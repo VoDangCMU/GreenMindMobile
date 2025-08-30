@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GreenMind</string>
+    <string name="title_activity_main">GreenMind</string>
+    <string name="package_name">com.vodang.greenmind</string>
+    <string name="custom_url_scheme">com.vodang.greenmind</string>
+</resources>
