@@ -5,7 +5,8 @@ const config: CapacitorConfig = {
   appName: 'GreenMind',
   webDir: 'dist',
   server: {
-    url: 'http://10.0.2.2:5173',
+    url: 'https://mobile-devurl-greenmind.khoav4.com/', 
+    // url: 'http://10.0.2.2:5173', // ONLY FOR ANDROID EMULATOR TESTING
     cleartext: true
   }
 };
