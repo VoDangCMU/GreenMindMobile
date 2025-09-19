@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, createHashRouter } from 'react-router-dom';
 import LoginPage from './pages/LoginPage.tsx';
 import OnboardingPage from './pages/OnboardingPage.tsx';
 import HomePage from './pages/HomePage.tsx';
@@ -16,8 +16,9 @@ import QuizPage from './pages/QuizPage.tsx';
 import RecomendationPage from './pages/RecomendationPage.tsx';
 import RegisterPage from './pages/RegisterPage.tsx';
 import TrackingPage from './pages/TrackingPage.tsx';
+import BillHistoryPage from './pages/BillHistoryPage.tsx';
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   { path: "/", element: <LoginPage /> },
   { path: "/onboarding", element: <OnboardingPage /> },
   { path: "/home", element: <HomePage /> },
@@ -32,6 +33,7 @@ const router = createBrowserRouter([
   { path: "/recommendations", element: <RecomendationPage /> },
   { path: "/register", element: <RegisterPage /> },
   { path: "/tracking", element: <TrackingPage /> },
+  { path: "/bill-history", element: <BillHistoryPage /> }
 ]);
 
 createRoot(document.getElementById('root')!).render(

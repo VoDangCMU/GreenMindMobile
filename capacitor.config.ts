@@ -1,13 +1,18 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+const server = { 
+  url: "http://acer.mobile-devurl-greenmind.khoav4.com/", 
+  // url: "http://mobile-devurl-greenmind.khoav4.com/",  // PC URL 
+  cleartext: true 
+}
+
 const config: CapacitorConfig = {
   appId: 'com.vodang.greenmind',
   appName: 'GreenMind',
   webDir: 'dist',
-  server: {
-    url: 'http://10.0.2.2:5173',
-    cleartext: true
-  }
+  server
 };
+
+console.log('Capacitor server config:', process.env);
 
 export default config;
