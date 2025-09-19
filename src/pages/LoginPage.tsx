@@ -24,7 +24,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm mx-auto flex flex-col items-center">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 bg-greenery-500 rounded-full flex items-center justify-center shadow-md mb-3">
-            <Leaf className="w-8 h-8 text-white" />
+            <Link to='/home'>
+              <Leaf className="w-8 h-8 text-white" />
+            </Link>
           </div>
           <h1 className="text-3xl font-extrabold text-greenery-700 mb-1 tracking-tight text-center drop-shadow-sm">
             GREEN MIND
