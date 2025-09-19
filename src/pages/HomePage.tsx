@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { Target, Award, Users, MessageCircle } from "lucide-react"
 import { Link } from "react-router-dom"
-import AppHeader from "@/components/AppHeader"
+import AppHeader from "@/components/HomeAppHeader"
 import { useEffect, useRef, useState } from "react"
 import { App as CapacitorApp } from "@capacitor/app"
 import BottomNav from "@/components/BottomNav"
@@ -33,7 +33,7 @@ const features = [
     desc: "Get advice and support from our smart assistant.",
   },
   {
-    to: "/scan-bill",
+    to: "/bill-history",
     icon: (
       <svg
         className="w-8 h-8 text-greenery-600"
@@ -46,8 +46,8 @@ const features = [
         <path d="M8 2v4M16 2v4M3 10h18" />
       </svg>
     ),
-    title: "Scan Bill",
-    desc: "Scan receipts and bills using your camera or gallery.",
+    title: "Bill History",
+    desc: "Show all your scanned bill.",
   },
 ]
 

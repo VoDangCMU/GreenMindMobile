@@ -16,7 +16,7 @@ import QuizPage from './pages/QuizPage.tsx';
 import RecomendationPage from './pages/RecomendationPage.tsx';
 import RegisterPage from './pages/RegisterPage.tsx';
 import TrackingPage from './pages/TrackingPage.tsx';
-import ScanBillPage from './pages/ScanBillPage.tsx';
+import BillHistoryPage from './pages/BillHistoryPage.tsx';
 
 const router = createHashRouter([
   { path: "/", element: <LoginPage /> },
@@ -33,7 +33,7 @@ const router = createHashRouter([
   { path: "/recommendations", element: <RecomendationPage /> },
   { path: "/register", element: <RegisterPage /> },
   { path: "/tracking", element: <TrackingPage /> },
-  { path: "/scan-bill", element: <ScanBillPage /> }
+  { path: "/bill-history", element: <BillHistoryPage /> }
 ]);
 
 createRoot(document.getElementById('root')!).render(

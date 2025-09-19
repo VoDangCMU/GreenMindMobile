@@ -2,7 +2,7 @@ import { Home, BarChart2, Users, Plus, User } from "lucide-react"
 
 const BottomNav = () => {
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg">
+    <div className="sticky bottom-0 left-0 z-50 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg">
       <div
         className="grid max-w-lg mx-auto grid-cols-5 font-medium"
         style={{
