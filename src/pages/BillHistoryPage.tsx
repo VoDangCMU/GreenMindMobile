@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import AppHeader from "@/components/AppHeader";
 import { Bell, Settings, ScanLine } from "lucide-react";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+// import { Geolocation } from "@capacitor/geolocation";
+import { Filesystem } from "@capacitor/filesystem";
+import axios from "axios";
 
-const mockBills = [
+let mockBills = [
   {
     id: "0002",
     vendor: {
@@ -64,15 +68,88 @@ export default function BillHistoryPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleScan = async () => {
-    setLoading(true);
-    setError(null);
-    setTimeout(() => {
-      setBills((prev) => [
-        ...prev,
-        { ...mockBills[0], id: Math.random().toString().slice(2, 8) },
-      ]);
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Mở camera hệ thống
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera, // 👈 ép mở camera
+        saveToGallery: false,
+        allowEditing: false,
+      });
+
+      console.log("Ảnh chụp:", JSON.stringify(photo));
+
+      if (!photo.path && !photo.webPath) {
+        throw new Error("Không có đường dẫn ảnh");
+      }
+
+      let file: File;
+
+      // Native iOS/Android + Web
+      if (photo.webPath) {
+        const response = await fetch(photo.webPath); // photo.webPath vẫn tồn tại trên Native
+        const blob = await response.blob();
+        file = new File([blob], "scan.jpg", {
+          type: blob.type || "image/jpeg",
+        });
+      }
+
+      // let file: File;
+
+      // if (photo.path) {
+      //   // Native Android/iOS
+      //   const fileData = await Filesystem.readFile({ path: photo.path });
+      //   if (!fileData.data) throw new Error("Không đọc được file");
+
+      //   // base64 → byte array
+      //   const byteString = atob(fileData.data);
+      //   const byteArray = new Uint8Array(byteString.length);
+      //   for (let i = 0; i < byteString.length; i++) {
+      //     byteArray[i] = byteString.charCodeAt(i);
+      //   }
+
+      //   const blob = new Blob([byteArray], { type: "image/jpeg" });
+      //   file = new File([blob], "scan.jpg", { type: "image/jpeg" });
+      // } else if (photo.webPath) {
+      //   // fallback web
+      //   const response = await fetch(photo.webPath);
+      //   const blob = await response.blob();
+      //   file = new File([blob], "scan.jpg", {
+      //     type: blob.type || "image/jpeg",
+      //   });
+      // } else {
+      //   throw new Error("Không có đường dẫn ảnh");
+      // }
+
+      console.log("đã xử lí xong file ảnh");
+      console.log("File ảnh:", file);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      console.log("Đang gửi lên server OCR...");
+
+      axios
+        .post("https://ai-greenmind.khoav4.com/ocr_text", formData)
+        .then((response) => {
+          return response.data;
+        })
+        .then((data) => {
+          mockBills = [data];
+          console.log("Kết quả OCR:", JSON.stringify(mockBills[0]));
+        })
+        .catch((error) => {
+          console.error("Lỗi OCR:", JSON.stringify(error));
+        });
+    } catch (err: any) {
+      setError(err.message || "Camera error");
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const handleImport = async () => {
