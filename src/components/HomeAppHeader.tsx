@@ -1,29 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+// ...existing code...
 import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
 
+// No scroll-to-hide logic; header is always visible
+
 export default function HomeAppHeader() {
-  const [visible, setVisible] = useState(true);
-  const lastScroll = useRef(0);
-
-  useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (y > lastScroll.current && y > 40) {
-        setVisible(false);
-      } else {
-        setVisible(true);
-      }
-      lastScroll.current = y;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <header
-      className={`w-full flex items-center justify-between px-4 py-3 bg-greenery-50 shadow-sm fixed top-0 left-0 z-30 transition-transform duration-300 ${visible ? 'translate-y-0' : '-translate-y-full'}`}
+      className="w-full flex items-center justify-between px-4 py-3 bg-greenery-50 shadow-sm fixed top-0 left-0 z-30"
       style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}
     >
       <div className="flex items-center gap-2">

@@ -14,12 +14,14 @@ interface HistoryPageFooterProps {
 const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
 
     const addBill = useBillStore((state) => state.addBill);
+    const setOcring = useBillStore((state) => state.setOcring);
 
     const handleImport = async () => {
         
     };
 
     const handleScan = async () => {
+        setOcring(true);
         try {
             const photo = await Camera.getPhoto({
                 quality: 90,
@@ -63,19 +65,17 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
                 formData.append("file", fileObj);
 
                 const res = await axios.post(
-                    "https://ai-greenmind.khoav4.com/ocr_text",
-                    // "http://192.168.1.230:3000/upload",
+                    // "https://ai-greenmind.khoav4.com/ocr_text",
+                    "http://192.168.1.230:3000/upload",
                     formData
                 );
 
                 addBill(res.data)
             }
-
-            console.log("fuckup")
-
         } catch (err: any) {
             console.error("Upload error:", JSON.stringify(err));
         } finally {
+            setOcring(false);
         }
     };
 
