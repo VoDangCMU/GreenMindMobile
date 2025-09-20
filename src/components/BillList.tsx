@@ -1,4 +1,6 @@
+
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import BillCard from "@/components/BillCard";
 
 interface BillListProps {
@@ -6,6 +8,7 @@ interface BillListProps {
 }
 
 const BillList: React.FC<BillListProps> = ({ bills }) => {
+  const navigate = useNavigate();
   if (!bills.length) {
     return (
       <div className="text-center text-gray-400 mt-16">
@@ -14,11 +17,13 @@ const BillList: React.FC<BillListProps> = ({ bills }) => {
     );
   }
   return (
-    <ul
-      className="grid gap-4 mt-2 grid-cols-1 sm:grid-cols-1 lg:grid-cols-1"
-    >
+    <ul className="grid gap-4 mt-2 grid-cols-1 sm:grid-cols-1 lg:grid-cols-1">
       {bills.map((bill) => (
-        <BillCard key={bill.id} bill={bill} />
+        <BillCard
+          key={bill.id}
+          bill={bill}
+          onClick={() => navigate(`/bill-detail/${bill.id}`)}
+        />
       ))}
     </ul>
   );

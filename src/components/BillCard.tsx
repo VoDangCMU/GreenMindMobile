@@ -1,11 +1,15 @@
-import React from "react";
 
+import React from "react";
 interface BillCardProps {
   bill: any;
+  onClick?: () => void;
 }
 
-const BillCard: React.FC<BillCardProps> = ({ bill }) => (
-  <li className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 border border-greenery-100">
+const BillCard: React.FC<BillCardProps> = ({ bill, onClick }) => (
+  <li
+    className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 border border-greenery-100 cursor-pointer hover:bg-greenery-50 transition"
+    onClick={onClick}
+  >
     <div className="flex justify-between items-center">
       <div>
         <div className="font-semibold text-greenery-700">{bill.vendor.name}</div>
