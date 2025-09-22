@@ -45,18 +45,20 @@ export interface IBill {
   totals: IBillTotals;
 }
 
-// ---- Store type ----
 interface BillStore {
   bills: IBill[];
+  isOcring: boolean;
+  setOcring: (isOcring: boolean) => void;
   setBills: (bills: IBill[]) => void;
   addBill: (bill: IBill) => void;
 }
 
-// ---- Zustand store ----
 const useBillStore = create<BillStore>((set) => ({
   bills: [],
+  isOcring: false,
   setBills: (bills) => set({ bills }),
   addBill: (bill) => set((state) => ({ bills: [bill, ...state.bills] })),
+  setOcring: (isOcring) => set({ isOcring }),
 }));
 
 export default useBillStore;

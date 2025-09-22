@@ -5,7 +5,7 @@ import { type ReactNode } from "react"
 interface AppHeaderProps {
   title: string
   showBack?: boolean
-  rightActions?: ReactNode[] // 👈 nhiều actions
+  rightActions?: ReactNode[]
 }
 
 const AppHeader = ({ title, showBack = false, rightActions = [] }: AppHeaderProps) => {
@@ -13,9 +13,8 @@ const AppHeader = ({ title, showBack = false, rightActions = [] }: AppHeaderProp
 
   return (
     <header
-      className="sticky top-0 left-0 w-full flex items-center justify-between px-4 py-3 
-                 bg-white dark:bg-gray-800 shadow z-30"
-      style={{ paddingTop: "env(safe-area-inset-top, 12px)" }}
+      className="w-full flex items-center justify-between px-4 py-3 bg-greenery-200 shadow-sm fixed top-0 left-0 z-30"
+      style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}
     >
       <div className="flex items-center gap-2">
         {showBack && (
