@@ -1,26 +1,25 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import React from "react";
 import { useRegisterStore } from "@/store/registerStore";
 
-interface Props {
-  formData: {
-    agreeToTerms: boolean;
-    subscribeNewsletter: boolean;
-  };
-  errors: {
-    agreeToTerms?: string;
-  };
-  onChange: (field: string, value: boolean) => void;
-  onSubmit: () => void;
-  isLoading: boolean;
-  setErrors: (errors: any) => void;
-}
+interface Props {}
 
-const RegisterFormStep3: React.FC<Props> = ({ formData, errors, onChange, onSubmit, isLoading, setErrors }) => {
-  const { setCurrentStep } = useRegisterStore();
+import { registerUser } from "@/apis/register";
+import { toast } from "sonner";
+import { loginUser } from "@/apis/login";
+import { useAppStore } from "@/store/appStore";
+const RegisterFormStep3: React.FC<Props> = () => {
+  const { isLoading, formData, errors, setFormData, setErrors, setCurrentStep, setIsLoading } = useRegisterStore();
+  const setAuth = useAppStore(state => state.setAuth);
+  const navigate = useNavigate();
+
+  const handleInputChange = (field: string, value: boolean) => {
+    setFormData({ [field]: value });
+    if (errors && errors[field as keyof typeof errors]) setErrors({ ...errors, [field]: undefined });
+  };
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -31,8 +30,41 @@ const RegisterFormStep3: React.FC<Props> = ({ formData, errors, onChange, onSubm
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validate()) onSubmit();
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    setIsLoading(true);
+    try {
+      const payload = {
+        email: formData.email,
+        password: formData.password,
+        confirm_password: formData.confirmPassword,
+        full_name: `${formData.firstName} ${formData.lastName}`.trim(),
+        date_of_birth: formData.dateOfBirth,
+      };
+
+      console.log("Submitting registration with payload:", payload);
+
+      const data = await registerUser(payload);
+      const loginData = await loginUser({ email: formData.email, password: formData.password });
+
+      setAuth({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        user: data.user,
+      });
+
+      toast.success("Đăng ký thành công! Đang chuyển hướng...");
+
+      navigate("/onboarding");
+      setTimeout(() => {
+        window.location.href = "/onboarding";
+      }, 1200);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Đăng ký hoặc đăng nhập thất bại!");
+      console.error("Registration or login failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -50,7 +82,7 @@ const RegisterFormStep3: React.FC<Props> = ({ formData, errors, onChange, onSubm
             <Checkbox
               id="agreeToTerms"
               checked={formData.agreeToTerms}
-              onCheckedChange={checked => onChange("agreeToTerms", checked as boolean)}
+              onCheckedChange={checked => handleInputChange("agreeToTerms", checked as boolean)}
               className="mt-1"
             />
             <div className="space-y-1">
@@ -72,7 +104,7 @@ const RegisterFormStep3: React.FC<Props> = ({ formData, errors, onChange, onSubm
             <Checkbox
               id="subscribeNewsletter"
               checked={formData.subscribeNewsletter}
-              onCheckedChange={checked => onChange("subscribeNewsletter", checked as boolean)}
+              onCheckedChange={checked => handleInputChange("subscribeNewsletter", checked as boolean)}
               className="mt-1"
             />
             <Label htmlFor="subscribeNewsletter" className="text-sm text-gray-700 leading-relaxed cursor-pointer">

@@ -8,43 +8,28 @@ import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useRegisterStore } from "@/store/registerStore";
 
 interface Props {
-  formData: {
-    password: string;
-    confirmPassword: string;
-    dateOfBirth: string;
-    location: string;
-  };
-  errors: {
-    password?: string;
-    confirmPassword?: string;
-    dateOfBirth?: string;
-    location?: string;
-  };
   showPassword: boolean;
   showConfirmPassword: boolean;
   onToggleShowPassword: () => void;
   onToggleShowConfirmPassword: () => void;
-  onChange: (field: string, value: string) => void;
   passwordStrength: { strength: number; label: string; color: string };
   locations: string[];
-  isLoading: boolean;
-  setErrors: (errors: any) => void;
 }
 
 const RegisterFormStep2: React.FC<Props> = ({
-  formData,
-  errors,
   showPassword,
   showConfirmPassword,
   onToggleShowPassword,
   onToggleShowConfirmPassword,
-  onChange,
   passwordStrength,
   locations,
-  isLoading,
-  setErrors,
 }) => {
-  const { setCurrentStep } = useRegisterStore();
+  const { isLoading, formData, errors, setFormData, setErrors, setCurrentStep } = useRegisterStore();
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData({ [field]: value });
+    if (errors && errors[field as keyof typeof errors]) setErrors({ ...errors, [field]: undefined });
+  };
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -104,7 +89,7 @@ const RegisterFormStep2: React.FC<Props> = ({
               type={showPassword ? "text" : "password"}
               placeholder="Create a strong password"
               value={formData.password}
-              onChange={e => onChange("password", e.target.value)}
+              onChange={e => handleInputChange("password", e.target.value)}
               className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${errors.password ? "border-red-500" : ""}`}
               autoComplete="new-password"
             />
@@ -158,7 +143,7 @@ const RegisterFormStep2: React.FC<Props> = ({
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm your password"
               value={formData.confirmPassword}
-              onChange={e => onChange("confirmPassword", e.target.value)}
+              onChange={e => handleInputChange("confirmPassword", e.target.value)}
               className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${errors.confirmPassword ? "border-red-500" : ""}`}
               autoComplete="new-password"
             />
@@ -193,7 +178,7 @@ const RegisterFormStep2: React.FC<Props> = ({
             id="dateOfBirth"
             type="date"
             value={formData.dateOfBirth}
-            onChange={e => onChange("dateOfBirth", e.target.value)}
+            onChange={e => handleInputChange("dateOfBirth", e.target.value)}
             className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 ${errors.dateOfBirth ? "border-red-500" : ""}`}
             max={new Date().toISOString().split("T")[0]}
           />
@@ -209,7 +194,7 @@ const RegisterFormStep2: React.FC<Props> = ({
             <MapPin className="w-4 h-4" />
             <span>Location</span>
           </Label>
-          <Select value={formData.location} onValueChange={value => onChange("location", value)}>
+          <Select value={formData.location} onValueChange={value => handleInputChange("location", value)}>
             <SelectTrigger className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 ${errors.location ? "border-red-500" : ""}`}>
               <SelectValue placeholder="Select your country" />
             </SelectTrigger>

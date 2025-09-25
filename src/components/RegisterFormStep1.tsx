@@ -5,24 +5,16 @@ import React from "react";
 import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useRegisterStore } from "@/store/registerStore";
 
-interface Props {
-  formData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  errors: {
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-  };
-  onChange: (field: string, value: string) => void;
-  isLoading: boolean;
-  setErrors: (errors: any) => void;
-}
+interface Props {}
 
-const RegisterFormStep1: React.FC<Props> = ({ formData, errors, onChange, isLoading, setErrors }) => {
-  const { setCurrentStep } = useRegisterStore();
+const RegisterFormStep1: React.FC<Props> = () => {
+  const { isLoading, formData, errors, setFormData, setErrors, setCurrentStep } = useRegisterStore();
+  // ...existing code...
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData({ [field]: value });
+    if (errors[field as keyof typeof errors]) setErrors({ ...errors, [field as keyof typeof errors]: undefined });
+  };
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -67,7 +59,7 @@ const RegisterFormStep1: React.FC<Props> = ({ formData, errors, onChange, isLoad
             type="text"
             placeholder="John"
             value={formData.firstName}
-            onChange={e => onChange("firstName", e.target.value)}
+            onChange={e => handleInputChange("firstName", e.target.value)}
             className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 ${errors.firstName ? "border-red-500" : ""}`}
             autoComplete="given-name"
           />
@@ -87,7 +79,7 @@ const RegisterFormStep1: React.FC<Props> = ({ formData, errors, onChange, isLoad
             type="text"
             placeholder="Doe"
             value={formData.lastName}
-            onChange={e => onChange("lastName", e.target.value)}
+            onChange={e => handleInputChange("lastName", e.target.value)}
             className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 ${errors.lastName ? "border-red-500" : ""}`}
             autoComplete="family-name"
           />
@@ -107,7 +99,7 @@ const RegisterFormStep1: React.FC<Props> = ({ formData, errors, onChange, isLoad
             type="email"
             placeholder="john.doe@example.com"
             value={formData.email}
-            onChange={e => onChange("email", e.target.value.toLowerCase())}
+            onChange={e => handleInputChange("email", e.target.value.toLowerCase())}
             className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 ${errors.email ? "border-red-500" : ""}`}
             autoComplete="email"
           />
