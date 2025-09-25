@@ -1,3 +1,10 @@
+interface Props {
+  children: React.ReactNode;
+  header?: React.ReactNode;
+  footer?: React.ReactNode;
+  className?: string;
+}
+
 export default function SafeAreaLayout({ children, header, footer, className = '' }: Props) {
   return (
     <div

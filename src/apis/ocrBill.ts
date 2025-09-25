@@ -1,9 +1,7 @@
-import axios from "axios";
-import servers from "./servers";
 import type { Photo } from "@capacitor/camera";
 import fileUtils from "../helpers/fileUtils";
 import type { IBill } from "@/store/billStore";
-import AIApi from "./AIInstance";
+import AIApi from "./instances/AIInstance";
 
 export default async function ocrBill(photo: Photo) {
 

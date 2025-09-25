@@ -9,6 +9,41 @@ import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
 
 const features = [
   {
+    to: "/bill-history",
+    icon: (
+      <svg
+        className="w-8 h-8 text-greenery-600"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M8 2v4M16 2v4M3 10h18" />
+      </svg>
+    ),
+    title: "Bill History",
+    desc: "Show all your scanned bill.",
+  },
+  {
+    to: "/home",
+    icon: <Target className="w-8 h-8 text-greenery-600" />,
+    title: "Home",
+    desc: "Go to the home dashboard.",
+  },
+  {
+    to: "/onboarding",
+    icon: <Award className="w-8 h-8 text-greenery-600" />,
+    title: "Onboarding",
+    desc: "Complete your onboarding steps.",
+  },
+  {
+    to: "/advice",
+    icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
+    title: "Advice",
+    desc: "Get advice and tips.",
+  },
+  {
     to: "/quiz",
     icon: <Target className="w-8 h-8 text-greenery-600" />,
     title: "Personality Quiz",
@@ -33,23 +68,42 @@ const features = [
     desc: "Get advice and support from our smart assistant.",
   },
   {
-    to: "/bill-history",
-    icon: (
-      <svg
-        className="w-8 h-8 text-greenery-600"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-      >
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <path d="M8 2v4M16 2v4M3 10h18" />
-      </svg>
-    ),
-    title: "Bill History",
-    desc: "Show all your scanned bill.",
+    to: "/feedback",
+    icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
+    title: "Feedback",
+    desc: "Send us your feedback.",
   },
-]
+  {
+    to: "/impact",
+    icon: <Award className="w-8 h-8 text-greenery-600" />,
+    title: "Impact",
+    desc: "See your impact stats.",
+  },
+  {
+    to: "/profile",
+    icon: <Users className="w-8 h-8 text-greenery-600" />,
+    title: "Profile",
+    desc: "View and edit your profile.",
+  },
+  {
+    to: "/recommendations",
+    icon: <Award className="w-8 h-8 text-greenery-600" />,
+    title: "Recommendations",
+    desc: "See personalized recommendations.",
+  },
+  {
+    to: "/register",
+    icon: <Users className="w-8 h-8 text-greenery-600" />,
+    title: "Register",
+    desc: "Create a new account.",
+  },
+  {
+    to: "/tracking",
+    icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
+    title: "Tracking",
+    desc: "Track your progress.",
+  },
+];
 
 export default function HomePage() {
   const backPressCount = useRef(0)

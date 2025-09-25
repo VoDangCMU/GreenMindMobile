@@ -56,7 +56,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 p-4">
       <div className="max-w-sm mx-auto flex flex-col justify-between h-screen py-8">
         <div className="flex justify-end">
-          <Link to="/">
+          <Link to="/home">
             <Button variant="ghost" className="text-gray-500 hover:text-gray-700">
               Skip
             </Button>
