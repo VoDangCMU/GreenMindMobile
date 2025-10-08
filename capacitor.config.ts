@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const server = { 
-  url: "http://acer.mobile-devurl-greenmind.khoav4.com/", 
-  // url: "http://mobile-devurl-greenmind.khoav4.com/",  // PC URL 
+  // url: "http://acer.mobile-devurl-greenmind.khoav4.com/", 
+  url: "http://mobile-devurl-greenmind.khoav4.com/",  // PC URL 
   cleartext: true 
 }
 

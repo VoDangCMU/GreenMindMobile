@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const clearAuth = useAppStore(state => state.clearAuth);
   const user = useAppStore(state => state.user);
   const [isEditing, setIsEditing] = useState(false)
+  const setBypassAuthGate = useAppStore(state => state.setBypassAuthGate);
   // Nếu user null, có thể redirect về login hoặc hiển thị thông báo
   const [userInfo, setUserInfo] = useState({
     name: user?.fullName || user?.username || "",
@@ -336,6 +337,7 @@ export default function ProfilePage() {
                 className="w-full justify-start h-12 text-red-600 hover:bg-red-50"
                 onClick={() => {
                   clearAuth();
+                  setBypassAuthGate(false);
                   navigate("/", { replace: true });
                 }}
               >
