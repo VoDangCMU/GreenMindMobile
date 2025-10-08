@@ -56,9 +56,6 @@ const RegisterFormStep3: React.FC<Props> = () => {
       toast.success("Đăng ký thành công! Đang chuyển hướng...");
 
       navigate("/onboarding");
-      setTimeout(() => {
-        window.location.href = "/onboarding";
-      }, 1200);
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Đăng ký hoặc đăng nhập thất bại!");
       console.error("Registration or login failed:", error);

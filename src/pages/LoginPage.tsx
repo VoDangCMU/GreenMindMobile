@@ -17,6 +17,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAppStore(state => state.setAuth);
   const access_token = useAppStore(state => state.access_token);
+  const setBypassAuthGate = useAppStore(state => state.setBypassAuthGate);
 
   useEffect(() => {
     if (access_token) {
@@ -25,8 +26,8 @@ export default function LoginPage() {
   }, []);
 
   const handleAutoFillDemo = () => {
-    setEmail("tnqb.bot2@gmail.com");
-    setPassword("1234567");
+    setEmail("nbk2124.z@gmail.com");
+    setPassword("Khoa123123");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +52,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm mx-auto flex flex-col items-center">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 bg-greenery-500 rounded-full flex items-center justify-center shadow-md mb-3">
-            <Link to='/home'>
+            <Link to='/home' onClick={() => setBypassAuthGate(true)}>
               <Leaf className="w-8 h-8 text-white" />
             </Link>
           </div>

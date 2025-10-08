@@ -5,9 +5,10 @@ import BillCard from "@/components/BillCard";
 
 interface BillListProps {
   bills: any[];
+  onBillClick?: (bill: any) => void;
 }
 
-const BillList: React.FC<BillListProps> = ({ bills }) => {
+const BillList: React.FC<BillListProps> = ({ bills, onBillClick }) => {
   const [selectedBill, setSelectedBill] = useState<any | null>(null);
   if (!bills.length) {
     return (
@@ -23,11 +24,18 @@ const BillList: React.FC<BillListProps> = ({ bills }) => {
           <BillCard
             key={bill.id}
             bill={bill}
-            onClick={() => setSelectedBill(bill)}
+            onClick={() => {
+              if (onBillClick) {
+                onBillClick(bill);
+              } else {
+                setSelectedBill(bill);
+              }
+            }}
           />
         ))}
       </ul>
-      {selectedBill && (
+      {/* Nếu không có onBillClick thì dùng modal cũ */}
+      {!onBillClick && selectedBill && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedBill(null)}>
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full relative" onClick={e => e.stopPropagation()}>
             <button className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-xl" onClick={() => setSelectedBill(null)}>&times;</button>
