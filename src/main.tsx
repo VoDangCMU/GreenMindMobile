@@ -26,27 +26,33 @@ import RegisterPage from "./pages/RegisterPage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
 import BillHistoryPage from "./pages/BillHistoryPage.tsx";
 import AuthGate from "./components/AuthGate.tsx";
+import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
 
 const router = createHashRouter([
-  { path: "/", element: <LoginPage /> },
-  { path: "/login", element: <LoginPage /> },
-  { path: "/register", element: <RegisterPage /> },
   {
-    element: <AuthGate />,
+    element: <AnimatedLayout />,
     children: [
-      { path: "/onboarding", element: <OnboardingPage /> },
-      { path: "/home", element: <HomePage /> },
-      { path: "/advice", element: <AdvicePage /> },
-      { path: "/chat", element: <ChatPage /> },
-      { path: "/community", element: <CommunityPage /> },
-      { path: "/feedback", element: <FeedbackPage /> },
-      { path: "/goals", element: <GoalsPage /> },
-      { path: "/impact", element: <ImpactPage /> },
-      { path: "/profile", element: <ProfilePage /> },
-      { path: "/quiz", element: <QuizPage /> },
-      { path: "/recommendations", element: <RecomendationPage /> },
-      { path: "/tracking", element: <TrackingPage /> },
-      { path: "/bill-history", element: <BillHistoryPage /> },
+      { path: "/", element: <LoginPage /> },
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
+      {
+        element: <AuthGate />,
+        children: [
+          { path: "/onboarding", element: <OnboardingPage /> },
+          { path: "/home", element: <HomePage /> },
+          { path: "/advice", element: <AdvicePage /> },
+          { path: "/chat", element: <ChatPage /> },
+          { path: "/community", element: <CommunityPage /> },
+          { path: "/feedback", element: <FeedbackPage /> },
+          { path: "/goals", element: <GoalsPage /> },
+          { path: "/impact", element: <ImpactPage /> },
+          { path: "/profile", element: <ProfilePage /> },
+          { path: "/quiz", element: <QuizPage /> },
+          { path: "/recommendations", element: <RecomendationPage /> },
+          { path: "/tracking", element: <TrackingPage /> },
+          { path: "/bill-history", element: <BillHistoryPage /> },
+        ],
+      },
     ],
   },
 ]);
