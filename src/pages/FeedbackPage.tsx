@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
-  ArrowLeft,
   Brain,
   BarChart3,
   Target,
@@ -22,6 +21,8 @@ import {
 } from "lucide-react"
 import {Link} from "react-router-dom"
 import { useLocation } from "react-router-dom";
+import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
+import AppHeader from "@/components/AppHeader";
 
 interface FeedbackData {
   recommendationId: string
@@ -195,14 +196,16 @@ export default function FeedbackPage() {
 
   if (!feedbackData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 p-4">
-        <div className="max-w-sm mx-auto flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-greenery-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading feedback...</p>
+      <SafeAreaLayout>
+        <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 p-4">
+          <div className="max-w-sm mx-auto flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin w-8 h-8 border-2 border-greenery-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading feedback...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </SafeAreaLayout>
     )
   }
 
@@ -216,356 +219,332 @@ export default function FeedbackPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 p-4">
-      <div className="max-w-sm mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Link to="/recommendations">
-            <Button variant="ghost" className="p-2">
-              <ArrowLeft className="w-5 h-5 text-greenery-700" />
-            </Button>
-          </Link>
-          <h1 className="text-lg font-bold text-greenery-700">Why This Recommendation?</h1>
-          <div className="w-9" />
-        </div>
+    <SafeAreaLayout header={<AppHeader title="Why This Recommendation?" showBack />}> 
+      <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 pr-4 pl-4 pb-4">
+        <div className="max-w-sm mx-auto">
+          {/* Recommendation Title */}
+          <Card className="border-0 shadow-md mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center space-x-2">
+                <Sparkles className="w-4 h-4 text-greenery-600" />
+                <span>{feedbackData.recommendationTitle}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-700">AI Confidence Score</span>
+                <span className="text-sm font-medium text-greenery-700">
+                  {feedbackData.algorithmExplanation.confidenceScore}%
+                </span>
+              </div>
+              <Progress value={feedbackData.algorithmExplanation.confidenceScore} className="h-2" />
+            </CardContent>
+          </Card>
 
-        {/* Recommendation Title */}
-        <Card className="border-0 shadow-md mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-greenery-600" />
-              <span>{feedbackData.recommendationTitle}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-700">AI Confidence Score</span>
-              <span className="text-sm font-medium text-greenery-700">
-                {feedbackData.algorithmExplanation.confidenceScore}%
-              </span>
-            </div>
-            <Progress value={feedbackData.algorithmExplanation.confidenceScore} className="h-2" />
-          </CardContent>
-        </Card>
+          {/* Section Navigation */}
+          <div className="flex space-x-1 mb-6 overflow-x-auto">
+            {sections.map((section) => {
+              const Icon = section.icon
+              return (
+                <Button
+                  key={section.id}
+                  variant={activeSection === section.id ? "default" : "outline"}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`flex-shrink-0 h-10 text-xs ${
+                    activeSection === section.id
+                      ? "bg-greenery-500 hover:bg-greenery-600 text-white"
+                      : "border-greenery-200 text-greenery-700 hover:bg-greenery-50 bg-transparent"
+                  }`}
+                >
+                  <Icon className="w-3 h-3 mr-1" />
+                  {section.label}
+                </Button>
+              )
+            })}
+          </div>
 
-        {/* Section Navigation */}
-        <div className="flex space-x-1 mb-6 overflow-x-auto">
-          {sections.map((section) => {
-            const Icon = section.icon
-            return (
-              <Button
-                key={section.id}
-                variant={activeSection === section.id ? "default" : "outline"}
-                onClick={() => setActiveSection(section.id)}
-                className={`flex-shrink-0 h-10 text-xs ${
-                  activeSection === section.id
-                    ? "bg-greenery-500 hover:bg-greenery-600 text-white"
-                    : "border-greenery-200 text-greenery-700 hover:bg-greenery-50 bg-transparent"
-                }`}
-              >
-                <Icon className="w-3 h-3 mr-1" />
-                {section.label}
-              </Button>
-            )
-          })}
-        </div>
-
-        {/* Content Sections */}
-        <div className="space-y-4">
-          {/* Personality Analysis */}
-          {activeSection === "personality" && (
-            <div className="space-y-4">
-              <Card className="border-0 shadow-md">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center space-x-2">
-                    <Brain className="w-4 h-4 text-purple-600" />
-                    <span>Personality Factor Analysis</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {feedbackData.personalityFactors.map((factor, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-800">{factor.trait}</span>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {factor.score}%
-                          </Badge>
-                          <Badge className="text-xs bg-purple-100 text-purple-700">{factor.weight}% weight</Badge>
+          {/* Content Sections */}
+          <div className="space-y-4">
+            {/* Personality Analysis */}
+            {activeSection === "personality" && (
+              <div className="space-y-4">
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center space-x-2">
+                      <Brain className="w-4 h-4 text-purple-600" />
+                      <span>Personality Factor Analysis</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {feedbackData.personalityFactors.map((factor, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-800">{factor.trait}</span>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {factor.score}%
+                            </Badge>
+                            <Badge className="text-xs bg-purple-100 text-purple-700">{factor.weight}% weight</Badge>
+                          </div>
                         </div>
+                        <Progress value={factor.score} className="h-2" />
+                        <p className="text-xs text-gray-600 leading-relaxed">{factor.influence}</p>
                       </div>
-                      <Progress value={factor.score} className="h-2" />
-                      <p className="text-xs text-gray-600 leading-relaxed">{factor.influence}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
-          {/* Behavior Analysis */}
-          {activeSection === "behavior" && (
-            <div className="space-y-4">
-              <Card className="border-0 shadow-md">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center space-x-2">
-                    <Activity className="w-4 h-4 text-blue-600" />
-                    <span>Current Behavior Patterns</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {feedbackData.behaviorAnalysis.currentPatterns.map((pattern, index) => (
-                    <div key={index} className="flex items-start space-x-2">
-                      <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-700">{pattern}</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+            {/* Behavior Analysis */}
+            {activeSection === "behavior" && (
+              <div className="space-y-4">
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center space-x-2">
+                      <Activity className="w-4 h-4 text-blue-600" />
+                      <span>Current Behavior Patterns</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {feedbackData.behaviorAnalysis.currentPatterns.map((pattern, index) => (
+                      <div key={index} className="flex items-start space-x-2">
+                        <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-700">{pattern}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
 
-              <Card className="border-0 shadow-md">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-yellow-600" />
-                    <span>Identified Gaps</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {feedbackData.behaviorAnalysis.gaps.map((gap, index) => (
-                    <div key={index} className="flex items-start space-x-2">
-                      <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-700">{gap}</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center space-x-2">
+                      <AlertCircle className="w-4 h-4 text-yellow-600" />
+                      <span>Identified Gaps</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {feedbackData.behaviorAnalysis.gaps.map((gap, index) => (
+                      <div key={index} className="flex items-start space-x-2">
+                        <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-700">{gap}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
 
-              <Card className="border-0 shadow-md">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center space-x-2">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                    <span>Growth Opportunities</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {feedbackData.behaviorAnalysis.opportunities.map((opportunity, index) => (
-                    <div key={index} className="flex items-start space-x-2">
-                      <TrendingUp className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-700">{opportunity}</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center space-x-2">
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                      <span>Growth Opportunities</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {feedbackData.behaviorAnalysis.opportunities.map((opportunity, index) => (
+                      <div key={index} className="flex items-start space-x-2">
+                        <TrendingUp className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-700">{opportunity}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
-          {/* Data Insights */}
-          {activeSection === "data" && (
-            <div className="space-y-4">
-              <Card className="border-0 shadow-md">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center space-x-2">
-                    <BarChart3 className="w-4 h-4 text-green-600" />
-                    <span>Your Data Analysis</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Calendar className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">Tracking Period</span>
-                    </div>
-                    <p className="text-sm text-green-700">{feedbackData.dataInsights.trackingHistory}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-800 mb-2">Observed Trends</h4>
-                    <div className="space-y-2">
-                      {feedbackData.dataInsights.trends.map((trend, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <TrendingUp className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-700">{trend}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-800 mb-2">Peer Comparisons</h4>
-                    <div className="space-y-2">
-                      {feedbackData.dataInsights.comparisons.map((comparison, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <BarChart3 className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-700">{comparison}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Algorithm Explanation */}
-          {activeSection === "algorithm" && (
-            <div className="space-y-4">
-              <Card className="border-0 shadow-md">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center space-x-2">
-                    <Lightbulb className="w-4 h-4 text-yellow-600" />
-                    <span>AI Decision Process</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-3 bg-yellow-50 rounded-lg">
-                    <h4 className="text-sm font-medium text-yellow-800 mb-2">Primary Reasoning</h4>
-                    <p className="text-sm text-yellow-700">{feedbackData.algorithmExplanation.primaryReason}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-800 mb-2">Supporting Factors</h4>
-                    <div className="space-y-2">
-                      {feedbackData.algorithmExplanation.secondaryFactors.map((factor, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-700">{factor}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <h4 className="text-sm font-medium text-gray-800 mb-2">Methodology</h4>
-                    <p className="text-sm text-gray-700">{feedbackData.algorithmExplanation.methodology}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Expected Outcomes */}
-          {activeSection === "outcomes" && (
-            <div className="space-y-4">
-              <Card className="border-0 shadow-md">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center space-x-2">
-                    <Target className="w-4 h-4 text-red-600" />
-                    <span>Predicted Outcomes</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-800 mb-2">Short-term (2-4 weeks)</h4>
-                    <div className="space-y-2">
-                      {feedbackData.expectedOutcomes.shortTerm.map((outcome, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-700">{outcome}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-800 mb-2">Long-term (3+ months)</h4>
-                    <div className="space-y-2">
-                      {feedbackData.expectedOutcomes.longTerm.map((outcome, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <TrendingUp className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-700">{outcome}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
+            {/* Data Insights */}
+            {activeSection === "data" && (
+              <div className="space-y-4">
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center space-x-2">
+                      <BarChart3 className="w-4 h-4 text-green-600" />
+                      <span>Your Data Analysis</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div className="p-3 bg-green-50 rounded-lg">
-                      <h5 className="text-xs font-medium text-green-800 mb-1">Environmental</h5>
-                      <p className="text-xs text-green-700">{feedbackData.expectedOutcomes.metrics.environmental}</p>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Calendar className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-800">Tracking Period</span>
+                      </div>
+                      <p className="text-sm text-green-700">{feedbackData.dataInsights.trackingHistory}</p>
                     </div>
-                    <div className="p-3 bg-red-50 rounded-lg">
-                      <h5 className="text-xs font-medium text-red-800 mb-1">Health</h5>
-                      <p className="text-xs text-red-700">{feedbackData.expectedOutcomes.metrics.health}</p>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">Observed Trends</h4>
+                      <div className="space-y-2">
+                        {feedbackData.dataInsights.trends.map((trend, index) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <TrendingUp className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-gray-700">{trend}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">Peer Comparisons</h4>
+                      <div className="space-y-2">
+                        {feedbackData.dataInsights.comparisons.map((comparison, index) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <BarChart3 className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-gray-700">{comparison}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Algorithm Explanation */}
+            {activeSection === "algorithm" && (
+              <div className="space-y-4">
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center space-x-2">
+                      <Lightbulb className="w-4 h-4 text-yellow-600" />
+                      <span>AI Decision Process</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div className="p-3 bg-yellow-50 rounded-lg">
-                      <h5 className="text-xs font-medium text-yellow-800 mb-1">Financial</h5>
-                      <p className="text-xs text-yellow-700">{feedbackData.expectedOutcomes.metrics.financial}</p>
+                      <h4 className="text-sm font-medium text-yellow-800 mb-2">Primary Reasoning</h4>
+                      <p className="text-sm text-yellow-700">{feedbackData.algorithmExplanation.primaryReason}</p>
                     </div>
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <h5 className="text-xs font-medium text-blue-800 mb-1">Social</h5>
-                      <p className="text-xs text-blue-700">{feedbackData.expectedOutcomes.metrics.social}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
 
-          {/* Community Insights */}
-          {activeSection === "community" && (
-            <div className="space-y-4">
-              <Card className="border-0 shadow-md">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center space-x-2">
-                    <User className="w-4 h-4 text-indigo-600" />
-                    <span>Similar Users' Experience</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-3 bg-indigo-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-indigo-800">Success Rate</span>
-                      <span className="text-lg font-bold text-indigo-700">
-                        {feedbackData.similarUsers.successRate}%
-                      </span>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">Supporting Factors</h4>
+                      <div className="space-y-2">
+                        {feedbackData.algorithmExplanation.secondaryFactors.map((factor, index) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-gray-700">{factor}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <Progress value={feedbackData.similarUsers.successRate} className="h-2" />
-                  </div>
 
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-800 mb-2">Common Challenges</h4>
-                    <div className="space-y-2">
-                      {feedbackData.similarUsers.commonChallenges.map((challenge, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <AlertCircle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-700">{challenge}</span>
-                        </div>
-                      ))}
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">Methodology</h4>
+                      <p className="text-sm text-gray-700">{feedbackData.algorithmExplanation.methodology}</p>
                     </div>
-                  </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-800 mb-2">Success Tips</h4>
-                    <div className="space-y-2">
-                      {feedbackData.similarUsers.tips.map((tip, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <Lightbulb className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-700">{tip}</span>
-                        </div>
-                      ))}
+            {/* Expected Outcomes */}
+            {activeSection === "outcomes" && (
+              <div className="space-y-4">
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center space-x-2">
+                      <Target className="w-4 h-4 text-red-600" />
+                      <span>Predicted Outcomes</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">Short-term (2-4 weeks)</h4>
+                      <div className="space-y-2">
+                        {feedbackData.expectedOutcomes.shortTerm.map((outcome, index) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-gray-700">{outcome}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
 
-        {/* Bottom Actions */}
-        <div className="mt-6 space-y-3">
-          <Link to="/recommendations">
-            <Button className="w-full bg-greenery-500 hover:bg-greenery-600 text-white">Back to Recommendations</Button>
-          </Link>
-          <Link to="/goals">
-            <Button
-              variant="outline"
-              className="w-full border-greenery-200 text-greenery-700 hover:bg-greenery-50 bg-transparent"
-            >
-              Convert to Goal
-            </Button>
-          </Link>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">Long-term (3+ months)</h4>
+                      <div className="space-y-2">
+                        {feedbackData.expectedOutcomes.longTerm.map((outcome, index) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <TrendingUp className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-gray-700">{outcome}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-green-50 rounded-lg">
+                        <h5 className="text-xs font-medium text-green-800 mb-1">Environmental</h5>
+                        <p className="text-xs text-green-700">{feedbackData.expectedOutcomes.metrics.environmental}</p>
+                      </div>
+                      <div className="p-3 bg-red-50 rounded-lg">
+                        <h5 className="text-xs font-medium text-red-800 mb-1">Health</h5>
+                        <p className="text-xs text-red-700">{feedbackData.expectedOutcomes.metrics.health}</p>
+                      </div>
+                      <div className="p-3 bg-yellow-50 rounded-lg">
+                        <h5 className="text-xs font-medium text-yellow-800 mb-1">Financial</h5>
+                        <p className="text-xs text-yellow-700">{feedbackData.expectedOutcomes.metrics.financial}</p>
+                      </div>
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <h5 className="text-xs font-medium text-blue-800 mb-1">Social</h5>
+                        <p className="text-xs text-blue-700">{feedbackData.expectedOutcomes.metrics.social}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Community Insights */}
+            {activeSection === "community" && (
+              <div className="space-y-4">
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center space-x-2">
+                      <User className="w-4 h-4 text-indigo-600" />
+                      <span>Similar Users' Experience</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="p-3 bg-indigo-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-indigo-800">Success Rate</span>
+                        <span className="text-lg font-bold text-indigo-700">
+                          {feedbackData.similarUsers.successRate}%
+                        </span>
+                      </div>
+                      <Progress value={feedbackData.similarUsers.successRate} className="h-2" />
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">Common Challenges</h4>
+                      <div className="space-y-2">
+                        {feedbackData.similarUsers.commonChallenges.map((challenge, index) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <AlertCircle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-gray-700">{challenge}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">Success Tips</h4>
+                      <div className="space-y-2">
+                        {feedbackData.similarUsers.tips.map((tip, index) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <Lightbulb className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-gray-700">{tip}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </SafeAreaLayout>
   )
 }

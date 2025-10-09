@@ -32,7 +32,7 @@ export default function BillDetailModal({ bill, open, onClose }: BillDetailModal
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="p-2 fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full relative" onClick={e => e.stopPropagation()}>
         <button className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-xl" onClick={onClose}>&times;</button>
         <h2 className="text-lg font-bold mb-2 text-greenery-700">Bill Details</h2>
