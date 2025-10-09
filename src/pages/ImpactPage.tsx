@@ -17,6 +17,8 @@ import {
   Award,
 } from "lucide-react"
 import {Link} from "react-router-dom"
+import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
+import AppHeader from "@/components/AppHeader"
 
 export default function ImpactPage() {
   // Mock data - in real app, this would come from user's tracked behaviors
@@ -105,19 +107,8 @@ export default function ImpactPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 p-4">
+    <SafeAreaLayout header={<AppHeader title="Impact" showBack />}>
       <div className="max-w-sm mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Link to="/home">
-            <Button variant="ghost" className="p-2">
-              <ArrowLeft className="w-5 h-5 text-greenery-700" />
-            </Button>
-          </Link>
-          <h1 className="text-lg font-bold text-greenery-700">Impact Dashboard</h1>
-          <div className="w-9" />
-        </div>
-
         {/* Overall Impact Score */}
         <Card className="border-0 shadow-md mb-6">
           <CardHeader className="pb-3">
@@ -359,6 +350,6 @@ export default function ImpactPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </SafeAreaLayout>
   )
 }

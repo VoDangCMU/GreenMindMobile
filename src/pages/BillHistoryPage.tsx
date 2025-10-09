@@ -3,16 +3,25 @@ import AppHeaderButton from "@/components/AppHeaderButton";
 import { Settings, Search, Loader2, Check } from "lucide-react";
 import BillList from "@/components/BillList";
 import BillDetailModal from "@/components/BillDetailModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import HistoryPageFooter from "@/components/HistoryPageFooter";
 import useBillStore from "@/store/billStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
+import invoiceApi from "@/apis/invoice";
+import { useAppStore } from "@/store/appStore";
 
 export default function BillHistoryPage() {
   const bills = useBillStore((state) => state.bills);
   const isOcring = useBillStore((state) => state.isOcring);
   const [selectedBill, setSelectedBill] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const appState = useAppStore.getState();
+
+  useEffect(() => {
+    invoiceApi.getInvoicesByUserId(appState.user?.id!).then((data) => {
+      useBillStore.getState().setBills(data ? [data] : []);
+    });
+  }, []);
 
   return (
     <SafeAreaLayout
