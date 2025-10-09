@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { type ReactNode } from "react"
+import { useDirectedBack } from "@/hooks/useDirectedBack"
 
 interface AppHeaderProps {
   title: string
@@ -9,7 +10,7 @@ interface AppHeaderProps {
 }
 
 const AppHeader = ({ title, showBack = false, rightActions = [] }: AppHeaderProps) => {
-  const navigate = useNavigate()
+  const back = useDirectedBack()
 
   return (
     <header
@@ -19,7 +20,7 @@ const AppHeader = ({ title, showBack = false, rightActions = [] }: AppHeaderProp
       <div className="flex items-center gap-2">
         {showBack && (
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => back()}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-200" />
