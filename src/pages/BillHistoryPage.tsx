@@ -19,7 +19,7 @@ export default function BillHistoryPage() {
 
   useEffect(() => {
     invoiceApi.getInvoicesByUserId(appState.user?.id!).then((data) => {
-      useBillStore.getState().setBills(data ? [data] : []);
+      useBillStore.getState().setBills(data ? data : []);
     });
   }, []);
 

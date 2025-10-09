@@ -108,7 +108,7 @@ export default function ProfilePage() {
         <AppHeader showBack title="Profile"></AppHeader>
       }
     >
-      <div className="max-w-sm mx-auto p-4 space-y-4">
+      <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
         {/* Profile Info */}
         <Card className="border-0 shadow-md">
           <CardContent className="p-6">

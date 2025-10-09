@@ -19,7 +19,8 @@ AIApi.interceptors.response.use(
     console.error(
       `[API ERROR] ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
       error.response?.status,
-      error.response?.data || error.message
+      error.response?.data || error.message,
+      JSON.stringify(error)
     );
     return Promise.reject(error);
   }
