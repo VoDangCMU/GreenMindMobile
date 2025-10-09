@@ -9,7 +9,7 @@ function getToken() {
 
 function authHeader(): Record<string, string> {
 	const token = getToken();
-	return token ? { Authorization: `${token}` } : {};
+	return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export async function getInvoices() {
@@ -27,8 +27,9 @@ export async function getInvoiceById(id: string) {
 	return res.data as IBill;
 }
 
+// Mock ScanID = 001 for now
 export async function createInvoice(data: IBill) {
-		const res = await BackendInstance.post("/invoices/create-invoice", data, { headers: authHeader() });
+		const res = await BackendInstance.post("/invoices/create-invoice", {...data, scanId: "001"}, { headers: authHeader() });
 	return res.data as IBill;
 }
 
