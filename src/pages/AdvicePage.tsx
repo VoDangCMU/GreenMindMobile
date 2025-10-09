@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Lightbulb, Leaf, Heart, Target, Shield, TrendingUp } from "lucide-react"
-import {Link} from "react-router-dom"
+import { Link } from "react-router-dom"
+import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
+import AppHeader from "@/components/AppHeader"
 
 export default function AdvicePage() {
   // Mock personality results - in real app, this would come from quiz results
@@ -61,32 +63,20 @@ export default function AdvicePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 p-4">
-      <div className="max-w-sm mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Link to="/quiz">
-            <Button variant="ghost" className="p-2">
-              <ArrowLeft className="w-5 h-5 text-greenery-700" />
-            </Button>
-          </Link>
-          <h1 className="text-lg font-bold text-greenery-700">Personalized Advice</h1>
-          <div className="w-9" />
-        </div>
-
+    <SafeAreaLayout header={<AppHeader title="Personalized Advice" showBack />}>
+      <div className="w-full max-w-sm mx-auto px-2 sm:px-0">
         {/* Introduction Card */}
         <Card className="border-0 shadow-xl mb-6">
           <CardHeader className="text-center pb-4">
             <div className="w-16 h-16 bg-greenery-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <Leaf className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-xl text-greenery-700">Your Green Journey</CardTitle>
-            <p className="text-sm text-gray-600">
+            <CardTitle className="text-xl sm:text-2xl text-greenery-700">Your Green Journey</CardTitle>
+            <p className="text-sm sm:text-base text-gray-600">
               Based on your personality traits, here are personalized recommendations for sustainable living
             </p>
           </CardHeader>
         </Card>
-
         {/* Advice Cards */}
         <div className="space-y-4">
           {Object.entries(personalityResults).map(([trait, score]) => {
@@ -99,28 +89,27 @@ export default function AdvicePage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Icon className={`w-5 h-5 ${advice.color}`} />
-                      <CardTitle className="text-base text-gray-800">{trait}</CardTitle>
+                      <CardTitle className="text-base sm:text-lg text-gray-800">{trait}</CardTitle>
                     </div>
                     <Badge
                       variant="secondary"
-                      className={`text-xs ${score > 60 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}
+                      className={`text-xs sm:text-sm ${score > 60 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}
                     >
                       {advice.level} ({score}%)
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-700 leading-relaxed">{advice.text}</p>
+                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{advice.text}</p>
                 </CardContent>
               </Card>
             )
           })}
         </div>
-
         {/* Action Buttons */}
         <div className="mt-8 space-y-3">
           <Link to="/goals">
-            <Button className="w-full bg-greenery-500 hover:bg-greenery-600 text-white">
+            <Button className="w-full bg-greenery-500 hover:bg-greenery-600 text-white text-sm sm:text-base py-3">
               <Target className="w-4 h-4 mr-2" />
               Set Sustainability Goals
             </Button>
@@ -128,7 +117,7 @@ export default function AdvicePage() {
           <Link to="/tracking">
             <Button
               variant="outline"
-              className="w-full border-greenery-200 text-greenery-700 hover:bg-greenery-50 bg-transparent"
+              className="w-full border-greenery-200 text-greenery-700 hover:bg-greenery-50 bg-transparent text-sm sm:text-base py-3"
             >
               <TrendingUp className="w-4 h-4 mr-2" />
               Start Tracking Behaviors
@@ -137,13 +126,13 @@ export default function AdvicePage() {
           <Link to="/home">
             <Button
               variant="outline"
-              className="w-full border-greenery-200 text-greenery-700 hover:bg-greenery-50 bg-transparent"
+              className="w-full border-greenery-200 text-greenery-700 hover:bg-greenery-50 bg-transparent text-sm sm:text-base py-3"
             >
               Back to Dashboard
             </Button>
           </Link>
         </div>
       </div>
-    </div>
+    </SafeAreaLayout>
   )
 }

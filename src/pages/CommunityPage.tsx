@@ -4,9 +4,10 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { ArrowLeft, Heart, MessageCircle, Share2, Trophy, TrendingUp, Leaf, Target, Award, Search } from "lucide-react"
+import { ArrowLeft, Heart, MessageCircle, Share2, Trophy, TrendingUp, Leaf, Target, Award, Search, Home } from "lucide-react"
 import {Link} from "react-router-dom"
+import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
+import AppHeader from "@/components/AppHeader"
 
 interface CommunityPost {
   id: string
@@ -35,7 +36,6 @@ interface LeaderboardUser {
 
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<"feed" | "leaderboard" | "challenges">("feed")
-  const [searchQuery, setSearchQuery] = useState("")
 
   const communityPosts: CommunityPost[] = [
     {
@@ -134,121 +134,81 @@ export default function CommunityPage() {
     console.log(`Liked post ${postId}`)
   }
 
-  const tabs = [
-    { id: "feed" as const, label: "Feed", icon: MessageCircle },
-    { id: "leaderboard" as const, label: "Leaderboard", icon: Trophy },
-    { id: "challenges" as const, label: "Challenges", icon: Target },
+  const navTabs = [
+    { id: "feed", label: "Feed", icon: MessageCircle },
+    { id: "leaderboard", label: "Leaderboard", icon: Trophy },
+    { id: "challenges", label: "Challenges", icon: Target },
+  ]
+
+  const rightActions = [
+    <button key="search" className="p-2" aria-label="Search">
+      <Search className="w-5 h-5 text-greenery-700" />
+    </button>
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100">
-      <div className="max-w-sm mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-white shadow-sm">
-          <Link to="/home">
-            <Button variant="ghost" className="p-2">
-              <ArrowLeft className="w-5 h-5 text-greenery-700" />
-            </Button>
-          </Link>
-          <h1 className="text-lg font-bold text-greenery-700">Community</h1>
-          <Button variant="ghost" className="p-2">
-            <Search className="w-5 h-5 text-greenery-700" />
-          </Button>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex bg-white border-b">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
+    <SafeAreaLayout header={<AppHeader title="Community" showBack rightActions={rightActions} />}>
+      <div className="max-w-sm mx-auto pb-20">
+        {/* Feed Content */}
+        <div className="pl-4 pr-4 space-y-4">
+          {/* Posts */}
+          {communityPosts.map((post) => {
+            const CategoryIcon = getCategoryIcon(post.category)
             return (
-              <Button
-                key={tab.id}
-                variant="ghost"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 h-12 rounded-none ${
-                  activeTab === tab.id ? "text-greenery-700 border-b-2 border-greenery-500" : "text-gray-600"
-                }`}
-              >
-                <Icon className="w-4 h-4 mr-2" />
-                {tab.label}
-              </Button>
+              <Card key={post.id} className="border-0 shadow-md">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-greenery-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">{post.user.avatar}</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-medium text-gray-800">{post.user.name}</h3>
+                          <Badge variant="secondary" className="text-xs">
+                            Lv.{post.user.level}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={`text-xs ${getCategoryColor(post.category)}`}>
+                            <CategoryIcon className="w-3 h-3 mr-1" />
+                            {post.category}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {post.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-gray-700 leading-relaxed">{post.content}</p>
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="flex items-center space-x-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleLike(post.id)}
+                        className={`p-1 ${post.liked ? "text-red-500" : "text-gray-500"}`}
+                      >
+                        <Heart className={`w-4 h-4 mr-1 ${post.liked ? "fill-current" : ""}`} />
+                        {post.likes}
+                      </Button>
+                      <Button variant="ghost" size="sm" className="p-1 text-gray-500">
+                        <MessageCircle className="w-4 h-4 mr-1" />
+                        {post.comments}
+                      </Button>
+                    </div>
+                    <Button variant="ghost" size="sm" className="p-1 text-gray-500">
+                      <Share2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )
           })}
         </div>
-
-        {/* Feed Tab */}
-        {activeTab === "feed" && (
-          <div className="p-4 space-y-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search posts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400"
-              />
-            </div>
-
-            {/* Posts */}
-            {communityPosts.map((post) => {
-              const CategoryIcon = getCategoryIcon(post.category)
-              return (
-                <Card key={post.id} className="border-0 shadow-md">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-greenery-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm font-medium">{post.user.avatar}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <h3 className="font-medium text-gray-800">{post.user.name}</h3>
-                            <Badge variant="secondary" className="text-xs">
-                              Lv.{post.user.level}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge className={`text-xs ${getCategoryColor(post.category)}`}>
-                              <CategoryIcon className="w-3 h-3 mr-1" />
-                              {post.category}
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              {post.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-gray-700 leading-relaxed">{post.content}</p>
-                    <div className="flex items-center justify-between pt-2 border-t">
-                      <div className="flex items-center space-x-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleLike(post.id)}
-                          className={`p-1 ${post.liked ? "text-red-500" : "text-gray-500"}`}
-                        >
-                          <Heart className={`w-4 h-4 mr-1 ${post.liked ? "fill-current" : ""}`} />
-                          {post.likes}
-                        </Button>
-                        <Button variant="ghost" size="sm" className="p-1 text-gray-500">
-                          <MessageCircle className="w-4 h-4 mr-1" />
-                          {post.comments}
-                        </Button>
-                      </div>
-                      <Button variant="ghost" size="sm" className="p-1 text-gray-500">
-                        <Share2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-        )}
 
         {/* Leaderboard Tab */}
         {activeTab === "leaderboard" && (
@@ -352,6 +312,24 @@ export default function CommunityPage() {
           </div>
         )}
       </div>
-    </div>
+
+      {/* Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm bg-white border-t border-greenery-100 shadow-lg z-20 flex justify-around items-center py-2">
+        {navTabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
+              className={`flex flex-col items-center justify-center px-2 py-1 focus:outline-none transition-all ${active ? "text-greenery-600" : "text-gray-400"}`}
+            >
+              <Icon className={`w-6 h-6 mb-1 ${active ? "text-greenery-600" : "text-gray-400"}`} />
+              <span className={`text-xs font-medium ${active ? "text-greenery-700" : "text-gray-400"}`}>{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    </SafeAreaLayout>
   )
 }
