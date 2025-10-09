@@ -23,7 +23,7 @@ export interface AppState {
   clearAuth: () => void;
 }
 
-const storageKey = "greenmind_auth";
+export const storageKey = "greenmind_auth";
 
 export const useAppStore = create<AppState>((set, get) => {
   // useLocalStorage hook must be used inside a React component, so we provide helpers for components
