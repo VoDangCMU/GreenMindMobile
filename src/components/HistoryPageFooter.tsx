@@ -1,10 +1,10 @@
 import React from "react";
 import { ScanLine } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
-import axios from "axios";
 import { Filesystem } from "@capacitor/filesystem";
 import useBillStore from "@/store/billStore";
 import ocrBill from "@/apis/ocrBill";
+import invoiceApi from "@/apis/invoice";
 
 interface HistoryPageFooterProps {
   onImport?: () => void;
@@ -29,7 +29,9 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
 
       const exportedBill = await ocrBill(photo);
       if (exportedBill) {
+        // Api Error, So still mock this time
         addBill(exportedBill);
+        const createdBill = await invoiceApi.createInvoice(exportedBill);
       } else {
         console.error("No bill data returned from OCR.");
       }

@@ -1,34 +1,63 @@
 "use client"
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Leaf } from "lucide-react"
-import {Link} from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom";
+import { loginUser } from "@/apis/login";
+import { useAppStore } from "@/store/appStore";
+import { toast } from "sonner";
+
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const setAuth = useAppStore(state => state.setAuth);
+  const access_token = useAppStore(state => state.access_token);
+  const setBypassAuthGate = useAppStore(state => state.setBypassAuthGate);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Simple validation - in real app, you'd authenticate
-    if (email && password) {
-      window.location.href = "/home"
+  useEffect(() => {
+    if (access_token) {
+      navigate("/home");
     }
-  }
+  }, []);
+
+  const handleAutoFillDemo = () => {
+    setEmail("nbk2124.z@gmail.com");
+    setPassword("Khoa123123");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    try {
+      const data = await loginUser({ email, password });
+      setAuth({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        user: data.user,
+      });
+      toast.success("Đăng nhập thành công! " + data.user.fullName);
+      navigate("/home");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Đăng nhập thất bại!");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 flex items-center justify-center p-4">
       <div className="w-full max-w-sm mx-auto flex flex-col items-center">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 bg-greenery-500 rounded-full flex items-center justify-center shadow-md mb-3">
-            <Link to='/home'>
+            <Link to='/home' onClick={() => setBypassAuthGate(true)}>
               <Leaf className="w-8 h-8 text-white" />
             </Link>
           </div>
-          <h1 className="text-3xl font-extrabold text-greenery-700 mb-1 tracking-tight text-center drop-shadow-sm">
+          <h1 className="text-3xl font-extrabold text-greenery-700 mb-1 tracking-tight text-center drop-shadow-sm"
+            onClick={handleAutoFillDemo}>
             GREEN MIND
           </h1>
           <p className="text-greenery-600 text-base text-center max-w-xs">
@@ -86,7 +115,7 @@ export default function LoginPage() {
         <div className="text-center mt-6">
           <p className="text-gray-600 text-sm">
             {"Don't have an account? "}
-            <Link to="/onboarding" className="text-greenery-600 hover:text-greenery-700 font-semibold">
+            <Link to="/register" className="text-greenery-600 hover:text-greenery-700 font-semibold">
               Sign up
             </Link>
           </p>

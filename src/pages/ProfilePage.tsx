@@ -25,16 +25,24 @@ import {
   HelpCircle,
   LogOut,
 } from "lucide-react"
-import {Link} from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom";
+import { useAppStore } from "@/store/appStore";
+import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
+import AppHeader from "@/components/AppHeader"
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
+  const clearAuth = useAppStore(state => state.clearAuth);
+  const user = useAppStore(state => state.user);
   const [isEditing, setIsEditing] = useState(false)
+  const setBypassAuthGate = useAppStore(state => state.setBypassAuthGate);
+  // Nếu user null, có thể redirect về login hoặc hiển thị thông báo
   const [userInfo, setUserInfo] = useState({
-    name: "Alex Rodriguez",
-    email: "alex.rodriguez@email.com",
+    name: user?.fullName || user?.username || "",
+    email: user?.email || "",
     bio: "Passionate about sustainable living and helping others make eco-friendly choices.",
-    location: "San Francisco, CA",
-    joinDate: "March 2024",
+    location: "",
+    joinDate: "",
   })
 
   const stats = {
@@ -95,29 +103,23 @@ export default function ProfilePage() {
   const progressToNextLevel = ((stats.totalPoints % 1000) / 1000) * 100
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100">
-      <div className="max-w-sm mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-white shadow-sm">
-          <Link to="/home">
-            <Button variant="ghost" className="p-2">
-              <ArrowLeft className="w-5 h-5 text-greenery-700" />
-            </Button>
-          </Link>
-          <h1 className="text-lg font-bold text-greenery-700">Profile</h1>
-          <Button variant="ghost" onClick={() => setIsEditing(!isEditing)} className="p-2">
-            <Edit3 className="w-5 h-5 text-greenery-700" />
-          </Button>
-        </div>
-
-        <div className="p-4 space-y-4">
-          {/* Profile Info */}
-          <Card className="border-0 shadow-md">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4 mb-4">
+    <SafeAreaLayout
+      header={
+        <AppHeader showBack title="Profile"></AppHeader>
+      }
+    >
+      <div className="max-w-sm mx-auto p-4 space-y-4">
+        {/* Profile Info */}
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4 mb-4">
                 <div className="relative">
                   <div className="w-20 h-20 bg-greenery-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold">AR</span>
+                    <span className="text-white text-2xl font-bold">
+                      {userInfo.name
+                        ? userInfo.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2)
+                        : "--"}
+                    </span>
                   </div>
                   <Button
                     size="sm"
@@ -129,14 +131,10 @@ export default function ProfilePage() {
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-1">
                     <h2 className="text-xl font-bold text-gray-800">{userInfo.name}</h2>
-                    <Badge className="bg-greenery-500 text-white">Lv.{stats.level}</Badge>
+                    <Badge className="bg-greenery-500 text-white">{user?.role ? user.role : "User"}</Badge>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{userInfo.location}</p>
-                  <div className="flex items-center space-x-4 text-xs text-gray-500">
-                    <span>Joined {userInfo.joinDate}</span>
-                    <span>•</span>
-                    <span>{stats.totalPoints.toLocaleString()} points</span>
-                  </div>
+                  <p className="text-sm text-gray-600 mb-2">{userInfo.email}</p>
+                  {/* Có thể bổ sung location, joinDate nếu backend trả về */}
                 </div>
               </div>
 
@@ -334,14 +332,21 @@ export default function ProfilePage() {
                   </Button>
                 )
               })}
-              <Button variant="ghost" className="w-full justify-start h-12 text-red-600 hover:bg-red-50">
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12 text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  clearAuth();
+                  setBypassAuthGate(false);
+                  navigate("/", { replace: true });
+                }}
+              >
                 <LogOut className="w-4 h-4 mr-3" />
                 Sign Out
               </Button>
             </CardContent>
           </Card>
-        </div>
       </div>
-    </div>
+    </SafeAreaLayout>
   )
 }

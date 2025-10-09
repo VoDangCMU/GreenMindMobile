@@ -1,4 +1,5 @@
 import { Home, BarChart2, Users, Plus, User } from "lucide-react"
+import { Link } from "react-router-dom";
 
 const BottomNav = () => {
   return (
@@ -9,21 +10,21 @@ const BottomNav = () => {
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
-        <button
-          type="button"
+        <Link
+          to="/home"
           className="flex flex-col items-center justify-center py-2 hover:text-blue-600 text-gray-500 dark:text-gray-400 group"
         >
           <Home className="w-6 h-6 mb-1" />
           <span className="text-xs">Home</span>
-        </button>
+        </Link>
 
-        <button
-          type="button"
+        <Link
+          to="/impact"
           className="flex flex-col items-center justify-center py-2 hover:text-blue-600 text-gray-500 dark:text-gray-400 group"
         >
           <BarChart2 className="w-6 h-6 mb-1" />
           <span className="text-xs">Impact</span>
-        </button>
+        </Link>
 
         {/* Floating Add button */}
         <div className="flex items-center justify-center">
@@ -35,21 +36,21 @@ const BottomNav = () => {
           </button>
         </div>
 
-        <button
-          type="button"
+        <Link
+          to="/community"
           className="flex flex-col items-center justify-center py-2 hover:text-blue-600 text-gray-500 dark:text-gray-400 group"
         >
           <Users className="w-6 h-6 mb-1" />
           <span className="text-xs">Community</span>
-        </button>
+        </Link>
 
-        <button
-          type="button"
+        <Link
+          to="/profile"
           className="flex flex-col items-center justify-center py-2 hover:text-blue-600 text-gray-500 dark:text-gray-400 group"
         >
           <User className="w-6 h-6 mb-1" />
           <span className="text-xs">Profile</span>
-        </button>
+        </Link>
       </div>
     </div>
   )
