@@ -1,6 +1,5 @@
 import type { IBill } from "@/store/billStore";
 import BackendInstance from "./instances/BackendInstance";
-
 import { storageKey } from "@/store/appStore";
 
 function getToken() {
@@ -19,7 +18,7 @@ export async function getInvoices() {
 
 export async function getInvoicesByUserId(userId: string) {
 		const res = await BackendInstance.get(`/invoices/get-invoices-by-user/${userId}`, { headers: authHeader() });
-	return res.data as IBill;
+	return res.data as IBill[];
 }
 
 export async function getInvoiceById(id: string) {
@@ -29,8 +28,10 @@ export async function getInvoiceById(id: string) {
 
 // Mock ScanID = 001 for now
 export async function createInvoice(data: IBill) {
-		const res = await BackendInstance.post("/invoices/create-invoice", {...data, scanId: "001"}, { headers: authHeader() });
-	return res.data as IBill;
+	const res = await BackendInstance.post("/invoices/create-invoice", data, {
+	  headers: authHeader(),
+  });
+	return res.data;
 }
 
 export default {
