@@ -9,7 +9,7 @@ import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
 
 const features = [
   {
-    to: "/bill-history",
+    to: "/invoice-history",
     icon: (
       <svg
         className="w-8 h-8 text-greenery-600"
@@ -22,8 +22,8 @@ const features = [
         <path d="M8 2v4M16 2v4M3 10h18" />
       </svg>
     ),
-    title: "Bill History",
-    desc: "Show all your scanned bill.",
+    title: "Invoice History",
+    desc: "Show all your scanned invoices.",
   },
   {
     to: "/home",

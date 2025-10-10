@@ -1,17 +1,17 @@
 import AppHeader from "@/components/AppHeader";
 import AppHeaderButton from "@/components/AppHeaderButton";
 import { Settings, Search, Loader2, Check } from "lucide-react";
-import BillList from "@/components/BillList";
-import BillDetailModal from "@/components/BillDetailModal";
+import InvoiceDetailModal from "@/components/InvoiceDetailModal";
 import { useEffect, useState } from "react";
 import HistoryPageFooter from "@/components/HistoryPageFooter";
-import useBillStore from "@/store/billStore";
+import useBillStore from "@/store/invoiceStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import invoiceApi from "@/apis/invoice";
 import { useAppStore } from "@/store/appStore";
+import InvoiceList from "@/components/InvoiceList";
 
-export default function BillHistoryPage() {
-  const bills = useBillStore((state) => state.bills);
+export default function InvoiceHistoryPage() {
+  const invoices = useBillStore((state) => state.invoices);
   const isOcring = useBillStore((state) => state.isOcring);
   const [selectedBill, setSelectedBill] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -19,7 +19,8 @@ export default function BillHistoryPage() {
 
   useEffect(() => {
     invoiceApi.getInvoicesByUserId(appState.user?.id!).then((data) => {
-      useBillStore.getState().setBills(data ? data : []);
+      console.log("Fetched invoices:", data);
+      useBillStore.getState().setInvoices(data ? data : []);
     });
   }, []);
 
@@ -39,16 +40,16 @@ export default function BillHistoryPage() {
     >
       <div className="flex flex-col bg-gradient-to-br">
         <div className="flex-1 w-full mx-auto px-3 pb-28">
-          <BillList
-            bills={bills}
-            onBillClick={(bill) => {
-              setSelectedBill(bill);
+          <InvoiceList
+            invoices={invoices}
+            onInvoiceClick={(invoice) => {
+              setSelectedBill(invoice);
               setShowModal(true);
             }}
           />
         </div>
       </div>
-      <BillDetailModal bill={selectedBill} open={showModal} onClose={() => setShowModal(false)} />
+      <InvoiceDetailModal invoice={selectedBill} open={showModal} onClose={() => setShowModal(false)} />
     </SafeAreaLayout>
   );
 }

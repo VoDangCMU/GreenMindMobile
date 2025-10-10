@@ -24,7 +24,7 @@ import QuizPage from "./pages/QuizPage.tsx";
 import RecomendationPage from "./pages/RecomendationPage.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
-import BillHistoryPage from "./pages/BillHistoryPage.tsx";
+import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
 import AuthGate from "./components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
 
@@ -50,7 +50,7 @@ const router = createHashRouter([
           { path: "/quiz", element: <QuizPage /> },
           { path: "/recommendations", element: <RecomendationPage /> },
           { path: "/tracking", element: <TrackingPage /> },
-          { path: "/bill-history", element: <BillHistoryPage /> },
+          { path: "/invoice-history", element: <InvoiceHistoryPage /> },
         ],
       },
     ],
