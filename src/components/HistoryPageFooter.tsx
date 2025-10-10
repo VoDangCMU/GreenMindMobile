@@ -1,10 +1,10 @@
 import React from "react";
 import { ScanLine } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
-import { Filesystem } from "@capacitor/filesystem";
-import useBillStore from "@/store/billStore";
-import ocrBill from "@/apis/ocrBill";
+import useInvoiceStore from "@/store/invoiceStore";
+import ocrBill from "@/apis/ocrInvoice";
 import invoiceApi from "@/apis/invoice";
+import { toast } from "sonner";
 
 interface HistoryPageFooterProps {
   onImport?: () => void;
@@ -13,32 +13,61 @@ interface HistoryPageFooterProps {
 }
 
 const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
-  const addBill = useBillStore((state) => state.addBill);
-  const setOcring = useBillStore((state) => state.setOcring);
+  const addInvoice = useInvoiceStore((state) => state.addInvoice);
+  const setOcring = useInvoiceStore((state) => state.setOcring);
+  const addAIInvoice = useInvoiceStore((state) => state.addAIInvoice);
+  const invoices = useInvoiceStore((state) => state.invoices);
 
   const handleScan = async () => {
     setOcring(true);
+    let photo;
     try {
-      const photo = await Camera.getPhoto({
+      photo = await Camera.getPhoto({
         quality: 90,
         resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
         saveToGallery: false,
         allowEditing: false,
       });
-
-      const exportedBill = await ocrBill(photo);
-      if (exportedBill) {
-        // Api Error, So still mock this time
-        addBill(exportedBill);
-        const createdBill = await invoiceApi.createInvoice(exportedBill);
-      } else {
-        console.error("No bill data returned from OCR.");
-      }
-    } catch (err: any) {
-      console.error("Upload error:", JSON.stringify(err));
-    } finally {
+    } catch (err) {
+      toast.error("Camera error");
       setOcring(false);
+      return;
+    }
+
+    let exportedInvoice;
+    try {
+      exportedInvoice = await ocrBill(photo);
+    } catch (err) {
+      toast.error("OCR error");
+      setOcring(false);
+      return;
+    }
+
+    if (exportedInvoice) {
+      let createdInvoice;
+      try {
+        createdInvoice = await invoiceApi.createInvoice(exportedInvoice);
+
+        console.log("Created invoice from server:", createdInvoice);
+
+        addInvoice(createdInvoice);
+        setOcring(false);
+        toast.success("Invoice added successfully");
+
+        console.log("Local states:", invoices);
+
+        return;
+      } catch (err) {
+        toast.warning("Cannot use server, saving locally");
+        addAIInvoice(exportedInvoice);
+        setOcring(false);
+        return;
+      }
+    } else {
+      toast.error("No invoice data returned from OCR.");
+      setOcring(false);
+      return;
     }
   };
 
@@ -54,14 +83,22 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
 
       setOcring(true);
 
-      const exportedBill = await ocrBill(photo);
-      if (exportedBill) {
-        addBill(exportedBill);
-      } else {
+      const exportedInvoice = await ocrBill(photo);
+
+      if (!exportedInvoice) {
         console.error("No bill data returned from OCR.");
+        return;
+      }
+
+      try {
+        const createdInvoice = await invoiceApi.createInvoice(exportedInvoice);
+        addInvoice(createdInvoice);
+      } catch (error) {
+        console.error("Failed to create invoice:", error);
+        addAIInvoice(exportedInvoice);
       }
     } catch (err: any) {
-      console.error("Upload error:", JSON.stringify(err));
+      console.error("Upload error:", err);
     } finally {
       setOcring(false);
     }
