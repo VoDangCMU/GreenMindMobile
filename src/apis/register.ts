@@ -6,6 +6,7 @@ export interface RegisterPayload {
   confirm_password: string;
   full_name: string;
   date_of_birth: string;
+  location: string;
 }
 
 export async function registerUser(payload: RegisterPayload) {
