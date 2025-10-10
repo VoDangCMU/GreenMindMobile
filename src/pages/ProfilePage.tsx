@@ -24,6 +24,8 @@ import {
   Shield,
   HelpCircle,
   LogOut,
+  User,
+  MapPin,
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
@@ -36,12 +38,13 @@ export default function ProfilePage() {
   const user = useAppStore(state => state.user);
   const [isEditing, setIsEditing] = useState(false)
   const setBypassAuthGate = useAppStore(state => state.setBypassAuthGate);
-  // Nếu user null, có thể redirect về login hoặc hiển thị thông báo
+  
   const [userInfo, setUserInfo] = useState({
     name: user?.fullName || user?.username || "",
     email: user?.email || "",
+    gender: user?.gender || "Unknown",
     bio: "Passionate about sustainable living and helping others make eco-friendly choices.",
-    location: "",
+    location: user?.location || "Unknown",
     joinDate: "",
   })
 
@@ -133,8 +136,19 @@ export default function ProfilePage() {
                     <h2 className="text-xl font-bold text-gray-800">{userInfo.name}</h2>
                     <Badge className="bg-greenery-500 text-white">{user?.role ? user.role : "User"}</Badge>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{userInfo.email}</p>
-                  {/* Có thể bổ sung location, joinDate nếu backend trả về */}
+                  <p className="text-sm text-gray-600 mb-1">{userInfo.email}</p>
+
+                  {/* Gender */}
+                  <div className="flex items-center space-x-1 text-gray-600 mb-1">
+                    <User className="w-4 h-4" />
+                    <span>{userInfo.gender}</span>
+                  </div>
+
+                  {/* Location */}
+                  <div className="flex items-center space-x-1 text-gray-600">
+                    <MapPin className="w-4 h-4" />
+                    <span>{userInfo.location}</span>
+                  </div>
                 </div>
               </div>
 
@@ -263,17 +277,9 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={achievement.id}
-                      className={`p-3 rounded-lg text-center ${
-                        achievement.earned
-                          ? "bg-greenery-50 border border-greenery-200"
-                          : "bg-gray-50 border border-gray-200 opacity-50"
-                      }`}
+                      className={`p-3 rounded-lg text-center ${achievement.earned ? "bg-greenery-50 border border-greenery-200" : "bg-gray-50 border border-gray-200 opacity-50"}`}
                     >
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${
-                          achievement.earned ? "bg-greenery-500" : "bg-gray-300"
-                        }`}
-                      >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${achievement.earned ? "bg-greenery-500" : "bg-gray-300"}`}>
                         <Icon className={`w-4 h-4 ${achievement.earned ? "text-white" : "text-gray-500"}`} />
                       </div>
                       <h4 className="text-xs font-medium text-gray-800 mb-1">{achievement.title}</h4>

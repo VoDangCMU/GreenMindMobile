@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+export type Gender = "Male" | "Female" | "Other";
+
 interface FormData {
   firstName: string;
   lastName: string;
@@ -10,6 +12,7 @@ interface FormData {
   location: string;
   agreeToTerms: boolean;
   subscribeNewsletter: boolean;
+  gender: Gender;
 }
 
 interface FormErrors {
@@ -21,6 +24,7 @@ interface FormErrors {
   dateOfBirth?: string;
   location?: string;
   agreeToTerms?: string;
+  gender?: string;
 }
 
 interface RegisterState {
@@ -49,6 +53,7 @@ const initialFormData: FormData = {
   location: '',
   agreeToTerms: false,
   subscribeNewsletter: true,
+  gender: "Other",
 };
 
 export const useRegisterStore = create<RegisterState>((set) => ({
