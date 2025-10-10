@@ -1,11 +1,11 @@
-import { Card } from "@/components/ui/card"
-import { Target, Award, Users, MessageCircle } from "lucide-react"
-import { Link } from "react-router-dom"
-import AppHeader from "@/components/HomeAppHeader"
-import { useEffect, useRef, useState } from "react"
-import { App as CapacitorApp } from "@capacitor/app"
-import BottomNav from "@/components/BottomNav"
-import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
+import { Card } from "@/components/ui/card";
+import { Target, Award, Users, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import AppHeader from "@/components/HomeAppHeader";
+import { useEffect, useRef, useState } from "react";
+import { App as CapacitorApp } from "@capacitor/app";
+import BottomNav from "@/components/BottomNav";
+import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 
 const features = [
   {
@@ -26,6 +26,18 @@ const features = [
     desc: "Show all your scanned invoices.",
   },
   {
+    to: "/quiz",
+    icon: <Target className="w-8 h-8 text-greenery-600" />,
+    title: "Personality Quiz",
+    desc: "Discover your unique personality traits and get personalized insights.",
+  },
+  {
+    to: "/register",
+    icon: <Users className="w-8 h-8 text-greenery-600" />,
+    title: "Register",
+    desc: "Create a new account.",
+  },
+  {
     to: "/home",
     icon: <Target className="w-8 h-8 text-greenery-600" />,
     title: "Home",
@@ -42,12 +54,6 @@ const features = [
     icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
     title: "Advice",
     desc: "Get advice and tips.",
-  },
-  {
-    to: "/quiz",
-    icon: <Target className="w-8 h-8 text-greenery-600" />,
-    title: "Personality Quiz",
-    desc: "Discover your unique personality traits and get personalized insights.",
   },
   {
     to: "/goals",
@@ -92,12 +98,6 @@ const features = [
     desc: "See personalized recommendations.",
   },
   {
-    to: "/register",
-    icon: <Users className="w-8 h-8 text-greenery-600" />,
-    title: "Register",
-    desc: "Create a new account.",
-  },
-  {
     to: "/tracking",
     icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
     title: "Tracking",
@@ -106,34 +106,34 @@ const features = [
 ];
 
 export default function HomePage() {
-  const backPressCount = useRef(0)
-  const [showToast, setShowToast] = useState(false)
+  const backPressCount = useRef(0);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
-    let listenerHandle: any
-    ;(async () => {
+    let listenerHandle: any;
+    (async () => {
       listenerHandle = await CapacitorApp.addListener("backButton", () => {
         if (window.location.hash === "#/" || window.location.pathname === "/") {
-          backPressCount.current++
+          backPressCount.current++;
           if (backPressCount.current < 2) {
-            setShowToast(true)
-            setTimeout(() => setShowToast(false), 1500)
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 1500);
           } else {
-            CapacitorApp.exitApp()
+            CapacitorApp.exitApp();
           }
         } else {
-          window.history.back()
+          window.history.back();
         }
-      })
-    })()
+      });
+    })();
     return () => {
       if (listenerHandle && typeof listenerHandle.remove === "function") {
-        listenerHandle.remove()
+        listenerHandle.remove();
       } else if (listenerHandle && typeof listenerHandle.then === "function") {
-        listenerHandle.then((h: any) => h.remove && h.remove())
+        listenerHandle.then((h: any) => h.remove && h.remove());
       }
-    }
-  }, [])
+    };
+  }, []);
 
   return (
     <SafeAreaLayout
@@ -180,5 +180,5 @@ export default function HomePage() {
         </div>
       </div>
     </SafeAreaLayout>
-  )
+  );
 }
