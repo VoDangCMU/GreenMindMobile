@@ -40,6 +40,7 @@ const RegisterFormStep3: React.FC<Props> = () => {
         confirm_password: formData.confirmPassword,
         full_name: `${formData.firstName} ${formData.lastName}`.trim(),
         date_of_birth: formData.dateOfBirth,
+        location: formData.location,
       };
 
       console.log("Submitting registration with payload:", payload);

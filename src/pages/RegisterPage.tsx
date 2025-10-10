@@ -41,20 +41,6 @@ export default function RegisterPage() {
 
   const passwordStrength = getPasswordStrength(formData.password);
 
-  const locations = [
-    "United States",
-    "Canada",
-    "United Kingdom",
-    "Australia",
-    "Germany",
-    "France",
-    "Spain",
-    "Italy",
-    "Netherlands",
-    "Sweden",
-    "Other",
-  ];
-
   return (
     <>
       <Toaster position="top-center" richColors closeButton />
@@ -75,7 +61,6 @@ export default function RegisterPage() {
                     onToggleShowPassword={() => setShowPassword(!showPassword)}
                     onToggleShowConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
                     passwordStrength={passwordStrength}
-                    locations={locations}
                   />
                 )}
                 {currentStep === 3 && (
