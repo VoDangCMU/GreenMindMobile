@@ -7,6 +7,8 @@ export interface User {
   email: string;
   fullName: string;
   role: string;
+  gender?: string;
+  location?: string;
 }
 
 export interface AppState {
