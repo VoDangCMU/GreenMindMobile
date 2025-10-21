@@ -18,7 +18,7 @@ export default function InvoiceDetailModal({ invoice, open, onClose }: InvoiceDe
   const [editInvoice, setEditInvoice] = useState<IInvoice | null>(null);
 
   // Khi mở modal mới, reset state edit
-  // eslint-disable-next-line
+   
   if (open && !isEdit && editInvoice !== invoice) setEditInvoice(invoice);
 
   if (!invoice) return null;

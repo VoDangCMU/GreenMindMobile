@@ -8,7 +8,6 @@ import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Target, Plus, CheckCircle2, Calendar, Leaf, Heart, DollarSign, Users } from "lucide-react"
-import {Link} from "react-router-dom"
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
 import AppHeader from "@/components/AppHeader"
 

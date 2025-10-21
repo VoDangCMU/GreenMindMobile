@@ -1,5 +1,5 @@
 import { Toaster } from "sonner";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { useAppStore } from "./store/appStore";
 import { StrictMode } from "react";
@@ -8,7 +8,6 @@ import "./index.css";
 import {
   RouterProvider,
   createHashRouter,
-  useNavigate,
 } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.tsx";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
@@ -64,7 +63,7 @@ function AuthStateInitializer() {
     if (state.user?.fullName) {
       toast.success(`Welcome back, ${state.user.fullName}!`);
     }
-    // eslint-disable-next-line
+     
   }, []);
   return null;
 }
