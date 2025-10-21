@@ -9,7 +9,6 @@ interface Props {}
 
 import { registerUser } from "@/apis/register";
 import { toast } from "sonner";
-import { loginUser } from "@/apis/login";
 import { useAppStore } from "@/store/appStore";
 const RegisterFormStep3: React.FC<Props> = () => {
   const { isLoading, formData, errors, setFormData, setErrors, setCurrentStep, setIsLoading } = useRegisterStore();
@@ -47,7 +46,6 @@ const RegisterFormStep3: React.FC<Props> = () => {
       console.log("Submitting registration with payload:", payload);
 
       const data = await registerUser(payload);
-      const loginData = await loginUser({ email: formData.email, password: formData.password });
 
       setAuth({
         access_token: data.access_token,

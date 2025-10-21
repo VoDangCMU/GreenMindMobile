@@ -1,6 +1,6 @@
 import AppHeader from "@/components/AppHeader";
 import AppHeaderButton from "@/components/AppHeaderButton";
-import { Settings, Search, Loader2, Check } from "lucide-react";
+import { Search, Loader2, Check } from "lucide-react";
 import InvoiceDetailModal from "@/components/InvoiceDetailModal";
 import { useEffect, useState } from "react";
 import HistoryPageFooter from "@/components/HistoryPageFooter";
@@ -17,11 +17,13 @@ export default function InvoiceHistoryPage() {
   const [showModal, setShowModal] = useState(false);
   const appState = useAppStore.getState();
 
+   
   useEffect(() => {
     invoiceApi.getInvoicesByUserId(appState.user?.id!).then((data) => {
       console.log("Fetched invoices:", data);
       useBillStore.getState().setInvoices(data ? data : []);
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

@@ -1,5 +1,5 @@
 import { useRegisterStore } from "@/store/registerStore";
-import { Toaster, toast } from "sonner";
+import { Toaster } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";

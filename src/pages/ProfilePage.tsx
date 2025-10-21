@@ -8,8 +8,6 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  ArrowLeft,
-  Edit3,
   Settings,
   Trophy,
   Target,
@@ -27,7 +25,7 @@ import {
   User,
   MapPin,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/AppHeader";

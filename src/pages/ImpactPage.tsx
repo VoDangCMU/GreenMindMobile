@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
-  ArrowLeft,
   BarChart3,
   Leaf,
   Heart,
@@ -284,7 +283,7 @@ export default function ImpactPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {weeklyData.map((day, index) => (
+              {weeklyData.map((day) => (
                 <div key={day.day} className="flex items-center space-x-3">
                   <span className="text-xs font-medium text-gray-600 w-8">{day.day}</span>
                   <div className="flex-1 flex space-x-1">

@@ -30,6 +30,7 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
         allowEditing: false,
       });
     } catch (err) {
+      console.log("Camera error:", err);
       toast.error("Camera error");
       setOcring(false);
       return;
@@ -39,6 +40,7 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
     try {
       exportedInvoice = await ocrBill(photo);
     } catch (err) {
+      console.log("OCR error:", err);
       toast.error("OCR error");
       setOcring(false);
       return;
@@ -59,6 +61,7 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
 
         return;
       } catch (err) {
+        console.log("Cannot use server, saving locally:", err);
         toast.warning("Cannot use server, saving locally");
         addAIInvoice(exportedInvoice);
         setOcring(false);

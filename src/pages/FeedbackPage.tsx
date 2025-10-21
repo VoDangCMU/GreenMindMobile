@@ -19,7 +19,6 @@ import {
   Info,
   Sparkles,
 } from "lucide-react"
-import {Link} from "react-router-dom"
 import { useLocation } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/AppHeader";
