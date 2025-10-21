@@ -1,23 +1,22 @@
-"use client"
-import type React from "react"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Leaf } from "lucide-react"
+"use client";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Leaf } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "@/apis/login";
 import { useAppStore } from "@/store/appStore";
 import { toast } from "sonner";
 
-
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const setAuth = useAppStore(state => state.setAuth);
-  const access_token = useAppStore(state => state.access_token);
-  const setBypassAuthGate = useAppStore(state => state.setBypassAuthGate);
+  const setAuth = useAppStore((state) => state.setAuth);
+  const access_token = useAppStore((state) => state.access_token);
+  const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
 
   useEffect(() => {
     if (access_token) {
@@ -25,8 +24,13 @@ export default function LoginPage() {
     }
   }, []);
 
-  const handleAutoFillDemo = () => {
-    setEmail("nbk2124.z@gmail.com");
+  const handleAutoFillDemoDaNang = () => {
+    setEmail("khoa.nguyenba@outlook.com");
+    setPassword("Khoa123123");
+  };
+
+  const handleAutoFillDemoHue = () => {
+    setEmail("hue@gmail.com");
     setPassword("Khoa123123");
   };
 
@@ -52,19 +56,27 @@ export default function LoginPage() {
       <div className="w-full max-w-sm mx-auto flex flex-col items-center">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 bg-greenery-500 rounded-full flex items-center justify-center shadow-md mb-3">
-            <Link to='/home' onClick={() => setBypassAuthGate(true)}>
+            <Link to="/home" onClick={() => setBypassAuthGate(true)}>
               <Leaf className="w-8 h-8 text-white" />
             </Link>
           </div>
-          <h1 className="text-3xl font-extrabold text-greenery-700 mb-1 tracking-tight text-center drop-shadow-sm"
-            onClick={handleAutoFillDemo}>
+          <h1
+            className="text-3xl font-extrabold text-greenery-700 mb-1 tracking-tight text-center drop-shadow-sm"
+            onClick={handleAutoFillDemoDaNang}
+          >
             GREEN MIND
           </h1>
-          <p className="text-greenery-600 text-base text-center max-w-xs">
+          <p
+            className="text-greenery-600 text-base text-center max-w-xs"
+            onClick={handleAutoFillDemoHue}
+          >
             Welcome back! Sign in to your account to continue
           </p>
         </div>
-        <form onSubmit={handleSubmit} className="w-full space-y-4 bg-white/90 rounded-2xl shadow-lg px-5 py-6">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full space-y-4 bg-white/90 rounded-2xl shadow-lg px-5 py-6"
+        >
           <div className="space-y-2">
             <Label htmlFor="email" className="text-gray-700 font-medium">
               Email
@@ -101,7 +113,10 @@ export default function LoginPage() {
               />
               <span className="text-gray-600">Remember me</span>
             </label>
-            <a href="#" className="text-greenery-600 hover:text-greenery-700 font-medium">
+            <a
+              href="#"
+              className="text-greenery-600 hover:text-greenery-700 font-medium"
+            >
               Forgot password?
             </a>
           </div>
@@ -115,12 +130,15 @@ export default function LoginPage() {
         <div className="text-center mt-6">
           <p className="text-gray-600 text-sm">
             {"Don't have an account? "}
-            <Link to="/register" className="text-greenery-600 hover:text-greenery-700 font-semibold">
+            <Link
+              to="/register"
+              className="text-greenery-600 hover:text-greenery-700 font-semibold"
+            >
               Sign up
             </Link>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

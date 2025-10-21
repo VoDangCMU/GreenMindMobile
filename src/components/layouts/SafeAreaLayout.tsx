@@ -27,7 +27,7 @@ export default function SafeAreaLayout({ children, header, footer, className = '
       ) : null}
 
       {/* Content — bỏ paddingTop để header và nội dung khít nhau */}
-      <main className="flex-1 w-full overflow-auto">
+      <main className="flex-1 w-full overflow-auto md:pt-10">
         <div>
           {children}
         </div>
