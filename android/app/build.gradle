@@ -4,11 +4,14 @@ android {
     namespace "com.vodang.greenmind"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
+        def vc = project.hasProperty('versionCode') ? project.versionCode.toInteger() : 1
+        def vn = project.hasProperty('versionName') ? project.versionName : "0.0.1"
+        
         applicationId "com.vodang.greenmind"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode vc
+        versionName vn
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
