@@ -57,9 +57,9 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "$KEYSTORE_FILE" | base64 --decode > android/app/release.keystore
+          echo "$GREENMIND_KEYSTORE_FILE" | base64 --decode > android/app/release.keystore
         env:
-          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          GREENMIND_KEYSTORE_FILE: ${{ secrets.GREENMIND_KEYSTORE_FILE }}
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
@@ -69,10 +69,10 @@ jobs:
             cd android
             ./gradlew clean assembleRelease \
               -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
-              -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-              -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-              -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }} \
-              -PapplicationId=${{ vars.APPLICATION_ID }}
+              -Pandroid.injected.signing.store.password=${{ secrets.GREENMIND_KEYSTORE_PASSWORD }} \
+              -Pandroid.injected.signing.key.alias=${{ secrets.GREENMIND_KEY_ALIAS }} \
+              -Pandroid.injected.signing.key.password=${{ secrets.GREENMIND_KEY_PASSWORD }} \
+              -PapplicationId=${{ vars.GREENMIND_APPLICATION_ID }}
 
       - name: Generate new tag
         id: tag
