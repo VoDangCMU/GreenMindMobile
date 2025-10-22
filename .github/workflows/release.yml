@@ -70,10 +70,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
-      - name: Build signed APK
+      - name: Build signed APK & AAB
         run: |
             cd android
-            ./gradlew clean assembleRelease \
+            ./gradlew clean assembleRelease bundleRelease \
               -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
               -Pandroid.injected.signing.store.password=${{ secrets.GREENMIND_KEYSTORE_PASSWORD }} \
               -Pandroid.injected.signing.key.alias=${{ secrets.GREENMIND_KEY_ALIAS }} \
@@ -102,11 +102,13 @@ jobs:
           git tag $new_tag
           git push origin $new_tag
 
-      - name: Upload APK to Release
+      - name: Upload APK & AAB to Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.new_tag }}
           name: "Release ${{ steps.tag.outputs.new_tag }}"
-          files: android/app/build/outputs/apk/release/app-release.apk
+          files: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
