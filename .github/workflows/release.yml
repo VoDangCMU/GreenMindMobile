@@ -65,7 +65,7 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build signed APK
-          run: |
+        run: |
             cd android
             ./gradlew clean assembleRelease \
               -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
