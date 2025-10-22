@@ -27,6 +27,9 @@ jobs:
       - name: Build web assets
         run: bun run build
 
+      - name: Sync Capacitor plugins
+        run: npx cap sync
+
       - name: Copy web build to Android
         run: npx cap copy android
 
