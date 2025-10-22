@@ -83,13 +83,21 @@ jobs:
       - name: Generate new tag
         id: tag
         run: |
+          git fetch --tags
           latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          
           version="${latest_tag#v}"
           major=$(echo $version | cut -d. -f1)
           minor=$(echo $version | cut -d. -f2)
           patch=$(echo $version | cut -d. -f3)
           new_patch=$((patch + 1))
           new_tag="v${major}.${minor}.${new_patch}"
+          
+          while git rev-parse "$new_tag" >/dev/null 2>&1; do
+            new_patch=$((new_patch + 1))
+            new_tag="v${major}.${minor}.${new_patch}"
+          done
+          
           echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
           git tag $new_tag
           git push origin $new_tag
