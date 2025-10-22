@@ -73,23 +73,30 @@ jobs:
       - name: Compute versionCode and versionName
         id: version
         run: |
-          git fetch --tags
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          version="${latest_tag#v}"
-          major=$(echo $version | cut -d. -f1)
-          minor=$(echo $version | cut -d. -f2)
-          patch=$(echo $version | cut -d. -f3)
-          
-          # Tăng patch
+          # Nếu chưa có file version.properties thì tạo mặc định
+          if [ ! -f android/version.properties ]; then
+            echo "versionCode=1" > android/version.properties
+            echo "versionName=0.0.1" >> android/version.properties
+          fi
+
+          # Đọc file
+          source android/version.properties
+
+          # Tăng versionCode
+          new_versionCode=$((versionCode + 1))
+
+          # Tăng patch của versionName
+          IFS='.' read -r major minor patch <<< "$versionName"
           new_patch=$((patch + 1))
-          new_version="${major}.${minor}.${new_patch}"
-          
-          # versionCode = tổng số commit
-          versionCode=$(git rev-list --count HEAD)
-          
-          echo "versionCode=$versionCode" >> $GITHUB_OUTPUT
-          echo "versionName=$new_version" >> $GITHUB_OUTPUT
-          echo "new_patch=$new_patch" >> $GITHUB_OUTPUT
+          new_versionName="${major}.${minor}.${new_patch}"
+
+          # Ghi lại file
+          echo "versionCode=$new_versionCode" > android/version.properties
+          echo "versionName=$new_versionName" >> android/version.properties
+
+          # Xuất ra workflow
+          echo "versionCode=$new_versionCode" >> $GITHUB_OUTPUT
+          echo "versionName=$new_versionName" >> $GITHUB_OUTPUT
 
       - name: Build signed APK & AAB
         run: |
@@ -106,21 +113,18 @@ jobs:
       - name: Generate new tag
         id: tag
         run: |
-          git fetch --tags
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          version="${latest_tag#v}"
-          major=$(echo $version | cut -d. -f1)
-          minor=$(echo $version | cut -d. -f2)
-          patch=$(echo $version | cut -d. -f3)
-          new_patch=$((patch + 1))
-          new_tag="v${major}.${minor}.${new_patch}"
-          while git rev-parse "$new_tag" >/dev/null 2>&1; do
-            new_patch=$((new_patch + 1))
-            new_tag="v${major}.${minor}.${new_patch}"
-          done
-          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add android/version.properties
+          git commit -m "Bump version to ${{ steps.version.outputs.versionName }}" || echo "No changes to commit"
+          git push
+
+          # Push tag
+          new_tag="v${{ steps.version.outputs.versionName }}"
           git tag $new_tag
           git push origin $new_tag
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
 
       - name: Upload APK & AAB to Release
         uses: softprops/action-gh-release@v2
