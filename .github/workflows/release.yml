@@ -65,14 +65,14 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build signed APK
-        working-directory: android
-        run: |
-          ./gradlew clean assembleRelease \
-            -Pandroid.injected.signing.store.file=release.keystore \
-            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }} \
-            -PapplicationId=${{ vars.APPLICATION_ID }}
+          working-directory: android
+          run: |
+            ./gradlew clean assembleRelease \
+              -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
+              -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
+              -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
+              -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }} \
+              -PapplicationId=${{ vars.APPLICATION_ID }}
 
       - name: Generate new tag
         id: tag
