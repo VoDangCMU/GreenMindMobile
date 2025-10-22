@@ -16,42 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Cache Bun
-      - name: Cache Bun
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      # Cache Gradle
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('android/build.gradle', 'android/app/build.gradle') }}
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build web app
-        run: bun run build
-        env:
-          NODE_ENV: production
-          ENV: production
-
-      - name: Copy and sync Capacitor Android
-        run: |
-          bunx @capacitor/cli copy android
-          bunx @capacitor/cli sync android
-        env:
-          NODE_ENV: production
-          ENV: production
-
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
@@ -70,33 +34,41 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
-      - name: Compute versionCode and versionName
+      - name: Compute versionCode and versionName from latest GitHub tag
         id: version
         run: |
+          cd android
+
           # Nếu chưa có file version.properties thì tạo mặc định
-          if [ ! -f android/version.properties ]; then
-            echo "versionCode=1" > android/version.properties
-            echo "versionName=0.0.1" >> android/version.properties
+          if [ ! -f version.properties ]; then
+            echo "versionCode=1" > version.properties
+            echo "versionName=0.0.1" >> version.properties
           fi
 
-          # Đọc file
-          source android/version.properties
+          # Đọc latest tag từ GitHub
+          git fetch --tags
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $latest_tag"
 
-          # Tăng versionCode
-          new_versionCode=$((versionCode + 1))
+          version="${latest_tag#v}"
+          IFS='.' read -r major minor patch <<< "$version"
 
-          # Tăng patch của versionName
-          IFS='.' read -r major minor patch <<< "$versionName"
+          # Tăng patch
           new_patch=$((patch + 1))
           new_versionName="${major}.${minor}.${new_patch}"
 
-          # Ghi lại file
-          echo "versionCode=$new_versionCode" > android/version.properties
-          echo "versionName=$new_versionName" >> android/version.properties
+          # versionCode = patch + tổng số commit (hoặc tăng 1 từ version.properties cũ)
+          old_vc=$(grep versionCode version.properties | cut -d= -f2)
+          new_versionCode=$((old_vc + 1))
+
+          # Ghi lại file version.properties
+          echo "versionCode=$new_versionCode" > version.properties
+          echo "versionName=$new_versionName" >> version.properties
 
           # Xuất ra workflow
           echo "versionCode=$new_versionCode" >> $GITHUB_OUTPUT
           echo "versionName=$new_versionName" >> $GITHUB_OUTPUT
+          echo "new_patch=$new_patch" >> $GITHUB_OUTPUT
 
       - name: Build signed APK & AAB
         run: |
@@ -106,22 +78,28 @@ jobs:
             -Pandroid.injected.signing.store.password=${{ secrets.GREENMIND_KEYSTORE_PASSWORD }} \
             -Pandroid.injected.signing.key.alias=${{ secrets.GREENMIND_KEY_ALIAS }} \
             -Pandroid.injected.signing.key.password=${{ secrets.GREENMIND_KEY_PASSWORD }} \
-            -PapplicationId=${{ vars.GREENMIND_APPLICATION_ID }} \
             -PversionCode=${{ steps.version.outputs.versionCode }} \
             -PversionName=${{ steps.version.outputs.versionName }}
 
-      - name: Generate new tag
-        id: tag
+      - name: Commit and push version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git add android/version.properties
           git commit -m "Bump version to ${{ steps.version.outputs.versionName }}" || echo "No changes to commit"
           git push
 
-          # Push tag
+      - name: Create new tag
+        id: tag
+        run: |
           new_tag="v${{ steps.version.outputs.versionName }}"
+          # đảm bảo tag chưa tồn tại
+          while git rev-parse "$new_tag" >/dev/null 2>&1; do
+            echo "Tag $new_tag exists, tăng patch thêm 1"
+            IFS='.' read -r major minor patch <<< "${new_tag#v}"
+            patch=$((patch + 1))
+            new_tag="v${major}.${minor}.${patch}"
+          done
           git tag $new_tag
           git push origin $new_tag
           echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
