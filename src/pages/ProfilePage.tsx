@@ -28,7 +28,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import AppHeader from "@/components/AppHeader";
+import AppHeader from "@/components/common/AppHeader";
 
 const oceanScores = {
   O: 66.67,

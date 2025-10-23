@@ -1,4 +1,3 @@
-// 🧠 Bản đầy đủ, chỉ thay đổi phần format câu hỏi và render
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, ArrowLeft, ArrowRight, Brain, Inbox, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import AppHeader from "@/components/AppHeader";
+import AppHeader from "@/components/common/AppHeader";
 import { toast } from "sonner";
 import { getQuestionTemplates } from "@/apis/question";
 

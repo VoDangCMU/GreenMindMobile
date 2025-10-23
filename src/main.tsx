@@ -24,7 +24,7 @@ import RecomendationPage from "./pages/RecomendationPage.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
-import AuthGate from "./components/AuthGate.tsx";
+import AuthGate from "./components/app-components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
 
 const router = createHashRouter([

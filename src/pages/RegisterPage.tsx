@@ -3,11 +3,11 @@ import { Toaster } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import AppHeader from "@/components/AppHeader";
-import RegisterFormStep1 from "@/components/RegisterFormStep1";
-import RegisterFormStep2 from "@/components/RegisterFormStep2";
-import RegisterFormStep3 from "@/components/RegisterFormStep3";
-import ProcessIndicator from "@/components/ProcessIndicator";
+import AppHeader from "@/components/common/AppHeader";
+import RegisterFormStep1 from "@/components/app-components/RegisterFormStep1";
+import RegisterFormStep2 from "@/components/app-components/RegisterFormStep2";
+import RegisterFormStep3 from "@/components/app-components/RegisterFormStep3";
+import ProcessIndicator from "@/components/common/ProcessIndicator";
 
 export default function RegisterPage() {
   const {

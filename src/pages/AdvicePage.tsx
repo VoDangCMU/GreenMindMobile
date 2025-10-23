@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Lightbulb, Leaf, Heart, Target, Shield, TrendingUp } from "lucide-react"
 import { Link } from "react-router-dom"
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
-import AppHeader from "@/components/AppHeader"
+import AppHeader from "@/components/common/AppHeader"
 
 export default function AdvicePage() {
   // Mock personality results - in real app, this would come from quiz results

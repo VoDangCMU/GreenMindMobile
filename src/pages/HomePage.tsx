@@ -1,10 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Target, Award, Users, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import AppHeader from "@/components/HomeAppHeader";
+import AppHeader from "@/components/app-components/HomeAppHeader";
 import { useEffect, useRef, useState } from "react";
 import { App as CapacitorApp } from "@capacitor/app";
-import BottomNav from "@/components/BottomNav";
+import BottomNav from "@/components/app-components/HomeBottomNav";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 
 const features = [
