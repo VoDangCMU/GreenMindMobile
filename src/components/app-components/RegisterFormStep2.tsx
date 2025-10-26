@@ -1,14 +1,16 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Calendar, MapPin, Search } from "lucide-react";
+import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Calendar as CalendarIcon, MapPin, Search } from "lucide-react";
 import React from "react";
-import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useRegisterStore } from "@/store/registerStore";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getCountryNames, getCitiesByCountry } from "@/apis/countries";
 import { uuid } from "@/store/invoiceStore";
+import { Capacitor } from "@capacitor/core";
+import { DatePicker } from "@capacitor-community/date-picker";
 
 interface Props {
   showPassword: boolean;
@@ -34,6 +36,16 @@ const RegisterFormStep2: React.FC<Props> = ({
   const [openCity, setOpenCity] = React.useState(false);
   const [searchCountry, setSearchCountry] = React.useState("");
   const [searchCity, setSearchCity] = React.useState("");
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
+  const [openDate, setOpenDate] = React.useState(false);
+
+  React.useEffect(() => {
+    if (formData.dateOfBirth) {
+      setDate(new Date(formData.dateOfBirth));
+    } else {
+      setDate(undefined);
+    }
+  }, [formData.dateOfBirth]);
 
   React.useEffect(() => {
     setCountries(getCountryNames());
@@ -103,12 +115,12 @@ const RegisterFormStep2: React.FC<Props> = ({
 
   return (
     <>
-      <CardHeader className="space-y-4 text-center pb-6">
+      {/* <CardHeader className="space-y-4 text-center pb-6">
         <div>
           <CardTitle className="text-xl text-gray-800">Secure Your Account</CardTitle>
           <CardDescription className="text-gray-600">Set up your password and profile details</CardDescription>
         </div>
-      </CardHeader>
+      </CardHeader> */}
       <div className="space-y-4">
         {/* --- Password --- */}
         <div className="space-y-2">
@@ -123,9 +135,8 @@ const RegisterFormStep2: React.FC<Props> = ({
               placeholder="Create a strong password"
               value={formData.password}
               onChange={e => handleInputChange("password", e.target.value)}
-              className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${
-                errors.password ? "border-red-500" : ""
-              }`}
+              className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${errors.password ? "border-red-500" : ""
+                }`}
               autoComplete="new-password"
             />
             <Button
@@ -142,15 +153,14 @@ const RegisterFormStep2: React.FC<Props> = ({
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-600">Password strength</span>
                 <span
-                  className={`font-medium ${
-                    passwordStrength.strength <= 25
-                      ? "text-red-600"
-                      : passwordStrength.strength <= 50
+                  className={`font-medium ${passwordStrength.strength <= 25
+                    ? "text-red-600"
+                    : passwordStrength.strength <= 50
                       ? "text-yellow-600"
                       : passwordStrength.strength <= 75
-                      ? "text-blue-600"
-                      : "text-green-600"
-                  }`}
+                        ? "text-blue-600"
+                        : "text-green-600"
+                    }`}
                 >
                   {passwordStrength.label}
                 </span>
@@ -183,9 +193,8 @@ const RegisterFormStep2: React.FC<Props> = ({
               placeholder="Confirm your password"
               value={formData.confirmPassword}
               onChange={e => handleInputChange("confirmPassword", e.target.value)}
-              className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${
-                errors.confirmPassword ? "border-red-500" : ""
-              }`}
+              className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${errors.confirmPassword ? "border-red-500" : ""
+                }`}
               autoComplete="new-password"
             />
             <Button
@@ -211,22 +220,82 @@ const RegisterFormStep2: React.FC<Props> = ({
           )}
         </div>
 
-        {/* --- Date of Birth --- */}
+        {/* --- Date of Birth (Hybrid: Native Picker + Web Fallback) --- */}
         <div className="space-y-2">
-          <Label htmlFor="dateOfBirth" className="text-gray-700 font-medium flex items-center space-x-1">
-            <Calendar className="w-4 h-4" />
+          <Label
+            htmlFor="dateOfBirth"
+            className="text-gray-700 font-medium flex items-center space-x-1"
+          >
+            <CalendarIcon className="w-4 h-4" />
             <span>Date of Birth</span>
           </Label>
-          <Input
-            id="dateOfBirth"
-            type="date"
-            value={formData.dateOfBirth}
-            onChange={e => handleInputChange("dateOfBirth", e.target.value)}
-            className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 ${
-              errors.dateOfBirth ? "border-red-500" : ""
-            }`}
-            max={new Date().toISOString().split("T")[0]}
-          />
+
+          <Popover open={openDate} onOpenChange={setOpenDate}>
+            {/* Trigger dùng để định vị popover */}
+            <PopoverTrigger asChild>
+              <div />
+            </PopoverTrigger>
+
+            {/* Nút bấm chọn ngày */}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (Capacitor.isNativePlatform()) {
+                  try {
+                    const result = await DatePicker.present({
+                      mode: "date",
+                      locale: "en_US",
+                      format: "yyyy-MM-dd",
+                      theme: "auto",
+                      date: date ? date.toISOString().split("T")[0] : undefined,
+                      min: "1900-01-01",
+                      max: new Date().toISOString().split("T")[0],
+                    });
+
+                    if (result?.value) {
+                      const selectedDate = new Date(result.value);
+                      setDate(selectedDate);
+                      handleInputChange(
+                        "dateOfBirth",
+                        selectedDate.toISOString().split("T")[0]
+                      );
+                    }
+                  } catch (err) {
+                    console.warn("DatePicker cancelled or failed", err);
+                  }
+                } else {
+                  setOpenDate(true); // fallback mở popover web
+                }
+              }}
+              className={`h-12 w-full justify-start text-left font-normal border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 ${errors.dateOfBirth ? "border-red-500" : ""
+                }`}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? date.toLocaleDateString() : "Pick a date"}
+            </Button>
+
+            {/* Popover Calendar fallback for web */}
+            <PopoverContent className="w-auto p-0 z-[9999]">
+              <Calendar
+                mode="single"
+                captionLayout="dropdown"
+                selected={date}
+                onSelect={(selectedDate) => {
+                  setDate(selectedDate);
+                  if (selectedDate) {
+                    handleInputChange(
+                      "dateOfBirth",
+                      selectedDate.toISOString().split("T")[0]
+                    );
+                  }
+                  setOpenDate(false);
+                }}
+                disabled={(d) => d > new Date() || d < new Date("1900-01-01")}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
           {errors.dateOfBirth && (
             <div className="flex items-center space-x-1 text-red-600">
               <AlertCircle className="w-4 h-4" />
@@ -234,6 +303,7 @@ const RegisterFormStep2: React.FC<Props> = ({
             </div>
           )}
         </div>
+
 
         {/* --- LOCATION (Popover) --- */}
         <div className="space-y-2">
@@ -247,9 +317,8 @@ const RegisterFormStep2: React.FC<Props> = ({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`h-12 w-full justify-between text-left ${
-                  errors.location ? "border-red-500" : ""
-                }`}
+                className={`h-12 w-full justify-between text-left ${errors.location ? "border-red-500" : ""
+                  }`}
               >
                 {selectedCountry || "Select your country"}
               </Button>
@@ -284,9 +353,8 @@ const RegisterFormStep2: React.FC<Props> = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={`h-12 w-full justify-between text-left ${
-                    errors.location ? "border-red-500" : ""
-                  }`}
+                  className={`h-12 w-full justify-between text-left ${errors.location ? "border-red-500" : ""
+                    }`}
                 >
                   {formData.location.includes(",")
                     ? formData.location.split(",")[0]

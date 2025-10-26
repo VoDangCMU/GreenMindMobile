@@ -52,14 +52,14 @@ const RegisterFormStep1: React.FC<Props> = () => {
 
   return (
     <>
-      <CardHeader className="space-y-4 text-center pb-6">
+      {/* <CardHeader className="space-y-4 text-center pb-6">
         <div>
           <CardTitle className="text-xl text-gray-800">Create Your Account</CardTitle>
           <CardDescription className="text-gray-600">
             Let's start with your basic information
           </CardDescription>
         </div>
-      </CardHeader>
+      </CardHeader> */}
 
       <div className="space-y-4">
         {/* First Name */}
