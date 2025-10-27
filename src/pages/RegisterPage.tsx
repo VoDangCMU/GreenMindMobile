@@ -1,5 +1,4 @@
 import { useRegisterStore } from "@/store/registerStore";
-import { Toaster } from "sonner";
 import { Link } from "react-router-dom";
 import RegisterFormStep1 from "@/components/app-components/RegisterFormStep1";
 import RegisterFormStep2 from "@/components/app-components/RegisterFormStep2";
@@ -43,7 +42,6 @@ export default function RegisterPage() {
 
   return (
     <>
-      <Toaster position="top-center" richColors closeButton />
       <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 flex flex-col pl-6 pr-6 pt-20">
         {/* Header top-left */}
         <div className="flex items-center space-x-2 md:absolute md:top-8 md:left-8">

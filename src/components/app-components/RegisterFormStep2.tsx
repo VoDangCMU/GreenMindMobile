@@ -11,6 +11,8 @@ import { getCountryNames, getCitiesByCountry } from "@/apis/countries";
 import { uuid } from "@/store/invoiceStore";
 import { Capacitor } from "@capacitor/core";
 import { DatePicker } from "@capacitor-community/date-picker";
+import { MobileSelectSheet } from "../common/MobileSelectSheet";
+import { DatePickerField } from "../common/DatePicker";
 
 interface Props {
   showPassword: boolean;
@@ -115,12 +117,6 @@ const RegisterFormStep2: React.FC<Props> = ({
 
   return (
     <>
-      {/* <CardHeader className="space-y-4 text-center pb-6">
-        <div>
-          <CardTitle className="text-xl text-gray-800">Secure Your Account</CardTitle>
-          <CardDescription className="text-gray-600">Set up your password and profile details</CardDescription>
-        </div>
-      </CardHeader> */}
       <div className="space-y-4">
         {/* --- Password --- */}
         <div className="space-y-2">
@@ -219,91 +215,13 @@ const RegisterFormStep2: React.FC<Props> = ({
             </div>
           )}
         </div>
-
-        {/* --- Date of Birth (Hybrid: Native Picker + Web Fallback) --- */}
-        <div className="space-y-2">
-          <Label
-            htmlFor="dateOfBirth"
-            className="text-gray-700 font-medium flex items-center space-x-1"
-          >
-            <CalendarIcon className="w-4 h-4" />
-            <span>Date of Birth</span>
-          </Label>
-
-          <Popover open={openDate} onOpenChange={setOpenDate}>
-            {/* Trigger dùng để định vị popover */}
-            <PopoverTrigger asChild>
-              <div />
-            </PopoverTrigger>
-
-            {/* Nút bấm chọn ngày */}
-            <Button
-              variant="outline"
-              onClick={async () => {
-                if (Capacitor.isNativePlatform()) {
-                  try {
-                    const result = await DatePicker.present({
-                      mode: "date",
-                      locale: "en_US",
-                      format: "yyyy-MM-dd",
-                      theme: "auto",
-                      date: date ? date.toISOString().split("T")[0] : undefined,
-                      min: "1900-01-01",
-                      max: new Date().toISOString().split("T")[0],
-                    });
-
-                    if (result?.value) {
-                      const selectedDate = new Date(result.value);
-                      setDate(selectedDate);
-                      handleInputChange(
-                        "dateOfBirth",
-                        selectedDate.toISOString().split("T")[0]
-                      );
-                    }
-                  } catch (err) {
-                    console.warn("DatePicker cancelled or failed", err);
-                  }
-                } else {
-                  setOpenDate(true); // fallback mở popover web
-                }
-              }}
-              className={`h-12 w-full justify-start text-left font-normal border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 ${errors.dateOfBirth ? "border-red-500" : ""
-                }`}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? date.toLocaleDateString() : "Pick a date"}
-            </Button>
-
-            {/* Popover Calendar fallback for web */}
-            <PopoverContent className="w-auto p-0 z-[9999]">
-              <Calendar
-                mode="single"
-                captionLayout="dropdown"
-                selected={date}
-                onSelect={(selectedDate) => {
-                  setDate(selectedDate);
-                  if (selectedDate) {
-                    handleInputChange(
-                      "dateOfBirth",
-                      selectedDate.toISOString().split("T")[0]
-                    );
-                  }
-                  setOpenDate(false);
-                }}
-                disabled={(d) => d > new Date() || d < new Date("1900-01-01")}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-
-          {errors.dateOfBirth && (
-            <div className="flex items-center space-x-1 text-red-600">
-              <AlertCircle className="w-4 h-4" />
-              <span className="text-xs">{errors.dateOfBirth}</span>
-            </div>
-          )}
-        </div>
-
+        {/* --- Date of Birth --- */}
+        <DatePickerField
+          label="Date of Birth"
+          value={formData.dateOfBirth}
+          error={errors.dateOfBirth}
+          onChange={(val) => handleInputChange("dateOfBirth", val)}
+        />
 
         {/* --- LOCATION (Popover) --- */}
         <div className="space-y-2">
@@ -349,41 +267,21 @@ const RegisterFormStep2: React.FC<Props> = ({
 
           {/* --- CITY --- */}
           {cities.length > 0 && (
-            <Popover open={openCity} onOpenChange={setOpenCity}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`h-12 w-full justify-between text-left ${errors.location ? "border-red-500" : ""
-                    }`}
-                >
-                  {formData.location.includes(",")
-                    ? formData.location.split(",")[0]
-                    : "Select your city"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-2">
-                <div className="relative mb-2">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Search city..."
-                    value={searchCity}
-                    onChange={e => setSearchCity(e.target.value)}
-                    className="pl-8 h-8 text-sm"
-                  />
-                </div>
-                <ScrollArea className="h-[200px]">
-                  {filteredCities.map((city) => (
-                    <button
-                      key={uuid()}
-                      onClick={() => handleSelectCity(city)}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                    >
-                      {city}
-                    </button>
-                  ))}
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
+            <MobileSelectSheet
+              open={openCity}
+              onOpenChange={setOpenCity}
+              triggerLabel={
+                formData.location.includes(",")
+                  ? formData.location.split(",")[0]
+                  : ""
+              }
+              placeholder="Select your city"
+              items={filteredCities}
+              searchValue={searchCity}
+              onSearchChange={setSearchCity}
+              onSelect={handleSelectCity}
+            />
+
           )}
 
           {errors.location && (

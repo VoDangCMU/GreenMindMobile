@@ -2,7 +2,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Mars, Venus } from "lucide-react";
 import React from "react";
-import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useRegisterStore, type Gender } from "@/store/registerStore";
 
 interface Props {}
@@ -52,15 +51,6 @@ const RegisterFormStep1: React.FC<Props> = () => {
 
   return (
     <>
-      {/* <CardHeader className="space-y-4 text-center pb-6">
-        <div>
-          <CardTitle className="text-xl text-gray-800">Create Your Account</CardTitle>
-          <CardDescription className="text-gray-600">
-            Let's start with your basic information
-          </CardDescription>
-        </div>
-      </CardHeader> */}
-
       <div className="space-y-4">
         {/* First Name */}
         <div className="space-y-2">
