@@ -1,16 +1,12 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Calendar as CalendarIcon, MapPin, Search } from "lucide-react";
+import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, MapPin, Search } from "lucide-react";
 import React from "react";
 import { useRegisterStore } from "@/store/registerStore";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getCountryNames, getCitiesByCountry } from "@/apis/countries";
-import { uuid } from "@/store/invoiceStore";
-import { Capacitor } from "@capacitor/core";
-import { DatePicker } from "@capacitor-community/date-picker";
 import { MobileSelectSheet } from "../common/MobileSelectSheet";
 import { DatePickerField } from "../common/DatePicker";
 
@@ -39,7 +35,6 @@ const RegisterFormStep2: React.FC<Props> = ({
   const [searchCountry, setSearchCountry] = React.useState("");
   const [searchCity, setSearchCity] = React.useState("");
   const [date, setDate] = React.useState<Date | undefined>(undefined);
-  const [openDate, setOpenDate] = React.useState(false);
 
   React.useEffect(() => {
     if (formData.dateOfBirth) {

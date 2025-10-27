@@ -8,7 +8,7 @@ import { Leaf } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "@/apis/login";
 import { useAppStore } from "@/store/appStore";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const setAuth = useAppStore((state) => state.setAuth);
   const access_token = useAppStore((state) => state.access_token);
   const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
+  const { success, error } = useToast();
 
   useEffect(() => {
     if (access_token) {
@@ -35,10 +36,10 @@ export default function LoginPage() {
         refresh_token: data.refresh_token,
         user: data.user,
       });
-      toast.success("Đăng nhập thành công! " + data.user.fullName);
+      success("Đăng nhập thành công! " + data.user.fullName);
       navigate("/home");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Đăng nhập thất bại!");
+      error(error?.response?.data?.message || "Đăng nhập thất bại!");
     }
   };
 
