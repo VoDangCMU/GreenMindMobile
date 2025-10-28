@@ -19,6 +19,11 @@ export default function LoginPage() {
   const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
   const { success, error } = useToast();
 
+  const handleMockLogin = () => {
+    setEmail("tnqb.bot2@gmail.com");
+    setPassword("1234567");
+  }
+
   useEffect(() => {
     if (access_token) {
       navigate("/home");
@@ -63,7 +68,7 @@ export default function LoginPage() {
 
   {/* Login section */}
   <div className="flex flex-1 flex-col w-full max-w-sm justify-center">
-        <h2 className="text-3xl font-extrabold text-greenery-700 mb-1">
+        <h2 className="text-3xl font-extrabold text-greenery-700 mb-1" onClick={handleMockLogin}>
           Login
         </h2>
         <p className="text-greenery-600 mb-6">
