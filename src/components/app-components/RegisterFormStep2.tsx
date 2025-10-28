@@ -6,7 +6,7 @@ import React from "react";
 import { useRegisterStore } from "@/store/registerStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getCountryNames, getCitiesByCountry } from "@/apis/countries";
-import { DatePickerField } from "../common/DatePicker";
+import { DatePickerField } from "../native-wrapper/DatePicker";
 import {
   Drawer
 } from "vaul";
