@@ -4,15 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, MapPin, Search } from "lucide-react";
 import React from "react";
 import { useRegisterStore } from "@/store/registerStore";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getCountryNames, getCitiesByCountry } from "@/apis/countries";
-import { MobileSelectSheet } from "../common/MobileSelectSheet";
 import { DatePickerField } from "../common/DatePicker";
 import {
   Drawer
 } from "vaul";
-
 
 interface Props {
   showPassword: boolean;
