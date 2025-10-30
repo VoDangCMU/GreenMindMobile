@@ -9,7 +9,7 @@ export interface Profile {
 }
 
 export async function getProfile(token: string): Promise<Profile> {
-  const res = await BackendInstance.get("/profile", {
+  const res = await BackendInstance.get("/auth/profile", {
     headers: {
       Authorization: `Bearer ${token}`,
     },

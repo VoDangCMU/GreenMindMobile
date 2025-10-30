@@ -20,7 +20,7 @@ export interface AppState {
   setAuth: (data: {
     access_token: string;
     refresh_token: string;
-    user: User;
+    user: User | null;
   }) => void;
   clearAuth: () => void;
 }
