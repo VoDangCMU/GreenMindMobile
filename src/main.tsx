@@ -26,6 +26,7 @@ import TrackingPage from "./pages/TrackingPage.tsx";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
 import AuthGate from "./components/app-components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
+import { getProfile } from "./apis/profile.ts";
 
 const router = createHashRouter([
   {
@@ -58,11 +59,34 @@ const router = createHashRouter([
 
 function AuthStateInitializer() {
   useEffect(() => {
-    const state = useAppStore.getState();
+    const initializer = async () => {
+      const state = useAppStore.getState();
 
-    if (state.user?.fullName) {
-      toast.success(`Welcome back, ${state.user.fullName}!`);
+      try {
+        const data = await getProfile(state.access_token || "");
+
+        useAppStore.getState().setAuth({
+          access_token: state.access_token || "",
+          refresh_token: state.refresh_token || "",
+          user: data,
+        });
+      } catch (error) {
+        console.error("Failed to get profile:", error);
+
+        useAppStore.getState().setAuth({
+          access_token: "",
+          refresh_token: "",
+          user: null,
+        });
+      }
+
+      if (state.user) {
+        console.log("Token alive", JSON.stringify(state));
+        toast.success(`Welcome back, ${state.user.fullName}!`);
+      }
     }
+
+    initializer();
   }, []);
   return null;
 }
