@@ -19,17 +19,17 @@ export default function LoginPage() {
   const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
   const { success, error } = useToast();
 
-  const handleMockLogin = () => {
-    setEmail("tnqb.bot2@gmail.com");
-    setPassword("1234567");
-  }
-
   useEffect(() => {
     if (access_token) {
       navigate("/home");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleMockLogin = () => {
+    setEmail("tnqb.bot2@gmail.com");
+    setPassword("1234567");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -26,8 +26,6 @@ import TrackingPage from "./pages/TrackingPage.tsx";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
 import AuthGate from "./components/app-components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
-import { useDeviceStore } from "./store/deviceStore.ts";
-import { Capacitor } from "@capacitor/core";
 
 const router = createHashRouter([
   {
