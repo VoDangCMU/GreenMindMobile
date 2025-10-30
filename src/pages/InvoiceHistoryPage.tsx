@@ -1,14 +1,14 @@
-import AppHeader from "@/components/AppHeader";
-import AppHeaderButton from "@/components/AppHeaderButton";
+import AppHeader from "@/components/common/AppHeader";
+import AppHeaderButton from "@/components/common/AppHeaderButton";
 import { Search, Loader2, Check } from "lucide-react";
-import InvoiceDetailModal from "@/components/InvoiceDetailModal";
+import InvoiceDetailModal from "@/components/app-components/InvoiceDetailModal";
 import { useEffect, useState } from "react";
-import HistoryPageFooter from "@/components/HistoryPageFooter";
+import HistoryPageFooter from "@/components/app-components/HistoryPageFooter";
 import useBillStore from "@/store/invoiceStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import invoiceApi from "@/apis/invoice";
 import { useAppStore } from "@/store/appStore";
-import InvoiceList from "@/components/InvoiceList";
+import InvoiceList from "@/components/app-components/InvoiceList";
 
 export default function InvoiceHistoryPage() {
   const invoices = useBillStore((state) => state.invoices);

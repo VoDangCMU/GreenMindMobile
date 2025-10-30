@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Send, Bot, User, Lightbulb, Leaf, Heart, Target } from "lucide-react"
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import AppHeader from "@/components/AppHeader";
+import AppHeader from "@/components/common/AppHeader";
 
 interface Message {
   id: string

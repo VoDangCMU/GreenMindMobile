@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 import { useLocation } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import AppHeader from "@/components/AppHeader";
+import AppHeader from "@/components/common/AppHeader";
 
 interface FeedbackData {
   recommendationId: string

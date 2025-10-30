@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, CheckCircle } from "lucide-react"
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
-import AppHeader from "@/components/AppHeader"
+import AppHeader from "@/components/common/AppHeader"
 
 interface BehaviorEntry {
   id: string

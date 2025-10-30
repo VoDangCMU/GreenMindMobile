@@ -1,14 +1,15 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, Calendar, MapPin, Search } from "lucide-react";
+import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, MapPin, Search } from "lucide-react";
 import React from "react";
-import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useRegisterStore } from "@/store/registerStore";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getCountryNames, getCitiesByCountry } from "@/apis/countries";
-import { uuid } from "@/store/invoiceStore";
+import { DatePickerField } from "../native-wrapper/DatePicker";
+import {
+  Drawer
+} from "vaul";
 
 interface Props {
   showPassword: boolean;
@@ -34,6 +35,15 @@ const RegisterFormStep2: React.FC<Props> = ({
   const [openCity, setOpenCity] = React.useState(false);
   const [searchCountry, setSearchCountry] = React.useState("");
   const [searchCity, setSearchCity] = React.useState("");
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
+
+  React.useEffect(() => {
+    if (formData.dateOfBirth) {
+      setDate(new Date(formData.dateOfBirth));
+    } else {
+      setDate(undefined);
+    }
+  }, [formData.dateOfBirth]);
 
   React.useEffect(() => {
     setCountries(getCountryNames());
@@ -103,12 +113,6 @@ const RegisterFormStep2: React.FC<Props> = ({
 
   return (
     <>
-      <CardHeader className="space-y-4 text-center pb-6">
-        <div>
-          <CardTitle className="text-xl text-gray-800">Secure Your Account</CardTitle>
-          <CardDescription className="text-gray-600">Set up your password and profile details</CardDescription>
-        </div>
-      </CardHeader>
       <div className="space-y-4">
         {/* --- Password --- */}
         <div className="space-y-2">
@@ -123,9 +127,8 @@ const RegisterFormStep2: React.FC<Props> = ({
               placeholder="Create a strong password"
               value={formData.password}
               onChange={e => handleInputChange("password", e.target.value)}
-              className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${
-                errors.password ? "border-red-500" : ""
-              }`}
+              className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${errors.password ? "border-red-500" : ""
+                }`}
               autoComplete="new-password"
             />
             <Button
@@ -142,15 +145,14 @@ const RegisterFormStep2: React.FC<Props> = ({
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-600">Password strength</span>
                 <span
-                  className={`font-medium ${
-                    passwordStrength.strength <= 25
-                      ? "text-red-600"
-                      : passwordStrength.strength <= 50
+                  className={`font-medium ${passwordStrength.strength <= 25
+                    ? "text-red-600"
+                    : passwordStrength.strength <= 50
                       ? "text-yellow-600"
                       : passwordStrength.strength <= 75
-                      ? "text-blue-600"
-                      : "text-green-600"
-                  }`}
+                        ? "text-blue-600"
+                        : "text-green-600"
+                    }`}
                 >
                   {passwordStrength.label}
                 </span>
@@ -183,9 +185,8 @@ const RegisterFormStep2: React.FC<Props> = ({
               placeholder="Confirm your password"
               value={formData.confirmPassword}
               onChange={e => handleInputChange("confirmPassword", e.target.value)}
-              className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${
-                errors.confirmPassword ? "border-red-500" : ""
-              }`}
+              className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 pr-12 ${errors.confirmPassword ? "border-red-500" : ""
+                }`}
               autoComplete="new-password"
             />
             <Button
@@ -210,121 +211,140 @@ const RegisterFormStep2: React.FC<Props> = ({
             </div>
           )}
         </div>
-
         {/* --- Date of Birth --- */}
-        <div className="space-y-2">
-          <Label htmlFor="dateOfBirth" className="text-gray-700 font-medium flex items-center space-x-1">
-            <Calendar className="w-4 h-4" />
-            <span>Date of Birth</span>
-          </Label>
-          <Input
-            id="dateOfBirth"
-            type="date"
-            value={formData.dateOfBirth}
-            onChange={e => handleInputChange("dateOfBirth", e.target.value)}
-            className={`h-12 border-gray-200 focus:border-greenery-400 focus:ring-greenery-400 ${
-              errors.dateOfBirth ? "border-red-500" : ""
-            }`}
-            max={new Date().toISOString().split("T")[0]}
-          />
-          {errors.dateOfBirth && (
-            <div className="flex items-center space-x-1 text-red-600">
-              <AlertCircle className="w-4 h-4" />
-              <span className="text-xs">{errors.dateOfBirth}</span>
-            </div>
-          )}
-        </div>
+        <DatePickerField
+          label="Date of Birth"
+          value={formData.dateOfBirth}
+          error={errors.dateOfBirth}
+          onChange={(val) => handleInputChange("dateOfBirth", val)}
+        />
 
         {/* --- LOCATION (Popover) --- */}
-        <div className="space-y-2">
-          <Label htmlFor="location" className="text-gray-700 font-medium flex items-center space-x-1">
-            <MapPin className="w-4 h-4" />
-            <span>Location</span>
-          </Label>
+        {/* --- LOCATION (Vaul Drawer) --- */}
+<div className="space-y-2">
+  <Label htmlFor="location" className="text-gray-700 font-medium flex items-center space-x-1">
+    <MapPin className="w-4 h-4" />
+    <span>Location</span>
+  </Label>
 
-          {/* --- COUNTRY --- */}
-          <Popover open={openCountry} onOpenChange={setOpenCountry}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={`h-12 w-full justify-between text-left ${
-                  errors.location ? "border-red-500" : ""
-                }`}
-              >
-                {selectedCountry || "Select your country"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[250px] p-2">
-              <div className="relative mb-2">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search country..."
-                  value={searchCountry}
-                  onChange={e => setSearchCountry(e.target.value)}
-                  className="pl-8 h-8 text-sm"
-                />
-              </div>
-              <ScrollArea className="h-[200px]">
-                {filteredCountries.map((country) => (
-                  <button
-                    key={country}
-                    onClick={() => handleSelectCountry(country)}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                  >
-                    {country}
-                  </button>
-                ))}
-              </ScrollArea>
-            </PopoverContent>
-          </Popover>
+  {/* --- COUNTRY (Vaul Drawer) --- */}
+  <Drawer.Root open={openCountry} onOpenChange={setOpenCountry}>
+    <Drawer.Trigger asChild>
+      <Button
+        variant="outline"
+        className={`h-12 w-full justify-between text-left ${errors.location ? "border-red-500" : ""}`}
+      >
+        {selectedCountry || "Select your country"}
+      </Button>
+    </Drawer.Trigger>
 
-          {/* --- CITY --- */}
-          {cities.length > 0 && (
-            <Popover open={openCity} onOpenChange={setOpenCity}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`h-12 w-full justify-between text-left ${
-                    errors.location ? "border-red-500" : ""
-                  }`}
-                >
-                  {formData.location.includes(",")
-                    ? formData.location.split(",")[0]
-                    : "Select your city"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-2">
-                <div className="relative mb-2">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Search city..."
-                    value={searchCity}
-                    onChange={e => setSearchCity(e.target.value)}
-                    className="pl-8 h-8 text-sm"
-                  />
-                </div>
-                <ScrollArea className="h-[200px]">
-                  {filteredCities.map((city) => (
-                    <button
-                      key={uuid()}
-                      onClick={() => handleSelectCity(city)}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                    >
-                      {city}
-                    </button>
-                  ))}
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
-          )}
-
-          {errors.location && (
-            <div className="flex items-center space-x-1 text-red-600">
-              <AlertCircle className="w-4 h-4" />
-              <span className="text-xs">{errors.location}</span>
-            </div>
-          )}
+    <Drawer.Portal>
+      <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+      <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-lg flex flex-col max-h-[80vh]">
+        <div className="p-4 border-b">
+          <Drawer.Title className="text-base font-semibold text-gray-800">Select Country</Drawer.Title>
+          <Drawer.Description className="text-sm text-gray-500">
+            Choose your country from the list below
+          </Drawer.Description>
         </div>
+
+        <div className="p-4 flex flex-col gap-3 flex-1 overflow-hidden">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search country..."
+              value={searchCountry}
+              onChange={(e) => setSearchCountry(e.target.value)}
+              className="pl-8 h-9 text-sm"
+            />
+          </div>
+          <ScrollArea className="flex-1 h-full">
+            {filteredCountries.map((country) => (
+              <button
+                key={country}
+                onClick={() => handleSelectCountry(country)}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 rounded-md"
+              >
+                {country}
+              </button>
+            ))}
+          </ScrollArea>
+        </div>
+
+        <div className="p-3 border-t flex justify-end">
+          <Drawer.Close asChild>
+            <Button variant="secondary">Close</Button>
+          </Drawer.Close>
+        </div>
+      </Drawer.Content>
+    </Drawer.Portal>
+  </Drawer.Root>
+
+  {/* --- CITY (Vaul Drawer) --- */}
+  {cities.length > 0 && (
+    <Drawer.Root open={openCity} onOpenChange={setOpenCity}>
+      <Drawer.Trigger asChild>
+        <Button
+          variant="outline"
+          className="h-12 w-full justify-between text-left"
+        >
+          {formData.location.includes(",")
+            ? formData.location.split(",")[0]
+            : "Select your city"}
+        </Button>
+      </Drawer.Trigger>
+
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-lg flex flex-col max-h-[80vh]">
+          <div className="p-4 border-b">
+            <Drawer.Title className="text-base font-semibold text-gray-800">Select City</Drawer.Title>
+            <Drawer.Description className="text-sm text-gray-500">
+              Choose your city below
+            </Drawer.Description>
+          </div>
+
+          <div className="p-4 flex flex-col gap-3 flex-1 overflow-hidden">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search city..."
+                value={searchCity}
+                onChange={(e) => setSearchCity(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+            <ScrollArea className="flex-1 h-full">
+              {filteredCities.map((city) => (
+                <button
+                  key={city}
+                  onClick={() => handleSelectCity(city)}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 rounded-md"
+                >
+                  {city}
+                </button>
+              ))}
+            </ScrollArea>
+          </div>
+
+          <div className="p-3 border-t flex justify-end">
+            <Drawer.Close asChild>
+              <Button variant="secondary">Close</Button>
+            </Drawer.Close>
+          </div>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  )}
+
+  {errors.location && (
+    <div className="flex items-center space-x-1 text-red-600">
+      <AlertCircle className="w-4 h-4" />
+      <span className="text-xs">{errors.location}</span>
+    </div>
+  )}
+</div>
+
       </div>
 
       <div className="flex space-x-3 pt-4">

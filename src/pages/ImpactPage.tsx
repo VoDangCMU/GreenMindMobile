@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import {Link} from "react-router-dom"
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
-import AppHeader from "@/components/AppHeader"
+import AppHeader from "@/components/common/AppHeader"
 
 export default function ImpactPage() {
   // Mock data - in real app, this would come from user's tracked behaviors
