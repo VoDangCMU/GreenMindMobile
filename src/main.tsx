@@ -2,6 +2,7 @@ import { Toaster } from "sonner";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useAppStore } from "./store/appStore";
+import { useGeolocationStore } from "./store/geolocationStore";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
@@ -27,6 +28,7 @@ import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
 import AuthGate from "./components/app-components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
 import { getProfile } from "./apis/profile.ts";
+import { getCurrentPosition, isGeolocationAvailable } from "./helpers/geolocationHelper";
 
 const router = createHashRouter([
   {
@@ -91,9 +93,63 @@ function AuthStateInitializer() {
   return null;
 }
 
+function GeolocationTracker() {
+  const { setPosition, setError, setTracking } = useGeolocationStore();
+
+  useEffect(() => {
+    const startTracking = async () => {
+      // Kiểm tra xem geolocation có khả dụng không
+      if (!isGeolocationAvailable()) {
+        console.warn("Geolocation is not available on this device");
+        return;
+      }
+
+      setTracking(true);
+
+      const updatePosition = async () => {
+        try {
+          const position = await getCurrentPosition({
+            enableHighAccuracy: true,
+            timeout: 10000,
+          });
+          setPosition(position);
+          console.log("Position updated:", position);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Unknown geolocation error";
+          setError(errorMessage);
+          console.error("Failed to get position:", errorMessage);
+          toast.error(`Location error: ${errorMessage}`);
+        }
+      };
+
+      // Cập nhật vị trí ngay lập tức
+      await updatePosition();
+
+      // Thiết lập interval để cập nhật mỗi 2 phút (120000ms)
+      const intervalId = setInterval(updatePosition, 120000);
+
+      // Cleanup function
+      return () => {
+        clearInterval(intervalId);
+        setTracking(false);
+      };
+    };
+
+    const cleanup = startTracking();
+
+    // Cleanup khi component unmount
+    return () => {
+      cleanup?.then(cleanupFn => cleanupFn?.());
+    };
+  }, [setPosition, setError, setTracking]);
+
+  return null;
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthStateInitializer />
+    <GeolocationTracker />
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />
   </StrictMode>
