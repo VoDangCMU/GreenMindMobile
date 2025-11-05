@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Target, Award, Users, MessageCircle } from "lucide-react";
+import { Target, Award, Users, MessageCircle, CheckCircle, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppHeader from "@/components/app-components/HomeAppHeader";
 import { useEffect, useRef, useState } from "react";
@@ -48,6 +48,12 @@ const features = [
     icon: <Award className="w-8 h-8 text-greenery-600" />,
     title: "Onboarding",
     desc: "Complete your onboarding steps.",
+  },
+  {
+    to: "/onboarding-quiz",
+    icon: <Target className="w-8 h-8 text-greenery-600" />,
+    title: "Onboarding Survey",
+    desc: "Take our comprehensive onboarding survey to personalize your experience.",
   },
   {
     to: "/advice",
@@ -158,6 +164,29 @@ export default function HomePage() {
             Your journey to a greener, more mindful life starts here.
           </p>
         </div>
+
+        {/* Onboarding Quiz Status */}
+        <Card className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <AlertCircle className="w-6 h-6 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-800 mb-1">
+                Hoàn thành khảo sát onboarding
+              </h3>
+              <p className="text-sm text-blue-600 mb-3">
+                Để GreenMind hiểu rõ hơn về bạn và đưa ra những gợi ý phù hợp nhất.
+              </p>
+              <Link to="/onboarding-quiz">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                  Bắt đầu khảo sát
+                </button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+
         <div className="flex flex-col gap-5">
           {features.map((f) => (
             <Link to={f.to} key={f.title} className="block group">
