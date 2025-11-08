@@ -1,6 +1,6 @@
-import BackendInstance from "./instances/BackendInstance";
+import BackendInstance from "../instances/BackendInstance";
 import { storageKey } from "@/store/appStore";
-import type { IAIInvoice } from "./ocrInvoice";
+import type { IAIInvoice } from "../ai/ocrInvoice";
 export interface IInvoiceItem {
   id: string;
   rawName: string;

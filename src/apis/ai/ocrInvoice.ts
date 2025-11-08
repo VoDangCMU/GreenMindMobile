@@ -1,6 +1,6 @@
 import type { Photo } from "@capacitor/camera";
-import fileUtils from "../helpers/fileUtils";
-import AIApi from "./instances/AIInstance";
+import fileUtils from "../../helpers/fileUtils";
+import AIApi from "../instances/AIInstance";
 
 export interface IAIInvoiceDoc {
   source_id: string;

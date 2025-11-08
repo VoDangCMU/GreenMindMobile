@@ -11,7 +11,7 @@ import {
   createHashRouter,
 } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.tsx";
-import OnboardingPage from "./pages/OnboardingPage.tsx";
+import OnboardingQuizPage from "./pages/OnboardingQuizPage.tsx";
 import HomePage from "./pages/HomePage.tsx";
 import AdvicePage from "./pages/AdvicePage.tsx";
 import ChatPage from "./pages/ChatPage.tsx";
@@ -27,8 +27,9 @@ import TrackingPage from "./pages/TrackingPage.tsx";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
 import AuthGate from "./components/app-components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
-import { getProfile } from "./apis/profile.ts";
+import { getProfile } from "./apis/backend/profile.ts";
 import { getCurrentPosition, isGeolocationAvailable } from "./helpers/geolocationHelper";
+import OnboardingPage from "./pages/OnboardingPage.tsx";
 
 const router = createHashRouter([
   {
@@ -41,6 +42,7 @@ const router = createHashRouter([
         element: <AuthGate />,
         children: [
           { path: "/onboarding", element: <OnboardingPage /> },
+          { path: "/onboarding-quiz", element: <OnboardingQuizPage /> },
           { path: "/home", element: <HomePage /> },
           { path: "/advice", element: <AdvicePage /> },
           { path: "/chat", element: <ChatPage /> },

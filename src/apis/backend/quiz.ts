@@ -1,4 +1,4 @@
-import AIInstance from "./instances/AIInstance";
+import AIInstance from "../instances/AIInstance";
 
 export interface IGenQuizPayload {
   ocean: string;
