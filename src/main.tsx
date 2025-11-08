@@ -24,6 +24,7 @@ import RecomendationPage from "./pages/RecomendationPage.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
+import TodoPage from "./pages/TodoPage.tsx";
 import AuthGate from "./components/app-components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
 import { getProfile } from "./apis/backend/profile.ts";
@@ -54,6 +55,7 @@ const router = createHashRouter([
           { path: "/recommendations", element: <RecomendationPage /> },
           { path: "/tracking", element: <TrackingPage /> },
           { path: "/invoice-history", element: <InvoiceHistoryPage /> },
+          { path: "/todo", element: <TodoPage /> },
         ],
       },
     ],

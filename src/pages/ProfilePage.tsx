@@ -31,6 +31,8 @@ import { usePreAppSurveyData } from "@/hooks/usePreAppSurveyData";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
+import CurrentLocationCard from "@/components/app-components/CurrentLocationCard";
+import LocationHistoryCard from "@/components/app-components/LocationHistoryCard";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -313,6 +315,12 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Current Location Card */}
+        <CurrentLocationCard />
+
+        {/* Location History Card */}
+        <LocationHistoryCard />
 
         {/* Level Progress */}
         <Card className="border-0 shadow-md">

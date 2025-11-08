@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Target, Award, Users, MessageCircle, CheckCircle, AlertCircle } from "lucide-react";
+import { Target, Award, Users, MessageCircle, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppHeader from "@/components/app-components/HomeAppHeader";
 import { useEffect, useRef, useState } from "react";
@@ -108,6 +108,12 @@ const features = [
     icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
     title: "Tracking",
     desc: "Track your progress.",
+  },
+  {
+    to: "/todo",
+    icon: <CheckCircle2 className="w-8 h-8 text-greenery-600" />,
+    title: "Todo",
+    desc: "Manage your tasks and subtasks.",
   },
 ];
 

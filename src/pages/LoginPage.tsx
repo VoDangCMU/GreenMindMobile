@@ -17,7 +17,7 @@ export default function LoginPage() {
   const setAuth = useAppStore((state) => state.setAuth);
   const access_token = useAppStore((state) => state.access_token);
   const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
-  const { success, error } = useToast();
+  const { success } = useToast();
 
   useEffect(() => {
     if (access_token) {
