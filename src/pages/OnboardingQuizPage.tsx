@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -7,8 +7,9 @@ import { CheckCircle, ArrowLeft, ArrowRight, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import { submitOnboardingAnswers } from "@/apis/onboarding";
+import { submitOnboardingAnswers } from "@/apis/backend/onboarding";
 import { useAppStore } from "@/store/appStore";
+import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { toast } from "sonner";
 
 interface OnboardingQuestion {
@@ -105,6 +106,16 @@ export default function OnboardingQuizPage() {
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showResults, setShowResults] = useState(false);
+  
+  const { setAnswers: saveToStore, markCompleted, getSurveyData } = usePreAppSurveyStore();
+
+  // Load existing answers from localStorage on component mount
+  useEffect(() => {
+    const existingData = getSurveyData();
+    if (existingData) {
+      setAnswers({...existingData});
+    }
+  }, [getSurveyData]);
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
@@ -127,17 +138,25 @@ export default function OnboardingQuizPage() {
   };
 
   const handleSelect = (value: string) => {
-    setAnswers((prev) => ({
-      ...prev,
+    const newAnswers = {
+      ...answers,
       [ONBOARDING_QUESTIONS[current].id]: value,
-    }));
+    };
+    setAnswers(newAnswers);
+    
+    // Auto-save to localStorage on every change
+    saveToStore(newAnswers as any);
   };
 
   const handleInputChange = (value: string) => {
-    setAnswers((prev) => ({
-      ...prev,
+    const newAnswers = {
+      ...answers,
       [ONBOARDING_QUESTIONS[current].id]: value,
-    }));
+    };
+    setAnswers(newAnswers);
+    
+    // Auto-save to localStorage on every change
+    saveToStore(newAnswers as any);
   };
 
   const handleNext = () => {
@@ -160,6 +179,9 @@ export default function OnboardingQuizPage() {
 
   const handleSubmit = async () => {
     try {
+      // Lưu vào localStorage trước
+      saveToStore(answers as any);
+      
       const token = useAppStore.getState().access_token;
       if (!token) {
         toast.error("Bạn cần đăng nhập để tiếp tục");
@@ -168,6 +190,9 @@ export default function OnboardingQuizPage() {
 
       await submitOnboardingAnswers(answers as any, token);
 
+      // Mark completed sau khi submit thành công
+      markCompleted();
+      
       toast.success("Cảm ơn bạn đã hoàn thành khảo sát! 🎉");
       setShowResults(true);
     } catch (error) {

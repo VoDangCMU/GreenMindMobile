@@ -1,4 +1,4 @@
-import BackendInstance from "./instances/BackendInstance";
+import BackendInstance from "../instances/BackendInstance";
 import { storageKey } from "@/store/appStore";
 
 // 🎭 Một template cụ thể

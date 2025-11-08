@@ -27,16 +27,10 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
+import { usePreAppSurveyData } from "@/hooks/usePreAppSurveyData";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-
-const oceanScores = {
-  O: 66.67,
-  C: 100.0,
-  E: 75.0,
-  A: 75.0,
-  N: 100.0,
-};
+import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -44,6 +38,11 @@ export default function ProfilePage() {
   const user = useAppStore((state) => state.user);
   const [isEditing, setIsEditing] = useState(false);
   const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
+  
+  // Get Pre-App Survey data
+  const { answers, isCompleted, completedAt } = usePreAppSurveyData();
+
+  console.log("Pre-App Survey Data:", { answers, isCompleted, completedAt });
 
   const [userInfo, setUserInfo] = useState({
     name: user?.fullName || user?.username || "",
@@ -269,7 +268,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-5 gap-2 items-end h-40">
-              {Object.entries(oceanScores).map(([trait, value]) => (
+              {Object.entries(MOCKED_OCEAN_SCORE).map(([trait, value]) => (
                 <div
                   key={trait}
                   className="flex flex-col items-center space-y-1"
@@ -287,6 +286,33 @@ export default function ProfilePage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Pre-App Survey Card */}
+        {answers && (
+          <Card className="border-0 shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center space-x-2">
+                <MapPin className="w-4 h-4 text-blue-600" />
+                <span>Pre-App Survey</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {Object.entries(answers).map(([key, value]) => (
+                  <div key={key} className="flex flex-col text-sm">
+                    <span className="font-medium text-gray-700 capitalize">{key.replace(/_/g, ' ')}</span>
+                    <span className="text-blue-700 font-semibold">{value}</span>
+                  </div>
+                ))}
+              </div>
+              {isCompleted && completedAt && (
+                <div className="mt-3 text-xs text-gray-500">
+                  Đã hoàn thành: {new Date(completedAt).toLocaleString()}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Level Progress */}
         <Card className="border-0 shadow-md">

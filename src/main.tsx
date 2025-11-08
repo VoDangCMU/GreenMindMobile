@@ -27,7 +27,7 @@ import TrackingPage from "./pages/TrackingPage.tsx";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
 import AuthGate from "./components/app-components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
-import { getProfile } from "./apis/profile.ts";
+import { getProfile } from "./apis/backend/profile.ts";
 import { getCurrentPosition, isGeolocationAvailable } from "./helpers/geolocationHelper";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
 

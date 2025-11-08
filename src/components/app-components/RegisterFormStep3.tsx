@@ -7,7 +7,7 @@ import { useRegisterStore } from "@/store/registerStore";
 
 interface Props {}
 
-import { registerUser } from "@/apis/register";
+import { registerUser } from "@/apis/backend/register";
 import { toast } from "sonner";
 import { useAppStore } from "@/store/appStore";
 const RegisterFormStep3: React.FC<Props> = () => {

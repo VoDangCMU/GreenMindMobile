@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import HistoryPageFooter from "@/components/app-components/HistoryPageFooter";
 import useBillStore from "@/store/invoiceStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import invoiceApi from "@/apis/invoice";
+import invoiceApi from "@/apis/backend/invoice";
 import { useAppStore } from "@/store/appStore";
 import InvoiceList from "@/components/app-components/InvoiceList";
 

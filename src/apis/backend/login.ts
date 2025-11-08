@@ -1,5 +1,5 @@
 
-import BackendInstance from "./instances/BackendInstance";
+import BackendInstance from "../instances/BackendInstance";
 
 export interface ILoginUser {
   id: string;

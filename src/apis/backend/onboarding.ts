@@ -1,4 +1,4 @@
-import BackendInstance from "./instances/BackendInstance";
+import BackendInstance from "../instances/BackendInstance";
 
 export interface OnboardingAnswers {
   daily_spending: string;

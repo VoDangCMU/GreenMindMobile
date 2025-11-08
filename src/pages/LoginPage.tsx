@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Leaf } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "@/apis/login";
+import { loginUser } from "@/apis/backend/login";
 import { useAppStore } from "@/store/appStore";
 import { useToast } from "@/hooks/useToast";
 

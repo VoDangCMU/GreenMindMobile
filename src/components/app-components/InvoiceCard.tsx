@@ -1,5 +1,5 @@
 
-import type { IInvoice } from "@/apis/invoice";
+import type { IInvoice } from "@/apis/backend/invoice";
 import React from "react";
 
 interface InvoiceCardProps {

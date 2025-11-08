@@ -2,8 +2,8 @@ import React from "react";
 import { ScanLine } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import useInvoiceStore from "@/store/invoiceStore";
-import ocrBill from "@/apis/ocrInvoice";
-import invoiceApi from "@/apis/invoice";
+import ocrBill from "@/apis/ai/ocrInvoice";
+import invoiceApi from "@/apis/backend/invoice";
 import { toast } from "sonner";
 
 interface HistoryPageFooterProps {

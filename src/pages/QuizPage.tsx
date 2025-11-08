@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { toast } from "sonner";
-import { getQuestionTemplates } from "@/apis/question";
+import { getQuestionTemplates } from "@/apis/backend/question";
 
 interface QuestionOption {
   text: string;
