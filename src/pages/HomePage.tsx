@@ -9,6 +9,24 @@ import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 
 const features = [
   {
+    to: "/plant-scan-history",
+    icon: (
+      <svg
+        className="w-8 h-8 text-greenery-600"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <rect x="4" y="4" width="16" height="16" rx="4" />
+        <path d="M8 12c1.5-2 6.5-2 8 0" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+    title: "Scan Rau Củ",
+    desc: "Phân tích tỉ lệ rau củ trong món ăn từ ảnh.",
+  },
+  {
     to: "/invoice-history",
     icon: (
       <svg

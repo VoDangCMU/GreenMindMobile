@@ -26,11 +26,13 @@ import RegisterPage from "./pages/RegisterPage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
 import TodoPage from "./pages/TodoPage.tsx";
+
 import AuthGate from "./components/app-components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
 import { getProfile } from "./apis/backend/profile.ts";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
 import GeolocationTracker from "./components/background-worker/GeolocationTracker.tsx";
+import PlantScanHistoryPage from "./pages/PlantScanPage.tsx";
 
 const router = createHashRouter([
   {
@@ -57,6 +59,7 @@ const router = createHashRouter([
           { path: "/tracking", element: <TrackingPage /> },
           { path: "/invoice-history", element: <InvoiceHistoryPage /> },
           { path: "/todo", element: <TodoPage /> },
+          { path: "/plant-scan-history", element: <PlantScanHistoryPage /> },
         ],
       },
     ],
