@@ -32,6 +32,12 @@ const features = [
     desc: "Discover your unique personality traits and get personalized insights.",
   },
   {
+    to: "/todo",
+    icon: <CheckCircle2 className="w-8 h-8 text-greenery-600" />,
+    title: "Todo",
+    desc: "Manage your tasks and subtasks.",
+  },
+  {
     to: "/register",
     icon: <Users className="w-8 h-8 text-greenery-600" />,
     title: "Register",
@@ -108,12 +114,6 @@ const features = [
     icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
     title: "Tracking",
     desc: "Track your progress.",
-  },
-  {
-    to: "/todo",
-    icon: <CheckCircle2 className="w-8 h-8 text-greenery-600" />,
-    title: "Todo",
-    desc: "Manage your tasks and subtasks.",
   },
 ];
 

@@ -6,6 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
+import { useTodoStore } from "@/store/todoStore";
+import { useToast } from "@/hooks/useToast";
+import generate_subtasks from "@/apis/ai/todos/todo_generator";
 import {
   ChevronDown,
   ChevronRight,
@@ -13,14 +16,17 @@ import {
   Plus,
   CheckCircle2,
   Circle,
+  Wand2,
+  Loader2,
 } from "lucide-react";
 
 interface TodoItem {
   id: string;
-  text: string;
+  title: string;
+  description?: string;
   completed: boolean;
   children: TodoItem[];
-  expanded: boolean;
+  expanded?: boolean;
 }
 
 // Recursive Todo Item Component
@@ -31,10 +37,13 @@ interface TodoItemProps {
   onToggleExpand: (id: string) => void;
   onDelete: (id: string) => void;
   onAddChild: (parentId: string, text: string) => void;
+  onGenerateSubtasks: (parentId: string, todoTitle: string) => void;
   editingParentId: string | null;
   newChildText: string;
   setNewChildText: (text: string) => void;
   setEditingParentId: (id: string | null) => void;
+  expandedIds: Set<string>;
+  generatingIds?: Set<string>;
 }
 
 function TodoItemComponent({
@@ -48,6 +57,9 @@ function TodoItemComponent({
   newChildText,
   setNewChildText,
   setEditingParentId,
+  expandedIds,
+  onGenerateSubtasks,
+  generatingIds,
 }: TodoItemProps) {
   const paddingLeft = level * 16;
 
@@ -97,7 +109,7 @@ function TodoItemComponent({
                     : "text-gray-800"
                 }`}
               >
-                {item.text}
+                {item.title}
               </p>
               {totalChildren > 0 && (
                 <p className="text-xs text-gray-500 mt-1">
@@ -106,13 +118,13 @@ function TodoItemComponent({
               )}
             </div>
 
-            {/* Expand/Collapse Button */}
+              {/* Expand/Collapse Button */}
             {item.children.length > 0 && (
               <button
                 onClick={() => onToggleExpand(item.id)}
                 className="flex-shrink-0 text-gray-400 hover:text-gray-600"
               >
-                {item.expanded ? (
+                {expandedIds.has(item.id) ? (
                   <ChevronDown className="w-4 h-4" />
                 ) : (
                   <ChevronRight className="w-4 h-4" />
@@ -132,6 +144,20 @@ function TodoItemComponent({
               <Plus className="w-4 h-4" />
             </button>
 
+            {/* AI Generate Button */}
+            <button
+              onClick={() => onGenerateSubtasks(item.id, item.title)}
+              className={`flex-shrink-0 ${generatingIds?.has(item.id) ? 'text-purple-600' : 'text-purple-400 hover:text-purple-600'}`}
+              title="Generate AI subtasks"
+              disabled={generatingIds?.has(item.id)}
+            >
+              {generatingIds?.has(item.id) ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Wand2 className="w-4 h-4" />
+              )}
+            </button>
+
             {/* Delete Button */}
             <button
               onClick={() => onDelete(item.id)}
@@ -144,7 +170,7 @@ function TodoItemComponent({
       </Card>
 
       {/* Children - Expanded */}
-      {item.expanded && item.children.length > 0 && (
+      {expandedIds.has(item.id) && item.children.length > 0 && (
         <div className="space-y-2">
           {item.children.map((child) => (
             <TodoItemComponent
@@ -155,10 +181,13 @@ function TodoItemComponent({
               onToggleExpand={onToggleExpand}
               onDelete={onDelete}
               onAddChild={onAddChild}
+              onGenerateSubtasks={onGenerateSubtasks}
               editingParentId={editingParentId}
               newChildText={newChildText}
               setNewChildText={setNewChildText}
               setEditingParentId={setEditingParentId}
+              expandedIds={expandedIds}
+              generatingIds={generatingIds}
             />
           ))}
         </div>
@@ -205,45 +234,8 @@ function TodoItemComponent({
 }
 
 export default function TodoPage() {
-  const [todos, setTodos] = useState<TodoItem[]>([
-    {
-      id: "1",
-      text: "Setup Development Environment",
-      completed: false,
-      expanded: true,
-      children: [
-        {
-          id: "1-1",
-          text: "Install Node.js",
-          completed: true,
-          expanded: false,
-          children: [],
-        },
-        {
-          id: "1-2",
-          text: "Clone repository",
-          completed: true,
-          expanded: true,
-          children: [
-            {
-              id: "1-2-1",
-              text: "Navigate to project folder",
-              completed: true,
-              expanded: false,
-              children: [],
-            },
-          ],
-        },
-        {
-          id: "1-3",
-          text: "Install dependencies",
-          completed: false,
-          expanded: false,
-          children: [],
-        },
-      ],
-    },
-  ]);
+  const { todos, addTodo, addSubtask, toggleComplete, removeTodo } = useTodoStore();
+  const toast = useToast();
 
   const [newTodoText, setNewTodoText] = useState("");
   const [editingParentId, setEditingParentId] = useState<string | null>(null);
@@ -263,68 +255,39 @@ export default function TodoPage() {
   // Add main todo
   const addMainTodo = () => {
     if (newTodoText.trim()) {
-      const newTodo: TodoItem = {
+      addTodo({
         id: Date.now().toString(),
-        text: newTodoText,
+        title: newTodoText,
         completed: false,
         children: [],
-        expanded: false,
-      };
-      setTodos([...todos, newTodo]);
+      });
       setNewTodoText("");
     }
   };
 
   // Toggle todo completion
   const toggleTodo = (id: string) => {
-    const toggleInTree = (items: TodoItem[]): TodoItem[] => {
-      return items.map((item) => {
-        if (item.id === id) {
-          return {
-            ...item,
-            completed: !item.completed,
-            children: item.children.map((child) => ({
-              ...child,
-              completed: !item.completed,
-            })),
-          };
-        }
-        return {
-          ...item,
-          children: toggleInTree(item.children),
-        };
-      });
-    };
-    setTodos(toggleInTree(todos));
+    toggleComplete(id);
   };
 
   // Toggle expand/collapse
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  
   const toggleExpand = (id: string) => {
-    const toggleInTree = (items: TodoItem[]): TodoItem[] => {
-      return items.map((item) => {
-        if (item.id === id) {
-          return { ...item, expanded: !item.expanded };
-        }
-        return {
-          ...item,
-          children: toggleInTree(item.children),
-        };
-      });
-    };
-    setTodos(toggleInTree(todos));
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   // Delete todo
   const deleteTodo = (id: string) => {
-    const deleteInTree = (items: TodoItem[]): TodoItem[] => {
-      return items
-        .filter((item) => item.id !== id)
-        .map((item) => ({
-          ...item,
-          children: deleteInTree(item.children),
-        }));
-    };
-    setTodos(deleteInTree(todos));
+    removeTodo(id);
     if (editingParentId === id) setEditingParentId(null);
   };
 
@@ -332,30 +295,47 @@ export default function TodoPage() {
   const addChildTodo = (parentId: string, text: string) => {
     if (!text.trim()) return;
 
-    const addInTree = (items: TodoItem[]): TodoItem[] => {
-      return items.map((item) => {
-        if (item.id === parentId) {
-          return {
-            ...item,
-            children: [
-              ...item.children,
-              {
-                id: `${parentId}-${Date.now()}`,
-                text,
-                completed: false,
-                children: [],
-                expanded: false,
-              },
-            ],
-          };
-        }
-        return {
-          ...item,
-          children: addInTree(item.children),
-        };
-      });
+    const newTodo = {
+      id: `${parentId}-${Date.now()}`,
+      title: text,
+      completed: false,
+      children: [],
     };
-    setTodos(addInTree(todos));
+
+    addSubtask(parentId, newTodo);
+  };
+
+  // Track generating states
+  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+
+  // Generate AI subtasks
+  const handleGenerateSubtasks = async (parentId: string, todoTitle: string) => {
+    setGeneratingIds(prev => new Set(prev).add(parentId));
+    try {
+      const response = await generate_subtasks({ task: todoTitle });
+      
+      response.subtasks.forEach((task: string) => {
+        const newTodo = {
+          id: `${parentId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          title: task.replace('*   ', ''),  // Remove the bullet point
+          completed: false,
+          children: [],
+        };
+        
+        addSubtask(parentId, newTodo);
+      });
+
+      toast.success("Generated subtasks successfully!");
+    } catch (error) {
+      console.error("Failed to generate subtasks:", error);
+      toast.error("Failed to generate subtasks");
+    } finally {
+      setGeneratingIds(prev => {
+        const next = new Set(prev);
+        next.delete(parentId);
+        return next;
+      });
+    }
   };
 
   const totalTodos = countAllTodos(todos);
@@ -409,10 +389,13 @@ export default function TodoPage() {
               onToggleExpand={toggleExpand}
               onDelete={deleteTodo}
               onAddChild={addChildTodo}
+              onGenerateSubtasks={handleGenerateSubtasks}
               editingParentId={editingParentId}
               newChildText={newChildText}
               setNewChildText={setNewChildText}
               setEditingParentId={setEditingParentId}
+              expandedIds={expandedIds}
+              generatingIds={generatingIds}
             />
           ))}
         </div>
