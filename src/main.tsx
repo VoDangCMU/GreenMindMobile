@@ -5,6 +5,7 @@ import { useAppStore } from "./store/appStore";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import "leaflet/dist/leaflet.css";
 import {
   RouterProvider,
   createHashRouter,

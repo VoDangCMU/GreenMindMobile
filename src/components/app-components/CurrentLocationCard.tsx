@@ -1,10 +1,39 @@
+import { useEffect, useRef } from "react";
 import { useGeolocationStore } from "@/store/geolocationStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Navigation, Compass, Gauge } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+const markerIcon = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+function RecenterMap({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([lat, lng], 16);
+  }, [lat, lng, map]);
+  return null;
+}
+
+function SetMapRef({ setRef }: { setRef: (map: L.Map) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    setRef(map);
+  }, [map, setRef]);
+  return null;
+}
 
 export default function CurrentLocationCard() {
   const { currentPosition, isTracking, lastUpdate, error } = useGeolocationStore();
+  const mapRef = useRef<L.Map | null>(null);
 
   const formatCoordinate = (coord: number) => coord.toFixed(6);
   const formatAccuracy = (accuracy?: number) => accuracy ? `${Math.round(accuracy)}m` : "N/A";
@@ -30,7 +59,7 @@ export default function CurrentLocationCard() {
   }
 
   return (
-    <Card className="border-0 shadow-md">
+    <Card className="border-0 shadow-md overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center space-x-2">
@@ -42,6 +71,7 @@ export default function CurrentLocationCard() {
           </Badge>
         </div>
       </CardHeader>
+
       <CardContent className="space-y-4">
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -51,7 +81,7 @@ export default function CurrentLocationCard() {
 
         {currentPosition && (
           <>
-            {/* Coordinates Section */}
+            {/* Coordinates */}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col">
                 <span className="text-xs font-medium text-gray-600">Latitude</span>
@@ -67,7 +97,7 @@ export default function CurrentLocationCard() {
               </div>
             </div>
 
-            {/* Accuracy & Speed Section */}
+            {/* Accuracy & Speed */}
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
               <div className="flex items-center space-x-2">
                 <Compass className="w-4 h-4 text-orange-500" />
@@ -85,7 +115,7 @@ export default function CurrentLocationCard() {
               </div>
             </div>
 
-            {/* Altitude Section */}
+            {/* Altitude */}
             {currentPosition.altitude !== null && (
               <div className="pt-2 border-t border-gray-200">
                 <div className="flex items-center space-x-2">
@@ -98,7 +128,7 @@ export default function CurrentLocationCard() {
               </div>
             )}
 
-            {/* Timestamp Section */}
+            {/* Timestamp */}
             {lastUpdate && (
               <div className="pt-2 border-t border-gray-200">
                 <p className="text-xs text-gray-500">
@@ -106,6 +136,34 @@ export default function CurrentLocationCard() {
                 </p>
               </div>
             )}
+
+            {/* Map Section */}
+            <div className="h-60 rounded-lg overflow-hidden border border-gray-200 mt-3">
+              <MapContainer
+                center={[currentPosition.latitude, currentPosition.longitude]}
+                zoom={16}
+                scrollWheelZoom={false}
+                className="h-full w-full z-0 [&_.leaflet-control-zoom]:hidden"
+                zoomControl={false}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+                />
+                <Marker
+                  position={[currentPosition.latitude, currentPosition.longitude]}
+                  icon={markerIcon}
+                >
+                  <Popup>Bạn đang ở đây</Popup>
+                </Marker>
+                <RecenterMap
+                  lat={currentPosition.latitude}
+                  lng={currentPosition.longitude}
+                />
+                <SetMapRef setRef={(map) => (mapRef.current = map)} />
+              </MapContainer>
+
+            </div>
           </>
         )}
       </CardContent>
