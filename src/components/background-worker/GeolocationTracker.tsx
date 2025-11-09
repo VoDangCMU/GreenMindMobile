@@ -7,49 +7,55 @@ function GeolocationTracker() {
   const { currentPosition, setPosition, setError, setTracking } = useGeolocationStore();
 
   useEffect(() => {
-    const startTracking = async () => {
-      if (!isGeolocationAvailable()) {
-        console.warn("Geolocation is not available");
-        return;
-      }
+    if (!isGeolocationAvailable()) {
+      console.warn("Geolocation is not available");
+      setError("Thiết bị không hỗ trợ định vị.");
+      return;
+    }
 
-      setTracking(true);
+    setTracking(true);
+    let isMounted = true;
+    let intervalId: NodeJS.Timeout | null = null;
 
-      const updatePosition = async () => {
-        try {
-          const newPos = await getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+    const updatePosition = async () => {
+      try {
+        const newPos = await getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 10000,
+        });
 
-          if (currentPosition) {
-            const distance = calculateDistance(
-              currentPosition.latitude,
-              currentPosition.longitude,
-              newPos.latitude,
-              newPos.longitude
-            );
-            console.log(`Moved ${distance.toFixed(2)} km since last update`);
-          }
+        if (!isMounted) return;
 
-          setPosition(newPos);
-        } catch (error) {
-          const msg = error instanceof Error ? error.message : "Unknown location error";
-          setError(msg);
-          console.error("Failed to get position:", msg);
-          toast.error(`Location error: ${msg}`);
+        if (currentPosition) {
+          const distance = calculateDistance(
+            currentPosition.latitude,
+            currentPosition.longitude,
+            newPos.latitude,
+            newPos.longitude
+          );
+          console.log(`📍 Moved ${distance.toFixed(2)} km since last update`);
         }
-      };
 
-      await updatePosition(); // Cập nhật ngay
-      const intervalId = setInterval(updatePosition, 120000); // 2 phút
-
-      return () => {
-        clearInterval(intervalId);
-        setTracking(false);
-      };
+        setPosition(newPos);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : "Unknown location error";
+        setError(msg);
+        console.error("❌ Failed to get position:", msg);
+        toast.error(`Location error: ${msg}`);
+      }
     };
 
-    const cleanup = startTracking();
+    // chạy ngay lần đầu
+    updatePosition();
+
+    // cập nhật liên tục mỗi 10 giây
+    intervalId = setInterval(updatePosition, 10000);
+
+    // cleanup
     return () => {
-      cleanup?.then(fn => fn?.());
+      isMounted = false;
+      if (intervalId) clearInterval(intervalId);
+      setTracking(false);
     };
   }, [currentPosition, setPosition, setError, setTracking]);
 
