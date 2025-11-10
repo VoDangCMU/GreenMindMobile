@@ -35,33 +35,55 @@ export default function QuizPage() {
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
-  const fetchQuestions = React.useCallback(async () => {
+  const fetchQuestions = async () => {
     setLoading(true);
-    setQuestions([]);
-    setShowResults(false);
-    setAnswers({});
-    setCurrent(0);
     try {
       const res = await getQuestionTemplates();
-
-      console.log("Fetched question templates:", res);
-
       const raw = res ?? {};
-
-      setQuestions(raw);
-
-      console.log(questions);
+      // Flatten nested question object to array
+      let flatQuestions: Question[] = [];
+      if (Array.isArray(raw)) {
+        flatQuestions = raw;
+      } else if (typeof raw === 'object' && raw !== null) {
+        // OceanTemplateData structure: { R: { rating: [..], ... }, ... }
+        Object.values(raw).forEach((group: any) => {
+          if (group && typeof group === 'object') {
+            Object.values(group).forEach((arr: any) => {
+              if (Array.isArray(arr)) {
+                arr.forEach((q: any) => {
+                  // Map to Question type
+                  flatQuestions.push({
+                    id: q.template_id || q.id || '',
+                    question: q.sentence || q.question || '',
+                    behaviorNormalized: q.slot || '',
+                    options: (q.value_slot || q.options || []).map((v: any, idx: number) => ({
+                      text: v,
+                      value: v,
+                      order: idx,
+                    })),
+                  });
+                });
+              }
+            });
+          }
+        });
+      }
+      setQuestions(flatQuestions);
     } catch (err) {
       console.error(err);
       toast.error("Không thể tải câu hỏi. Vui lòng thử lại sau 😭");
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
+    setQuestions([]);
+    setShowResults(false);
+    setAnswers({});
+    setCurrent(0);
     fetchQuestions();
-  }, [fetchQuestions]);
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;

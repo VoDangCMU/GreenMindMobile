@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import type { Todo } from "@/store/todoStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { useTodoStore } from "@/store/todoStore";
@@ -20,18 +21,8 @@ import {
   Loader2,
 } from "lucide-react";
 
-interface TodoItem {
-  id: string;
-  title: string;
-  description?: string;
-  completed: boolean;
-  children: TodoItem[];
-  expanded?: boolean;
-}
-
-// Recursive Todo Item Component
-interface TodoItemProps {
-  item: TodoItem;
+type TodoItemProps = {
+  item: Todo;
   level: number;
   onToggle: (id: string) => void;
   onToggleExpand: (id: string) => void;
@@ -43,8 +34,9 @@ interface TodoItemProps {
   setNewChildText: (text: string) => void;
   setEditingParentId: (id: string | null) => void;
   expandedIds: Set<string>;
+  setExpandedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   generatingIds?: Set<string>;
-}
+};
 
 function TodoItemComponent({
   item,
@@ -53,23 +45,24 @@ function TodoItemComponent({
   onToggleExpand,
   onDelete,
   onAddChild,
+  onGenerateSubtasks,
   editingParentId,
   newChildText,
   setNewChildText,
   setEditingParentId,
   expandedIds,
-  onGenerateSubtasks,
+  setExpandedIds,
   generatingIds,
 }: TodoItemProps) {
   const paddingLeft = level * 16;
 
-  const countTotalChildren = (node: TodoItem): number => {
-    return node.children.length + node.children.reduce((sum, child) => sum + countTotalChildren(child), 0);
+  const countTotalChildren = (node: Todo): number => {
+    return node.children.length + node.children.reduce((sum: number, child: Todo) => sum + countTotalChildren(child), 0);
   };
 
-  const countCompletedChildren = (node: TodoItem): number => {
-    const completed = node.children.filter((child) => child.completed).length;
-    const childrenCompleted = node.children.reduce((sum, child) => sum + countCompletedChildren(child), 0);
+  const countCompletedChildren = (node: Todo): number => {
+    const completed = node.children.filter((child: Todo) => child.completed).length;
+    const childrenCompleted = node.children.reduce((sum: number, child: Todo) => sum + countCompletedChildren(child), 0);
     return completed + childrenCompleted;
   };
 
@@ -135,7 +128,9 @@ function TodoItemComponent({
             {/* Add Sub-Todo Button */}
             <button
               onClick={() => {
-                onToggleExpand(item.id);
+                if (!expandedIds.has(item.id)) {
+                  setExpandedIds(prev => new Set(prev).add(item.id));
+                }
                 setEditingParentId(item.id);
               }}
               className="flex-shrink-0 text-blue-400 hover:text-blue-600"
@@ -172,7 +167,7 @@ function TodoItemComponent({
       {/* Children - Expanded */}
       {expandedIds.has(item.id) && item.children.length > 0 && (
         <div className="space-y-2">
-          {item.children.map((child) => (
+          {item.children.map((child: Todo) => (
             <TodoItemComponent
               key={child.id}
               item={child}
@@ -187,6 +182,7 @@ function TodoItemComponent({
               setNewChildText={setNewChildText}
               setEditingParentId={setEditingParentId}
               expandedIds={expandedIds}
+              setExpandedIds={setExpandedIds}
               generatingIds={generatingIds}
             />
           ))}
@@ -194,7 +190,7 @@ function TodoItemComponent({
       )}
 
       {/* Add Child Todo - Show when expanded */}
-      {item.expanded && (
+  {expandedIds.has(item.id) && (
         <div style={{ marginLeft: `${paddingLeft + 16}px` }}>
           <Card className="shadow-sm border border-dashed border-gray-300">
             <CardContent className="p-3">
@@ -242,13 +238,13 @@ export default function TodoPage() {
   const [newChildText, setNewChildText] = useState("");
 
   // Count all todos recursively
-  const countAllTodos = (items: TodoItem[]): number => {
-    return items.length + items.reduce((sum, item) => sum + countAllTodos(item.children), 0);
+  const countAllTodos = (items: Todo[]): number => {
+    return items.length + items.reduce((sum: number, item: Todo) => sum + countAllTodos(item.children), 0);
   };
 
-  const countCompletedTodos = (items: TodoItem[]): number => {
-    const completed = items.filter((item) => item.completed).length;
-    const childrenCompleted = items.reduce((sum, item) => sum + countCompletedTodos(item.children), 0);
+  const countCompletedTodos = (items: Todo[]): number => {
+    const completed = items.filter((item: Todo) => item.completed).length;
+    const childrenCompleted = items.reduce((sum: number, item: Todo) => sum + countCompletedTodos(item.children), 0);
     return completed + childrenCompleted;
   };
 
@@ -395,6 +391,7 @@ export default function TodoPage() {
               setNewChildText={setNewChildText}
               setEditingParentId={setEditingParentId}
               expandedIds={expandedIds}
+              setExpandedIds={setExpandedIds}
               generatingIds={generatingIds}
             />
           ))}

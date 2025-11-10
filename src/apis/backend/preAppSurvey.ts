@@ -1,4 +1,3 @@
-import { storageKey } from "@/store/appStore";
 import BackendInstance from "../instances/BackendInstance";
 import { authHeader } from "../instances/getToken";
 
