@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { toast } from "sonner";
 import { useGeolocationStore } from "@/store/geolocationStore";
 import { getCurrentPosition, isGeolocationAvailable, calculateDistance } from "@/helpers/geolocationHelper";
 

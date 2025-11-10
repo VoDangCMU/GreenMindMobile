@@ -33,7 +33,7 @@ export function AppStateInitializer() {
             if (!ignore && created?.scores) {
               setOcean(created.scores);
             }
-          } catch (e) {
+          } catch (_e) {
             // handle error if needed
           }
         }
