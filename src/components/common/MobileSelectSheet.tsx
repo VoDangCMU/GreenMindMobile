@@ -33,7 +33,7 @@ export function MobileSelectSheet({
   const [isNative, setIsNative] = React.useState<boolean | null>(null)
 
   React.useEffect(() => {
-    let mounted = true
+  // let mounted = true
 
     const detect = async () => {
     try {
@@ -61,7 +61,7 @@ export function MobileSelectSheet({
     detect()
 
     return () => {
-      mounted = false
+      // mounted = false
     }
   }, [forceNative])
 

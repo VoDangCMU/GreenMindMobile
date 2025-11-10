@@ -62,7 +62,7 @@ export const NativeBridge = {
   // 📍 LOCATION
   async getCurrentPosition() {
     if (!isNative) {
-      return new Promise((resolve, reject) => {
+  return new Promise((resolve, _reject) => {
         if (!navigator.geolocation) {
           resolve({ coords: { latitude: 0, longitude: 0 }, mock: true });
         } else {

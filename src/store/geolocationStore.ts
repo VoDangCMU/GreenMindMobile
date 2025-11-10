@@ -16,10 +16,12 @@ export interface GeolocationState {
   isTracking: boolean;
   lastUpdate: Date | null;
   error: string | null;
+  positionHistory: GeolocationPosition[];
   setPosition: (position: GeolocationPosition) => void;
   setTracking: (isTracking: boolean) => void;
   setError: (error: string | null) => void;
   clearPosition: () => void;
+  clearHistory: () => void;
 }
 
 export const useGeolocationStore = create<GeolocationState>((set) => ({
@@ -27,11 +29,13 @@ export const useGeolocationStore = create<GeolocationState>((set) => ({
   isTracking: false,
   lastUpdate: null,
   error: null,
-  setPosition: (position) => set({
+  positionHistory: [],
+  setPosition: (position) => set((state) => ({
     currentPosition: position,
     lastUpdate: new Date(),
-    error: null
-  }),
+    error: null,
+    positionHistory: [position, ...state.positionHistory].slice(0, 50), // Keep last 50 positions
+  })),
   setTracking: (isTracking) => set({ isTracking }),
   setError: (error) => set({ error, isTracking: false }),
   clearPosition: () => set({
@@ -39,4 +43,5 @@ export const useGeolocationStore = create<GeolocationState>((set) => ({
     lastUpdate: null,
     error: null
   }),
+  clearHistory: () => set({ positionHistory: [] }),
 }));

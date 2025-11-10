@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Target, Award, Users, MessageCircle, CheckCircle, AlertCircle } from "lucide-react";
+import { Target, Award, Users, MessageCircle, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppHeader from "@/components/app-components/HomeAppHeader";
 import { useEffect, useRef, useState } from "react";
@@ -8,6 +8,24 @@ import BottomNav from "@/components/app-components/HomeBottomNav";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 
 const features = [
+  {
+    to: "/plant-scan-history",
+    icon: (
+      <svg
+        className="w-8 h-8 text-greenery-600"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <rect x="4" y="4" width="16" height="16" rx="4" />
+        <path d="M8 12c1.5-2 6.5-2 8 0" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+    title: "Scan Rau Củ",
+    desc: "Phân tích tỉ lệ rau củ trong món ăn từ ảnh.",
+  },
   {
     to: "/invoice-history",
     icon: (
@@ -30,6 +48,12 @@ const features = [
     icon: <Target className="w-8 h-8 text-greenery-600" />,
     title: "Personality Quiz",
     desc: "Discover your unique personality traits and get personalized insights.",
+  },
+  {
+    to: "/todo",
+    icon: <CheckCircle2 className="w-8 h-8 text-greenery-600" />,
+    title: "Todo",
+    desc: "Manage your tasks and subtasks.",
   },
   {
     to: "/register",

@@ -1,20 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getPreAppSurveyByUser } from "@/apis/backend/preAppSurvey";
 
 export interface PreAppSurveyAnswers extends Record<string, string> {
-  daily_spending: string;
-  spending_variation: string;
-  brand_trial: string;
-  shopping_list: string;
-  daily_distance: string;
-  new_places: string;
-  public_transport: string;
-  stable_schedule: string;
-  night_outings: string;
-  healthy_eating: string;
-  social_media: string;
-  goal_setting: string;
-  mood_swings: string;
+  avg_daily_spend: string;          // Chi tiêu trung bình mỗi ngày
+  spend_variability: string;        // Dao động chi tiêu
+  brand_novel: string;              // Thử thương hiệu mới
+  list_adherence: string;           // Thực hiện đúng kế hoạch
+  daily_distance_km: string;        // Quãng đường di chuyển trung bình
+  novel_location_ratio: string;     // Đến địa điểm mới
+  public_transit_ratio: string;     // Phương tiện công cộng
+  night_out_freq: string;           // Ra ngoài buổi đêm
+  healthy_food_ratio: string;       // Ăn uống lành mạnh
 }
 
 export interface PreAppSurveyState {
@@ -25,6 +22,7 @@ export interface PreAppSurveyState {
   markCompleted: () => void;
   clearSurvey: () => void;
   getSurveyData: () => PreAppSurveyAnswers | null;
+  fetchPreAppSurvey: (userId: string) => Promise<void>;
 }
 
 export const usePreAppSurveyStore = create<PreAppSurveyState>()(
@@ -33,21 +31,38 @@ export const usePreAppSurveyStore = create<PreAppSurveyState>()(
       answers: null,
       isCompleted: false,
       completedAt: null,
-      setAnswers: (answers) => set({ 
-        answers,
-        isCompleted: true,
-        completedAt: new Date()
-      }),
-      markCompleted: () => set({ 
-        isCompleted: true,
-        completedAt: new Date()
-      }),
-      clearSurvey: () => set({ 
-        answers: null,
-        isCompleted: false,
-        completedAt: null
-      }),
+      setAnswers: (answers) =>
+        set({
+          answers,
+          isCompleted: true,
+          completedAt: new Date(),
+        }),
+      markCompleted: () =>
+        set({
+          isCompleted: true,
+          completedAt: new Date(),
+        }),
+      clearSurvey: () =>
+        set({
+          answers: null,
+          isCompleted: false,
+          completedAt: null,
+        }),
       getSurveyData: () => get().answers,
+      fetchPreAppSurvey: async (userId: string) => {
+        try {
+          const res = await getPreAppSurveyByUser(userId);
+          if (res.data && res.data.answers) {
+            set({
+              answers: res.data.answers,
+              isCompleted: !!res.data.isCompleted,
+              completedAt: res.data.completedAt ? new Date(res.data.completedAt) : null,
+            });
+          }
+        } catch (_e) {
+          // Optionally handle error
+        }
+      },
     }),
     {
       name: "greenmind_preapp_survey",

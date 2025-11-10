@@ -35,13 +35,10 @@ const RegisterFormStep2: React.FC<Props> = ({
   const [openCity, setOpenCity] = React.useState(false);
   const [searchCountry, setSearchCountry] = React.useState("");
   const [searchCity, setSearchCity] = React.useState("");
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
 
   React.useEffect(() => {
     if (formData.dateOfBirth) {
-      setDate(new Date(formData.dateOfBirth));
-    } else {
-      setDate(undefined);
+      // Date is handled directly in the DatePicker
     }
   }, [formData.dateOfBirth]);
 

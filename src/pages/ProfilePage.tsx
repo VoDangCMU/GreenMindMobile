@@ -31,6 +31,8 @@ import { usePreAppSurveyData } from "@/hooks/usePreAppSurveyData";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
+import CurrentLocationCard from "@/components/app-components/CurrentLocationCard";
+import LocationHistoryCard from "@/components/app-components/LocationHistoryCard";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -38,6 +40,7 @@ export default function ProfilePage() {
   const user = useAppStore((state) => state.user);
   const [isEditing, setIsEditing] = useState(false);
   const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
+  const ocean = useAppStore((state) => state.ocean) || MOCKED_OCEAN_SCORE;
   
   // Get Pre-App Survey data
   const { answers, isCompleted, completedAt } = usePreAppSurveyData();
@@ -45,7 +48,7 @@ export default function ProfilePage() {
   console.log("Pre-App Survey Data:", { answers, isCompleted, completedAt });
 
   const [userInfo, setUserInfo] = useState({
-    name: user?.fullName || user?.username || "",
+    name: user?.full_name || user?.username || "",
     email: user?.email || "",
     gender: user?.gender || "Unknown",
     bio: "Passionate about sustainable living and helping others make eco-friendly choices.",
@@ -268,7 +271,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-5 gap-2 items-end h-40">
-              {Object.entries(MOCKED_OCEAN_SCORE).map(([trait, value]) => (
+              {Object.entries(ocean).map(([trait, value]) => (
                 <div
                   key={trait}
                   className="flex flex-col items-center space-y-1"
@@ -313,6 +316,12 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Current Location Card */}
+        <CurrentLocationCard />
+
+        {/* Location History Card */}
+        <LocationHistoryCard />
 
         {/* Level Progress */}
         <Card className="border-0 shadow-md">

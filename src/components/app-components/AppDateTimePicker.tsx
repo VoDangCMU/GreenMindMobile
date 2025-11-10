@@ -92,9 +92,9 @@ const AppDateTimePicker: React.FC<Props> = ({
         const picked = new Date(res.value);
         callOnChange(picked);
       }
-    } catch (err) {
+    } catch {
       // user cancelled or error
-      // console.warn("DatePicker error/cancel:", err);
+      // console.warn("DatePicker error/cancel");
     }
   };
 

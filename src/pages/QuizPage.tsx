@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -8,6 +8,8 @@ import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { toast } from "sonner";
 import { getQuestionTemplates } from "@/apis/backend/question";
+import { submitUserAnswers } from "@/apis/backend/userAnswer";
+import { useAppStore } from "@/store/appStore";
 
 interface QuestionOption {
   text: string;
@@ -28,24 +30,45 @@ export default function QuizPage() {
   const [showResults, setShowResults] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const user = useAppStore((state) => state.user);
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
   const fetchQuestions = async () => {
     setLoading(true);
-    setQuestions([]);
-    setShowResults(false);
-    setAnswers({});
-    setCurrent(0);
     try {
       const res = await getQuestionTemplates();
-
-      console.log("Fetched question templates:", res);
-
       const raw = res ?? {};
-
-      setQuestions(raw);
+      // Flatten nested question object to array
+      let flatQuestions: Question[] = [];
+      if (Array.isArray(raw)) {
+        flatQuestions = raw;
+      } else if (typeof raw === 'object' && raw !== null) {
+        // OceanTemplateData structure: { R: { rating: [..], ... }, ... }
+        Object.values(raw).forEach((group: any) => {
+          if (group && typeof group === 'object') {
+            Object.values(group).forEach((arr: any) => {
+              if (Array.isArray(arr)) {
+                arr.forEach((q: any) => {
+                  // Map to Question type
+                  flatQuestions.push({
+                    id: q.template_id || q.id || '',
+                    question: q.sentence || q.question || '',
+                    behaviorNormalized: q.slot || '',
+                    options: (q.value_slot || q.options || []).map((v: any, idx: number) => ({
+                      text: v,
+                      value: v,
+                      order: idx,
+                    })),
+                  });
+                });
+              }
+            });
+          }
+        });
+      }
+      setQuestions(flatQuestions);
     } catch (err) {
       console.error(err);
       toast.error("Không thể tải câu hỏi. Vui lòng thử lại sau 😭");
@@ -55,6 +78,10 @@ export default function QuizPage() {
   };
 
   useEffect(() => {
+    setQuestions([]);
+    setShowResults(false);
+    setAnswers({});
+    setCurrent(0);
     fetchQuestions();
   }, []);
 
@@ -82,15 +109,30 @@ export default function QuizPage() {
     }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const q = questions[current];
     if (!answers[q.id]) {
       toast.warning("Bạn cần chọn một đáp án trước khi tiếp tục 💡");
       return;
     }
 
-    if (current < questions.length - 1) setCurrent((c) => c + 1);
-    else setShowResults(true);
+    if (current < questions.length - 1) {
+      setCurrent((c) => c + 1);
+    } else {
+      // Submit answers to backend
+      try {
+        const userId = user?.id || "test-user-id";
+        const payload = {
+          userId,
+          answers: Object.entries(answers).map(([questionId, answer]) => ({ questionId, answer })),
+        };
+        const res = await submitUserAnswers(payload);
+        console.log("submitUserAnswers response:", res);
+      } catch (err) {
+        console.error("submitUserAnswers error:", err);
+      }
+      setShowResults(true);
+    }
   };
 
   const handlePrev = () => {

@@ -7,7 +7,7 @@ import { CheckCircle, ArrowLeft, ArrowRight, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import { submitOnboardingAnswers } from "@/apis/backend/onboarding";
+import { submitPreAppSurvey } from "@/apis/backend/preAppSurvey";
 import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { toast } from "sonner";
@@ -22,74 +22,54 @@ interface OnboardingQuestion {
 
 const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
   {
-    id: 'daily_spending',
+    id: 'avg_daily_spend',
     question: 'Chi tiêu trung bình mỗi ngày của bạn là bao nhiêu?',
     type: 'number',
     placeholder: 'Ví dụ: 50000',
     unit: 'VNĐ'
   },
   {
-    id: 'spending_variation',
+    id: 'spend_variability',
     question: 'Mức độ dao động chi tiêu trong 1 tuần của bạn như thế nào?',
     type: 'likert5'
   },
   {
-    id: 'brand_trial',
-    question: 'Mức độ thử thương hiệu mới kỳ này so với bình thường của bạn như thế nào?',
+    id: 'brand_novel',
+    question: 'Bạn có thường xuyên thử những thương hiệu mới không?',
     type: 'likert5'
   },
   {
-    id: 'shopping_list',
-    question: 'Bạn có hay thực hiện đúng theo danh sách đã chuẩn bị sẵn không?',
+    id: 'list_adherence',
+    question: 'Bạn có thường xuyên thực hiện đúng theo danh sách, kế hoạch đã chuẩn bị không?',
     type: 'likert5'
   },
   {
-    id: 'daily_distance',
+    id: 'daily_distance_km',
     question: 'Trung bình mỗi ngày bạn di chuyển bao nhiêu km?',
     type: 'number',
     placeholder: 'Ví dụ: 5.5',
     unit: 'km'
   },
   {
-    id: 'new_places',
-    question: 'Bạn có thường xuyên đến địa điểm mới không?',
+    id: 'novel_location_ratio',
+    question: 'Bạn có thường xuyên đến những địa điểm mới không?',
     type: 'likert5'
   },
   {
-    id: 'public_transport',
-    question: 'Bạn có chủ yếu di chuyển bằng phương tiện công cộng không?',
+    id: 'public_transit_ratio',
+    question: 'Bạn có thường xuyên sử dụng phương tiện công cộng không?',
     type: 'likert5'
   },
   {
-    id: 'stable_schedule',
-    question: 'Lịch trình di chuyển của bạn có ổn định theo thời gian không?',
-    type: 'likert5'
-  },
-  {
-    id: 'night_outings',
-    question: 'Số lần ra ngoài buổi đêm trong tuần của bạn là bao nhiêu?',
+    id: 'night_out_freq',
+    question: 'Số lần bạn ra ngoài buổi đêm trong tuần là bao nhiêu?',
     type: 'number',
     placeholder: 'Ví dụ: 2',
     unit: 'lần/tuần'
   },
   {
-    id: 'healthy_eating',
-    question: 'Bạn có ăn uống lành mạnh, ăn uống xanh không?',
-    type: 'likert5'
-  },
-  {
-    id: 'social_media',
-    question: 'Bạn có thường xuyên đăng bài, bình luận và tương tác với cộng đồng trên Facebook, Instagram không?',
-    type: 'likert5'
-  },
-  {
-    id: 'goal_setting',
-    question: 'Bạn có đặt ra mục tiêu và thường xuyên hoàn thành chúng không?',
-    type: 'likert5'
-  },
-  {
-    id: 'mood_swings',
-    question: 'Bạn có hay dao động cảm xúc trong thời gian ngắn không?',
+    id: 'healthy_food_ratio',
+    question: 'Bạn có thường ăn uống lành mạnh, ưu tiên thực phẩm thực vật không?',
     type: 'likert5'
   }
 ];
@@ -108,6 +88,7 @@ export default function OnboardingQuizPage() {
   const [showResults, setShowResults] = useState(false);
   
   const { setAnswers: saveToStore, markCompleted, getSurveyData } = usePreAppSurveyStore();
+  const user = useAppStore((s) => s.user);
 
   // Load existing answers from localStorage on component mount
   useEffect(() => {
@@ -181,18 +162,17 @@ export default function OnboardingQuizPage() {
     try {
       // Lưu vào localStorage trước
       saveToStore(answers as any);
-      
-      const token = useAppStore.getState().access_token;
-      if (!token) {
+      if (!user?.id) {
         toast.error("Bạn cần đăng nhập để tiếp tục");
         return;
       }
-
-      await submitOnboardingAnswers(answers as any, token);
-
-      // Mark completed sau khi submit thành công
+      await submitPreAppSurvey({
+        userId: user.id,
+        answers: answers as any,
+        isCompleted: true,
+        completedAt: new Date().toISOString(),
+      });
       markCompleted();
-      
       toast.success("Cảm ơn bạn đã hoàn thành khảo sát! 🎉");
       setShowResults(true);
     } catch (error) {
