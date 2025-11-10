@@ -1,11 +1,11 @@
 import { create } from "zustand";
-import { useLocalStorage } from "usehooks-ts";
+import { persist } from "zustand/middleware";
 
 export interface User {
   id: string;
   username: string;
   email: string;
-  fullName: string;
+  full_name: string;
   role: string;
   gender?: string;
   location?: string;
@@ -27,39 +27,31 @@ export interface AppState {
 
 export const storageKey = "greenmind_auth";
 
-export const useAppStore = create<AppState>((set) => {
-  // useLocalStorage hook must be used inside a React component, so we provide helpers for components
-  let initial: Partial<AppState> = {};
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) initial = JSON.parse(raw);
-    } catch {}
-  }
-  return {
-    access_token: initial.access_token ?? null,
-    refresh_token: initial.refresh_token ?? null,
-    user: initial.user ?? null,
-    bypassAuthGate: false,
-    setAuth: (data) => {
-      set(data);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(storageKey, JSON.stringify(data));
-      }
-    },
-    clearAuth: () => {
-      set({ access_token: null, refresh_token: null, user: null });
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(storageKey);
-      }
-    },
-    setBypassAuthGate: (value: boolean) => {
-      set({ bypassAuthGate: value }); 
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      access_token: null,
+      refresh_token: null,
+      user: null,
+      bypassAuthGate: false,
+      setAuth: async (data) => {
+        set({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+          user: data.user,
+        });
+      },
+      clearAuth: () => {
+        set({ access_token: null, refresh_token: null, user: null });
+      },
+      setBypassAuthGate: (value: boolean) => {
+        set({ bypassAuthGate: value });
+      },
+    }),
+    {
+      name: storageKey,
     }
-  };
-});
+  )
+);
 
-// Optional: React hook for components to get/set auth state with useLocalStorage
-export function useAuthLocalStorage() {
-  return useLocalStorage<AppState | null>(storageKey, null);
-}
+

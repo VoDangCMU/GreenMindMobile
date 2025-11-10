@@ -47,7 +47,7 @@ export default function ProfilePage() {
   console.log("Pre-App Survey Data:", { answers, isCompleted, completedAt });
 
   const [userInfo, setUserInfo] = useState({
-    name: user?.fullName || user?.username || "",
+    name: user?.full_name || user?.username || "",
     email: user?.email || "",
     gender: user?.gender || "Unknown",
     bio: "Passionate about sustainable living and helping others make eco-friendly choices.",

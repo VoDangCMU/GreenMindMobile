@@ -41,7 +41,7 @@ function GeolocationTracker() {
         const msg = error instanceof Error ? error.message : "Unknown location error";
         setError(msg);
         console.error("❌ Failed to get position:", msg);
-        toast.error(`Location error: ${msg}`);
+        // toast.error(`Location error: ${msg}`);
       }
     };
 

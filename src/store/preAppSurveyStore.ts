@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getPreAppSurveyByUser } from "@/apis/backend/preAppSurvey";
 
 export interface PreAppSurveyAnswers extends Record<string, string> {
   avg_daily_spend: string;          // Chi tiêu trung bình mỗi ngày
@@ -21,6 +22,7 @@ export interface PreAppSurveyState {
   markCompleted: () => void;
   clearSurvey: () => void;
   getSurveyData: () => PreAppSurveyAnswers | null;
+  fetchPreAppSurvey: (userId: string) => Promise<void>;
 }
 
 export const usePreAppSurveyStore = create<PreAppSurveyState>()(
@@ -47,6 +49,20 @@ export const usePreAppSurveyStore = create<PreAppSurveyState>()(
           completedAt: null,
         }),
       getSurveyData: () => get().answers,
+      fetchPreAppSurvey: async (userId: string) => {
+        try {
+          const res = await getPreAppSurveyByUser(userId);
+          if (res.data && res.data.answers) {
+            set({
+              answers: res.data.answers,
+              isCompleted: !!res.data.isCompleted,
+              completedAt: res.data.completedAt ? new Date(res.data.completedAt) : null,
+            });
+          }
+        } catch (_e) {
+          // Optionally handle error
+        }
+      },
     }),
     {
       name: "greenmind_preapp_survey",

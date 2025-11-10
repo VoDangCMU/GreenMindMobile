@@ -4,7 +4,7 @@ export interface Profile {
   id: string;
   username: string;
   email: string;
-  fullName: string;
+  full_name: string;
   role: string;
 }
 

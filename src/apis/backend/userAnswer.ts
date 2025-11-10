@@ -1,5 +1,6 @@
 import BEApi from "@/apis/instances/BackendInstance";
 import { storageKey } from "@/store/appStore";
+import { authHeader } from "../instances/getToken";
 
 export interface UserAnswerSubmitParams {
   userId: string;
@@ -18,15 +19,6 @@ export interface UserAnswerSubmitResponse {
     answer: string;
     timestamp: string;
   }>;
-}
-
-function getToken() {
-  return localStorage.getItem(storageKey) ? JSON.parse(localStorage.getItem(storageKey)!).access_token : null;
-}
-
-function authHeader(): Record<string, string> {
-    const token = getToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export async function submitUserAnswers(params: UserAnswerSubmitParams) {

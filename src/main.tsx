@@ -33,6 +33,7 @@ import { getProfile } from "./apis/backend/profile.ts";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
 import GeolocationTracker from "./components/background-worker/GeolocationTracker.tsx";
 import PlantScanHistoryPage from "./pages/PlantScanPage.tsx";
+import { AppStateInitializer } from "./components/background-worker/AppStateInitializer.tsx";
 
 const router = createHashRouter([
   {
@@ -91,7 +92,8 @@ function AuthStateInitializer() {
 
       if (state.user) {
         console.log("Token alive", JSON.stringify(state));
-        toast.success(`Welcome back, ${state.user.fullName}!`);
+        console.log("user", state.user);
+        toast.success(`Welcome back, ${state.user.full_name}!`);
       }
     }
 
@@ -103,6 +105,7 @@ function AuthStateInitializer() {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthStateInitializer />
+    <AppStateInitializer />
     <GeolocationTracker />
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />

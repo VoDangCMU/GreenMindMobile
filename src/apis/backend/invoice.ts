@@ -1,6 +1,7 @@
 import BackendInstance from "../instances/BackendInstance";
 import { storageKey } from "@/store/appStore";
 import type { IAIInvoice } from "../ai/ocrInvoice";
+import { authHeader } from "../instances/getToken";
 export interface IInvoiceItem {
   id: string;
   rawName: string;
@@ -48,15 +49,6 @@ export interface IInvoice {
   vendor: IInvoiceVendor;
   scans: unknown | null;
 	user: IUser;
-}
-
-function getToken() {
-	return localStorage.getItem(storageKey) ? JSON.parse(localStorage.getItem(storageKey)!).access_token : null;
-}
-
-function authHeader(): Record<string, string> {
-	const token = getToken();
-	return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export async function getInvoices() {

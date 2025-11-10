@@ -7,7 +7,7 @@ import { CheckCircle, ArrowLeft, ArrowRight, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import { submitOnboardingAnswers } from "@/apis/backend/onboarding";
+import { submitPreAppSurvey } from "@/apis/backend/preAppSurvey";
 import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { toast } from "sonner";
@@ -88,6 +88,7 @@ export default function OnboardingQuizPage() {
   const [showResults, setShowResults] = useState(false);
   
   const { setAnswers: saveToStore, markCompleted, getSurveyData } = usePreAppSurveyStore();
+  const user = useAppStore((s) => s.user);
 
   // Load existing answers from localStorage on component mount
   useEffect(() => {
@@ -161,18 +162,17 @@ export default function OnboardingQuizPage() {
     try {
       // Lưu vào localStorage trước
       saveToStore(answers as any);
-      
-      const token = useAppStore.getState().access_token;
-      if (!token) {
+      if (!user?.id) {
         toast.error("Bạn cần đăng nhập để tiếp tục");
         return;
       }
-
-      await submitOnboardingAnswers(answers as any, token);
-
-      // Mark completed sau khi submit thành công
+      await submitPreAppSurvey({
+        userId: user.id,
+        answers: answers as any,
+        isCompleted: true,
+        completedAt: new Date().toISOString(),
+      });
       markCompleted();
-      
       toast.success("Cảm ơn bạn đã hoàn thành khảo sát! 🎉");
       setShowResults(true);
     } catch (error) {
