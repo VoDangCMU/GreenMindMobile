@@ -1,9 +1,9 @@
 import React from "react";
 import { ScanLine } from "lucide-react";
 
+
 interface ScanHistoryFooterProps {
   onScan: () => void;
-  scanLabel?: string;
   scanIcon?: React.ReactNode;
   importLabel?: string;
   onImport?: (() => void) | null;
@@ -12,7 +12,6 @@ interface ScanHistoryFooterProps {
 
 const ScanHistoryFooter: React.FC<ScanHistoryFooterProps> = ({
   onScan,
-  scanLabel = "Scan",
   scanIcon = <ScanLine className="w-9 h-9" />,
   importLabel = "Import",
   onImport = null,

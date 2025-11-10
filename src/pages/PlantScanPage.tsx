@@ -154,7 +154,7 @@ export default function PlantScanPage() {
         _original_base64: base64,
       };
       addScan(scan);
-    } catch (err) {
+    } catch {
       // handle error or user cancel
     } finally {
       setIsScanning(false);
@@ -180,7 +180,7 @@ export default function PlantScanPage() {
         _original_base64: base64,
       };
       addScan(scan);
-    } catch (err) {
+    } catch {
       // handle error or user cancel
     } finally {
       setIsScanning(false);

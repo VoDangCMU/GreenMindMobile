@@ -9,7 +9,7 @@ export interface IGeneratedSubTodos {
     subtasks: string[];
 }
 
-const example_response = {
+const _example_response = {
     "task": "Đi chơi Đà Nẵng",
     "subtasks": [
         "*   Lên kế hoạch (thời gian, ngân sách, người đi cùng)",

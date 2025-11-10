@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -8,6 +8,8 @@ import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { toast } from "sonner";
 import { getQuestionTemplates } from "@/apis/backend/question";
+import { submitUserAnswers } from "@/apis/backend/userAnswer";
+import { useAppStore } from "@/store/appStore";
 
 interface QuestionOption {
   text: string;
@@ -28,11 +30,12 @@ export default function QuizPage() {
   const [showResults, setShowResults] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const user = useAppStore((state) => state.user);
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = React.useCallback(async () => {
     setLoading(true);
     setQuestions([]);
     setShowResults(false);
@@ -46,17 +49,19 @@ export default function QuizPage() {
       const raw = res ?? {};
 
       setQuestions(raw);
+
+      console.log(questions);
     } catch (err) {
       console.error(err);
       toast.error("Không thể tải câu hỏi. Vui lòng thử lại sau 😭");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchQuestions();
-  }, []);
+  }, [fetchQuestions]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -82,15 +87,30 @@ export default function QuizPage() {
     }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const q = questions[current];
     if (!answers[q.id]) {
       toast.warning("Bạn cần chọn một đáp án trước khi tiếp tục 💡");
       return;
     }
 
-    if (current < questions.length - 1) setCurrent((c) => c + 1);
-    else setShowResults(true);
+    if (current < questions.length - 1) {
+      setCurrent((c) => c + 1);
+    } else {
+      // Submit answers to backend
+      try {
+        const userId = user?.id || "test-user-id";
+        const payload = {
+          userId,
+          answers: Object.entries(answers).map(([questionId, answer]) => ({ questionId, answer })),
+        };
+        const res = await submitUserAnswers(payload);
+        console.log("submitUserAnswers response:", res);
+      } catch (err) {
+        console.error("submitUserAnswers error:", err);
+      }
+      setShowResults(true);
+    }
   };
 
   const handlePrev = () => {
