@@ -10,6 +10,9 @@ import AppHeader from "@/components/common/AppHeader";
 import { useTodoStore } from "@/store/todoStore";
 import { useToast } from "@/hooks/useToast";
 import generate_subtasks from "@/apis/ai/todos/todo_generator";
+import list_adherence from "@/apis/ai/monitor_ocean/list_adherence";
+import { useAppStore } from "@/store/appStore";
+import { useOceanUpdate } from "@/hooks/useOceanUpdate";
 import {
   ChevronDown,
   ChevronRight,
@@ -19,7 +22,9 @@ import {
   Circle,
   Wand2,
   Loader2,
+  Users,
 } from "lucide-react";
+import type { OceanScore } from "@/apis/ai/monitor_ocean";
 
 type TodoItemProps = {
   item: Todo;
@@ -231,6 +236,8 @@ function TodoItemComponent({
 
 export default function TodoPage() {
   const { todos, addTodo, addSubtask, toggleComplete, removeTodo } = useTodoStore();
+  const { updateOcean } = useOceanUpdate();
+  const ocean = useAppStore((state) => state.ocean);
   const toast = useToast();
 
   const [newTodoText, setNewTodoText] = useState("");
@@ -262,8 +269,49 @@ export default function TodoPage() {
   };
 
   // Toggle todo completion
-  const toggleTodo = (id: string) => {
+  const toggleTodo = async (id: string) => {
     toggleComplete(id);
+
+    // Prepare data for the list_adherence API - only top level tasks
+    const flattenTodos = (items: Todo[]): Array<{ task: string; done: boolean }> => {
+      return items.map(item => ({
+        task: item.title,
+        done: item.completed
+      }));
+    };
+
+    const normalizeOceanScores = ({ O, C, E, A, N }: OceanScore) => ({
+      O: O / 100,
+      C: C / 100,
+      E: E / 100,
+      A: A / 100,
+      N: N / 100
+    });
+
+    try {
+      const flatTodos = flattenTodos(todos);
+      if (!ocean) {
+        console.error("No OCEAN scores available");
+        return;
+      }
+      // Call list_adherence first to calculate new scores
+      const response = await list_adherence({
+        todos: flatTodos,
+        base_likert: 4, // Default base likert scale
+        weight: 0.3,   // Default weight
+        direction: "up", // Default direction
+        sigma_r: 1.0,  // Default sigma
+        alpha: 0.5,   // Default alpha
+        ocean_score: normalizeOceanScores(ocean)
+      });
+
+      // Update the OCEAN scores with the new values from list_adherence
+      await updateOcean(response.new_ocean_score);
+    } catch (error) {
+      console.error("Failed to process todo completion:", error);
+      toast.error("Failed to update OCEAN score");
+      // The todo state remains changed even if the API fails
+    }
   };
 
   // Toggle expand/collapse
@@ -340,6 +388,35 @@ export default function TodoPage() {
   return (
     <SafeAreaLayout header={<AppHeader showBack title="Todo" />}>
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
+        {/* OCEAN Score Compact
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-greenery-600" />
+                <span className="text-sm font-medium">OCEAN Score</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-5 gap-1.5">
+              {ocean && Object.entries(ocean).map(([trait, value]) => (
+                <div
+                  key={trait}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-2 h-16 bg-gray-200 relative rounded-sm overflow-hidden mb-1">
+                    <div
+                      className="bg-greenery-500 w-full absolute bottom-0 transition-all duration-300"
+                      style={{ height: `${value}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium text-gray-600">{trait}</span>
+                  <span className="text-[10px] text-gray-500">{Number(value).toFixed(0)}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card> */}
+
         {/* Stats Card */}
         <Card className="border-0 shadow-md bg-gradient-to-r from-greenery-50 to-blue-50">
           <CardContent className="p-4">

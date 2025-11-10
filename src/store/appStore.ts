@@ -38,9 +38,19 @@ export const useAppStore = create<AppState>()(
       access_token: null,
       refresh_token: null,
       user: null,
-  ocean: null,
-  bypassAuthGate: false,
-  setOcean: (scores) => set({ ocean: scores }),
+      ocean: null,
+      bypassAuthGate: false,
+      setOcean: (scores) => {
+        // Normalize scores if they're in 0-1 range
+        const normalizedScores = {
+          O: scores.O < 1.0 ? scores.O * 100 : scores.O,
+          C: scores.C < 1.0 ? scores.C * 100 : scores.C,
+          E: scores.E < 1.0 ? scores.E * 100 : scores.E,
+          A: scores.A < 1.0 ? scores.A * 100 : scores.A,
+          N: scores.N < 1.0 ? scores.N * 100 : scores.N,
+        };
+        set({ ocean: normalizedScores });
+      },
       setAuth: async (data) => {
         set({
           access_token: data.access_token,
