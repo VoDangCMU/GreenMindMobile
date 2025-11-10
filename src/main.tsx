@@ -5,12 +5,13 @@ import { useAppStore } from "./store/appStore";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import "leaflet/dist/leaflet.css";
 import {
   RouterProvider,
   createHashRouter,
 } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.tsx";
-import OnboardingPage from "./pages/OnboardingPage.tsx";
+import OnboardingQuizPage from "./pages/OnboardingQuizPage.tsx";
 import HomePage from "./pages/HomePage.tsx";
 import AdvicePage from "./pages/AdvicePage.tsx";
 import ChatPage from "./pages/ChatPage.tsx";
@@ -24,8 +25,15 @@ import RecomendationPage from "./pages/RecomendationPage.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
-import AuthGate from "./components/AuthGate.tsx";
+import TodoPage from "./pages/TodoPage.tsx";
+
+import AuthGate from "./components/app-components/AuthGate.tsx";
 import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
+import { getProfile } from "./apis/backend/profile.ts";
+import OnboardingPage from "./pages/OnboardingPage.tsx";
+import GeolocationTracker from "./components/background-worker/GeolocationTracker.tsx";
+import PlantScanHistoryPage from "./pages/PlantScanPage.tsx";
+import { AppStateInitializer } from "./components/background-worker/AppStateInitializer.tsx";
 
 const router = createHashRouter([
   {
@@ -38,6 +46,7 @@ const router = createHashRouter([
         element: <AuthGate />,
         children: [
           { path: "/onboarding", element: <OnboardingPage /> },
+          { path: "/onboarding-quiz", element: <OnboardingQuizPage /> },
           { path: "/home", element: <HomePage /> },
           { path: "/advice", element: <AdvicePage /> },
           { path: "/chat", element: <ChatPage /> },
@@ -50,6 +59,8 @@ const router = createHashRouter([
           { path: "/recommendations", element: <RecomendationPage /> },
           { path: "/tracking", element: <TrackingPage /> },
           { path: "/invoice-history", element: <InvoiceHistoryPage /> },
+          { path: "/todo", element: <TodoPage /> },
+          { path: "/plant-scan-history", element: <PlantScanHistoryPage /> },
         ],
       },
     ],
@@ -58,12 +69,35 @@ const router = createHashRouter([
 
 function AuthStateInitializer() {
   useEffect(() => {
-    const state = useAppStore.getState();
+    const initializer = async () => {
+      const state = useAppStore.getState();
 
-    if (state.user?.fullName) {
-      toast.success(`Welcome back, ${state.user.fullName}!`);
+      try {
+        const data = await getProfile(state.access_token || "");
+
+        useAppStore.getState().setAuth({
+          access_token: state.access_token || "",
+          refresh_token: state.refresh_token || "",
+          user: data,
+        });
+      } catch (error) {
+        console.error("Failed to get profile:", error);
+
+        useAppStore.getState().setAuth({
+          access_token: "",
+          refresh_token: "",
+          user: null,
+        });
+      }
+
+      if (state.user) {
+        console.log("Token alive", JSON.stringify(state));
+        console.log("user", state.user);
+        toast.success(`Welcome back, ${state.user.full_name}!`);
+      }
     }
-     
+
+    initializer();
   }, []);
   return null;
 }
@@ -71,6 +105,8 @@ function AuthStateInitializer() {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthStateInitializer />
+    <AppStateInitializer />
+    <GeolocationTracker />
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />
   </StrictMode>

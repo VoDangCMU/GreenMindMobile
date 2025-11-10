@@ -1,13 +1,31 @@
 import { Card } from "@/components/ui/card";
-import { Target, Award, Users, MessageCircle } from "lucide-react";
+import { Target, Award, Users, MessageCircle, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import AppHeader from "@/components/HomeAppHeader";
+import AppHeader from "@/components/app-components/HomeAppHeader";
 import { useEffect, useRef, useState } from "react";
 import { App as CapacitorApp } from "@capacitor/app";
-import BottomNav from "@/components/BottomNav";
+import BottomNav from "@/components/app-components/HomeBottomNav";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 
 const features = [
+  {
+    to: "/plant-scan-history",
+    icon: (
+      <svg
+        className="w-8 h-8 text-greenery-600"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <rect x="4" y="4" width="16" height="16" rx="4" />
+        <path d="M8 12c1.5-2 6.5-2 8 0" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+    title: "Scan Rau Củ",
+    desc: "Phân tích tỉ lệ rau củ trong món ăn từ ảnh.",
+  },
   {
     to: "/invoice-history",
     icon: (
@@ -32,6 +50,12 @@ const features = [
     desc: "Discover your unique personality traits and get personalized insights.",
   },
   {
+    to: "/todo",
+    icon: <CheckCircle2 className="w-8 h-8 text-greenery-600" />,
+    title: "Todo",
+    desc: "Manage your tasks and subtasks.",
+  },
+  {
     to: "/register",
     icon: <Users className="w-8 h-8 text-greenery-600" />,
     title: "Register",
@@ -48,6 +72,12 @@ const features = [
     icon: <Award className="w-8 h-8 text-greenery-600" />,
     title: "Onboarding",
     desc: "Complete your onboarding steps.",
+  },
+  {
+    to: "/onboarding-quiz",
+    icon: <Target className="w-8 h-8 text-greenery-600" />,
+    title: "Onboarding Survey",
+    desc: "Take our comprehensive onboarding survey to personalize your experience.",
   },
   {
     to: "/advice",
@@ -158,6 +188,29 @@ export default function HomePage() {
             Your journey to a greener, more mindful life starts here.
           </p>
         </div>
+
+        {/* Onboarding Quiz Status */}
+        <Card className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <AlertCircle className="w-6 h-6 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-800 mb-1">
+                Hoàn thành khảo sát onboarding
+              </h3>
+              <p className="text-sm text-blue-600 mb-3">
+                Để GreenMind hiểu rõ hơn về bạn và đưa ra những gợi ý phù hợp nhất.
+              </p>
+              <Link to="/onboarding-quiz">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                  Bắt đầu khảo sát
+                </button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+
         <div className="flex flex-col gap-5">
           {features.map((f) => (
             <Link to={f.to} key={f.title} className="block group">

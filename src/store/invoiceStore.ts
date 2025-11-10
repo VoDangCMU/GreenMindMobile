@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { IInvoice } from "../apis/invoice";
-import type { IAIInvoice } from "@/apis/ocrInvoice";
+import type { IInvoice } from "../apis/backend/invoice";
+import type { IAIInvoice } from "@/apis/ai/ocrInvoice";
 
 interface InvoiceStore {
   invoices: IInvoice[];

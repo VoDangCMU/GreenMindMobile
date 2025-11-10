@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Heart, MessageCircle, Share2, Trophy, TrendingUp, Leaf, Target, Award, Search } from "lucide-react"
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
-import AppHeader from "@/components/AppHeader"
+import AppHeader from "@/components/common/AppHeader"
 
 interface CommunityPost {
   id: string

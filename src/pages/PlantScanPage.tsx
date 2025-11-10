@@ -1,0 +1,217 @@
+import AppHeader from "@/components/common/AppHeader";
+import AppHeaderButton from "@/components/common/AppHeaderButton";
+import { Loader2, Check } from "lucide-react";
+import { useState } from "react";
+import ScanHistoryFooter from "@/components/app-components/ScanHistoryFooter";
+import usePlantScanStore from "@/store/plantScanStore";
+import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
+import analyzeImagePlant from "@/apis/ai/analyzeImagePlant";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { Filesystem } from "@capacitor/filesystem";
+
+function PlantScanList({ scans, onScanClick }: { scans: any[]; onScanClick: (scan: any) => void }) {
+  // Helper to check if base64 is valid (not empty/null/undefined)
+  const isValidBase64 = (b64: any) => typeof b64 === 'string' && b64.length > 20;
+  return (
+    <div className="space-y-4">
+      {scans.map((scan) => (
+        <div
+          key={scan.id}
+          className="bg-white rounded-lg shadow p-4 flex items-center gap-4 cursor-pointer"
+          onClick={() => onScanClick(scan)}
+        >
+          {isValidBase64(scan._original_base64) ? (
+            <img
+              src={`data:image/jpeg;base64,${scan._original_base64}`}
+              alt="Dish"
+              className="w-16 h-16 object-cover rounded"
+              onError={e => (e.currentTarget.style.display = 'none')}
+            />
+          ) : (
+            <div className="w-16 h-16 bg-gray-100 flex items-center justify-center rounded text-gray-400 text-xs">No image</div>
+          )}
+          <div className="flex-1">
+            <div className="font-semibold text-green-700">
+              Rau củ: {scan.vegetable_ratio_percent}%
+            </div>
+            <div className="text-xs text-gray-500">{scan.createdAt}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PlantScanDetailModal({ scan, open, onClose }: { scan: any; open: boolean; onClose: () => void }) {
+  if (!open || !scan) return null;
+  // Helper to check if base64 is valid (not empty/null/undefined)
+  const isValidBase64 = (b64: any) => typeof b64 === 'string' && b64.length > 20;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
+        <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-600" onClick={onClose}>
+          ×
+        </button>
+        <div className="mb-4">
+          {isValidBase64(scan._original_base64) ? (
+            <img
+              src={`data:image/jpeg;base64,${scan._original_base64}`}
+              alt="Dish"
+              className="w-full rounded mb-2"
+              onError={e => (e.currentTarget.style.display = 'none')}
+            />
+          ) : (
+            <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded mb-2 text-gray-400 text-sm">No dish image</div>
+          )}
+          {isValidBase64(scan.plant_image_base64) ? (
+            <img
+              src={`data:image/jpeg;base64,${scan.plant_image_base64}`}
+              alt="Vegetable"
+              className="w-full rounded"
+              onError={e => (e.currentTarget.style.display = 'none')}
+            />
+          ) : (
+            <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded text-gray-400 text-sm">No vegetable mask</div>
+          )}
+        </div>
+        <div className="font-semibold text-green-700 mb-2">
+          Rau củ: {scan.vegetable_ratio_percent}%
+        </div>
+        <div className="text-xs text-gray-500 mb-2">
+          Dish area: {scan.dish_area} | Vegetable area: {scan.vegetable_area}
+        </div>
+        <div className="text-xs text-gray-400">{scan.createdAt}</div>
+      </div>
+    </div>
+  );
+}
+
+
+export default function PlantScanPage() {
+  const scans = usePlantScanStore((state) => state.scans);
+  const addScan = usePlantScanStore((state) => state.addScan);
+  const [isScanning, setIsScanning] = useState(false);
+  const [selectedScan, setSelectedScan] = useState<any>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  // Helper to extract base64 from photo (web/native)
+  // Always use Capacitor Filesystem API to get base64 from photo
+  const getBase64FromPhoto = async (photo: any): Promise<string | null> => {
+    if (photo.path) {
+      try {
+        const file = await Filesystem.readFile({ path: photo.path });
+        if (typeof file.data === 'string') {
+          return file.data;
+        } else if (file.data instanceof Blob) {
+          // Convert Blob to base64 string
+          return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file.data);
+          });
+        } else {
+          return null;
+        }
+      } catch {
+        // fallback below
+      }
+    }
+    if (photo.base64String) return photo.base64String;
+    if (photo.webPath) {
+      try {
+        const res = await fetch(photo.webPath);
+        const blob = await res.blob();
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const handleScan = async () => {
+    setIsScanning(true);
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        saveToGallery: false,
+        allowEditing: false,
+      });
+      const result = await analyzeImagePlant(photo);
+      const base64 = await getBase64FromPhoto(photo);
+      const scan = {
+        ...result,
+        id: Date.now().toString(),
+        createdAt: new Date().toLocaleString(),
+        _original_base64: base64,
+      };
+      addScan(scan);
+    } catch {
+      // handle error or user cancel
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleImport = async () => {
+    setIsScanning(true);
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Photos,
+        saveToGallery: false,
+        allowEditing: false,
+      });
+      const result = await analyzeImagePlant(photo);
+      const base64 = await getBase64FromPhoto(photo);
+      const scan = {
+        ...result,
+        id: Date.now().toString(),
+        createdAt: new Date().toLocaleString(),
+        _original_base64: base64,
+      };
+      addScan(scan);
+    } catch {
+      // handle error or user cancel
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  return (
+    <SafeAreaLayout
+      header={
+        <AppHeader
+          title="Scan Rau Củ"
+          showBack
+          rightActions={[
+            <AppHeaderButton key="scan" icon={isScanning ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : <Check className="h-6 w-6 text-green-500" />} onClick={handleScan} />,
+          ]}
+        />
+      }
+      footer={<ScanHistoryFooter onScan={handleScan} onImport={handleImport} />}
+    >
+      <div className="flex flex-col bg-gradient-to-br">
+        <div className="flex-1 w-full mx-auto px-3 pb-28">
+          <PlantScanList
+            scans={scans}
+            onScanClick={(scan) => {
+              setSelectedScan(scan);
+              setShowModal(true);
+            }}
+          />
+        </div>
+      </div>
+      <PlantScanDetailModal scan={selectedScan} open={showModal} onClose={() => setShowModal(false)} />
+    </SafeAreaLayout>
+  );
+}

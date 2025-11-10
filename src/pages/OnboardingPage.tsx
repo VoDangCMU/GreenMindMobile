@@ -158,13 +158,13 @@ export default function OnboardingPage() {
               if (currentStep < onboardingSteps.length - 1) {
                 setCurrentStep(currentStep + 1);
               } else {
-                navigate("/home");
+                navigate("/onboarding-quiz");
               }
             }}
             className="flex-1 rounded-full py-3 bg-greenery-500 text-white shadow-sm transition-all duration-150 hover:bg-greenery-600 ml-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {currentStep === onboardingSteps.length - 1
-              ? "Get Started"
+              ? "Take Survey"
               : "Next"}
             <ChevronRight className="w-5 h-5 ml-2" />
           </Button>
