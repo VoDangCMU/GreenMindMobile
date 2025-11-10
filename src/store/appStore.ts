@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { OceanScores } from "@/apis/backend/ocean";
 
 export interface User {
   id: string;
@@ -11,10 +12,14 @@ export interface User {
   location?: string;
 }
 
+
+
 export interface AppState {
   access_token: string | null;
   refresh_token: string | null;
   user: User | null;
+  ocean: OceanScores | null;
+  setOcean: (scores: OceanScores) => void;
   bypassAuthGate: boolean;
   setBypassAuthGate: (value: boolean) => void;
   setAuth: (data: {
@@ -33,7 +38,9 @@ export const useAppStore = create<AppState>()(
       access_token: null,
       refresh_token: null,
       user: null,
-      bypassAuthGate: false,
+  ocean: null,
+  bypassAuthGate: false,
+  setOcean: (scores) => set({ ocean: scores }),
       setAuth: async (data) => {
         set({
           access_token: data.access_token,

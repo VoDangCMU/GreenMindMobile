@@ -40,6 +40,7 @@ export default function ProfilePage() {
   const user = useAppStore((state) => state.user);
   const [isEditing, setIsEditing] = useState(false);
   const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
+  const ocean = useAppStore((state) => state.ocean) || MOCKED_OCEAN_SCORE;
   
   // Get Pre-App Survey data
   const { answers, isCompleted, completedAt } = usePreAppSurveyData();
@@ -270,7 +271,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-5 gap-2 items-end h-40">
-              {Object.entries(MOCKED_OCEAN_SCORE).map(([trait, value]) => (
+              {Object.entries(ocean).map(([trait, value]) => (
                 <div
                   key={trait}
                   className="flex flex-col items-center space-y-1"
