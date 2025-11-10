@@ -59,7 +59,7 @@ export const usePreAppSurveyStore = create<PreAppSurveyState>()(
               completedAt: res.data.completedAt ? new Date(res.data.completedAt) : null,
             });
           }
-        } catch (_e) {
+        } catch {
           // Optionally handle error
         }
       },

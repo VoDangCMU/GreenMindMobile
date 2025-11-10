@@ -41,7 +41,7 @@ export default function LoginPage() {
         refresh_token: data.refresh_token,
         user: data.user,
       });
-      success("Đăng nhập thành công! " + data.user.fullName);
+      success("Đăng nhập thành công! " + data.user.full_name);
       navigate("/home");
     } catch (error: any) {
       error(error?.response?.data?.message || "Đăng nhập thất bại!");
