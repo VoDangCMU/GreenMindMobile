@@ -10,7 +10,6 @@ import type { Todo } from "@/store/todoStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { useTodoStore } from "@/store/todoStore";
-import { useToast } from "@/hooks/useToast";
 import generate_subtasks from "@/apis/ai/todos/todo_generator";
 import list_adherence from "@/apis/ai/monitor_ocean/list_adherence";
 import { useAppStore } from "@/store/appStore";

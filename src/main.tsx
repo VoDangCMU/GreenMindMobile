@@ -32,6 +32,7 @@ import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
 import { getProfile } from "./apis/backend/profile.ts";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
 import GeolocationTracker from "./components/background-worker/GeolocationTracker.tsx";
+import NightOutTracker from "./components/background-worker/NightOutTracker.tsx";
 import PlantScanHistoryPage from "./pages/PlantScanPage.tsx";
 import { AppStateInitializer } from "./components/background-worker/AppStateInitializer.tsx";
 
@@ -107,6 +108,7 @@ createRoot(document.getElementById("root")!).render(
     <AuthStateInitializer />
     <AppStateInitializer />
     <GeolocationTracker />
+    <NightOutTracker timeBetweenCheck={10000} />
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />
   </StrictMode>

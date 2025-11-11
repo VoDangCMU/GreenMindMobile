@@ -17,6 +17,7 @@ export interface GeolocationState {
   lastUpdate: Date | null;
   error: string | null;
   positionHistory: GeolocationPosition[];
+  // Actions
   setPosition: (position: GeolocationPosition) => void;
   setTracking: (isTracking: boolean) => void;
   setError: (error: string | null) => void;
@@ -24,12 +25,16 @@ export interface GeolocationState {
   clearHistory: () => void;
 }
 
-export const useGeolocationStore = create<GeolocationState>((set) => ({
+const initialState = {
   currentPosition: null,
   isTracking: false,
   lastUpdate: null,
   error: null,
   positionHistory: [],
+};
+
+export const useGeolocationStore = create<GeolocationState>((set) => ({
+  ...initialState,
   setPosition: (position) => set((state) => ({
     currentPosition: position,
     lastUpdate: new Date(),
