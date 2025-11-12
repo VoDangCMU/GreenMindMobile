@@ -8,6 +8,10 @@ import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import analyzeImagePlant from "@/apis/ai/analyzeImagePlant";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Filesystem } from "@capacitor/filesystem";
+import { healthy_food_ratio } from "@/apis/ai/monitor_ocean";
+import type { IHealthyFoodRatio } from "@/apis/ai/monitor_ocean";
+import { useAppStore } from "@/store/appStore";
+import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 
 function PlantScanList({
   scans,
@@ -117,6 +121,61 @@ export default function PlantScanPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [selectedScan, setSelectedScan] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
+  const setOcean = useAppStore((state) => state.setOcean);
+  const ocean = useAppStore((state) => state.ocean);
+  const preAppSurveyAnswers = usePreAppSurveyStore((state) => state.answers);
+
+  // Calculate plant_meals and total_meals from scans
+  const calculateMealStats = () => {
+    const totalScans = scans.length;
+    const plantScans = scans.filter(scan => scan.vegetable_ratio_percent > 30).length; // Consider >30% as plant meal
+    return { plant_meals: plantScans, total_meals: totalScans };
+  };
+
+  // Get base_likert from preAppSurvey healthy_food_ratio
+  const getBaseLikert = () => {
+    if (preAppSurveyAnswers?.healthy_food_ratio) {
+      return parseInt(preAppSurveyAnswers.healthy_food_ratio);
+    }
+    return 3; // default
+  };
+
+  // Example: Call healthy_food_ratio and update ocean
+  async function handleUpdateOcean() {
+    const { plant_meals, total_meals } = calculateMealStats();
+    const base_likert = getBaseLikert();
+    
+    if (!ocean) {
+      alert("No current OCEAN scores found!");
+      return;
+    }
+
+    const data: IHealthyFoodRatio = {
+      plant_meals,
+      total_meals,
+      base_likert,
+      weight: 0.25,
+      direction: "up",
+      sigma_r: 1.0,
+      alpha: 0.5,
+      ocean_score: {
+        O: ocean.O / 100, // Convert back to 0-1 range
+        C: ocean.C / 100,
+        E: ocean.E / 100,
+        A: ocean.A / 100,
+        N: ocean.N / 100,
+      },
+    };
+    try {
+      const res = await healthy_food_ratio(data);
+      if (res && res.new_ocean_score) {
+        setOcean(res.new_ocean_score);
+        alert(`OCEAN updated! Plant meals: ${plant_meals}/${total_meals}, Base: ${base_likert}`);
+      }
+    } catch {
+      alert("Failed to update OCEAN");
+    }
+  };
 
   // Helper to extract base64 from photo (web/native)
   // Always use Capacitor Filesystem API to get base64 from photo
@@ -260,6 +319,12 @@ export default function PlantScanPage() {
         open={showModal}
         onClose={() => setShowModal(false)}
       />
+      <button
+        className="bg-greenery-600 text-white px-4 py-2 rounded-lg mb-4"
+        onClick={handleUpdateOcean}
+      >
+        Update OCEAN (Demo)
+      </button>
     </SafeAreaLayout>
   );
 }

@@ -5,6 +5,10 @@ import useInvoiceStore from "@/store/invoiceStore";
 import ocrBill from "@/apis/ai/ocrInvoice";
 import invoiceApi from "@/apis/backend/invoice";
 import { toast } from "sonner";
+import { avg_daily_spend } from "@/apis/ai/monitor_ocean";
+import type { IAvgDailySpend } from "@/apis/ai/monitor_ocean";
+import { useAppStore } from "@/store/appStore";
+import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 
 interface HistoryPageFooterProps {
   onImport?: () => void;
@@ -17,6 +21,57 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
   const setOcring = useInvoiceStore((state) => state.setOcring);
   const addAIInvoice = useInvoiceStore((state) => state.addAIInvoice);
   const invoices = useInvoiceStore((state) => state.invoices);
+  const setOcean = useAppStore((state) => state.setOcean);
+  const ocean = useAppStore((state) => state.ocean);
+  const preAppSurveyAnswers = usePreAppSurveyStore((state) => state.answers);
+
+  // Get base_avg from preAppSurvey avg_daily_spend
+  const getBaseAvg = () => {
+    if (preAppSurveyAnswers?.avg_daily_spend) {
+      return parseInt(preAppSurveyAnswers.avg_daily_spend);
+    }
+    return 500000; // default
+  };
+
+  // Update OCEAN after invoice scan
+  const updateOceanFromInvoice = async (invoiceTotal: number) => {
+    const base_avg = getBaseAvg();
+    
+    if (!ocean) {
+      return; // No OCEAN scores, skip silently
+    }
+
+    if (invoiceTotal === 0) {
+      return; // No valid total, skip silently
+    }
+
+    const data: IAvgDailySpend = {
+      daily_total: invoiceTotal,
+      base_avg,
+      weight: 0.2,
+      direction: "down",
+      sigma_r: 1.0,
+      alpha: 0.5,
+      ocean_score: {
+        O: ocean.O / 100, // Convert back to 0-1 range
+        C: ocean.C / 100,
+        E: ocean.E / 100,
+        A: ocean.A / 100,
+        N: ocean.N / 100,
+      },
+    };
+    
+    try {
+      const res = await avg_daily_spend(data);
+      if (res && res.new_ocean_score) {
+        setOcean(res.new_ocean_score);
+        console.log(`OCEAN updated from invoice! Daily: ${invoiceTotal}, Base: ${base_avg}`);
+      }
+    } catch (error) {
+      // Silently ignore API errors
+      console.warn("Failed to update OCEAN from invoice:", error);
+    }
+  };
 
   const handleScan = async () => {
     setOcring(true);
@@ -57,6 +112,10 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
         setOcring(false);
         toast.success("Invoice added successfully");
 
+        // Update OCEAN from the new invoice
+        const invoiceTotal = parseFloat(createdInvoice.grandTotal);
+        updateOceanFromInvoice(invoiceTotal);
+
         console.log("Local states:", invoices);
 
         return;
@@ -64,6 +123,11 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
         console.log("Cannot use server, saving locally:", err);
         toast.warning("Cannot use server, saving locally");
         addAIInvoice(exportedInvoice);
+        
+        // Update OCEAN from the AI invoice data
+        const invoiceTotal = parseFloat(exportedInvoice?.totals?.grand_total?.toString() || "0");
+        updateOceanFromInvoice(invoiceTotal);
+        
         setOcring(false);
         return;
       }
@@ -96,9 +160,17 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
       try {
         const createdInvoice = await invoiceApi.createInvoice(exportedInvoice);
         addInvoice(createdInvoice);
+        
+        // Update OCEAN from the imported invoice
+        const invoiceTotal = parseFloat(createdInvoice.grandTotal);
+        updateOceanFromInvoice(invoiceTotal);
       } catch (error) {
         console.error("Failed to create invoice:", error);
         addAIInvoice(exportedInvoice);
+        
+        // Update OCEAN from the AI invoice data
+        const invoiceTotal = parseFloat(exportedInvoice?.totals?.grand_total?.toString() || "0");
+        updateOceanFromInvoice(invoiceTotal);
       }
     } catch (err: any) {
       console.error("Upload error:", err);

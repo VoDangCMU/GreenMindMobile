@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGeolocationStore } from "@/store/geolocationStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Navigation, Compass, Gauge } from "lucide-react";
@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { reverseGeocode } from "@/apis/nominatim/reverseGeocode";
 
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -34,11 +35,25 @@ function SetMapRef({ setRef }: { setRef: (map: L.Map) => void }) {
 export default function CurrentLocationCard() {
   const { currentPosition, isTracking, lastUpdate, error } = useGeolocationStore();
   const mapRef = useRef<L.Map | null>(null);
+  const [address, setAddress] = useState<string>("");
+  const [loadingAddress, setLoadingAddress] = useState(false);
 
   const formatCoordinate = (coord: number) => coord.toFixed(6);
   const formatAccuracy = (accuracy?: number) => accuracy ? `${Math.round(accuracy)}m` : "N/A";
   const formatSpeed = (speed?: number | null) => speed ? `${(speed * 3.6).toFixed(1)} km/h` : "N/A";
   const formatAltitude = (altitude?: number | null) => altitude ? `${Math.round(altitude)}m` : "N/A";
+
+  useEffect(() => {
+    if (currentPosition) {
+      setLoadingAddress(true);
+      reverseGeocode(currentPosition.latitude, currentPosition.longitude)
+        .then((res) => setAddress(res.display_name))
+        .catch(() => setAddress("Không lấy được địa chỉ"))
+        .finally(() => setLoadingAddress(false));
+    } else {
+      setAddress("");
+    }
+  }, [currentPosition]);
 
   if (!currentPosition && !error) {
     return (
@@ -96,7 +111,13 @@ export default function CurrentLocationCard() {
                 </span>
               </div>
             </div>
-
+            {/* Reverse Geocode Address */}
+            <div className="pt-2">
+              <span className="text-xs font-medium text-gray-600">Địa chỉ</span>
+              <span className="block text-sm text-greenery-700 min-h-[20px]">
+                {loadingAddress ? "Đang lấy địa chỉ..." : address}
+              </span>
+            </div>
             {/* Accuracy & Speed */}
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
               <div className="flex items-center space-x-2">
@@ -114,7 +135,6 @@ export default function CurrentLocationCard() {
                 </div>
               </div>
             </div>
-
             {/* Altitude */}
             {currentPosition.altitude !== null && (
               <div className="pt-2 border-t border-gray-200">
@@ -127,7 +147,6 @@ export default function CurrentLocationCard() {
                 </div>
               </div>
             )}
-
             {/* Timestamp */}
             {lastUpdate && (
               <div className="pt-2 border-t border-gray-200">
@@ -136,7 +155,6 @@ export default function CurrentLocationCard() {
                 </p>
               </div>
             )}
-
             {/* Map Section */}
             <div className="h-60 rounded-lg overflow-hidden border border-gray-200 mt-3">
               <MapContainer
@@ -162,7 +180,6 @@ export default function CurrentLocationCard() {
                 />
                 <SetMapRef setRef={(map) => (mapRef.current = map)} />
               </MapContainer>
-
             </div>
           </>
         )}
