@@ -24,8 +24,8 @@ const features = [
         <circle cx="12" cy="12" r="3" />
       </svg>
     ),
-    title: "Tỷ lệ rau củ",
-    desc: "Phân tích tỉ lệ rau củ trong món ăn từ ảnh.",
+    title: "Tỷ lệ thực vật",
+    desc: "Phân tích tỉ lệ thực vật trong món ăn từ ảnh.",
   },
   {
     to: "/invoice-history",

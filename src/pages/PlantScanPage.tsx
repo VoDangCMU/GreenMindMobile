@@ -292,7 +292,7 @@ export default function PlantScanPage() {
     <SafeAreaLayout
       header={
         <AppHeader
-          title="Tỷ lệ rau củ"
+          title="Tỷ lệ thực vật"
           showBack
           rightActions={[
             <AppHeaderButton
