@@ -33,6 +33,7 @@ export default tseslint.config([
       '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
       'no-empty': 'off',
       'react-refresh/only-export-components': 'off',
+      'react-hooks/exhaustive-deps': 'off'
     },
   },
 ])

@@ -1,43 +1,76 @@
-import { Toaster } from "sonner";
-import { useEffect } from "react";
-import { toast } from "sonner";
-import { useAppStore } from "./store/appStore";
-import { StrictMode } from "react";
+import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import "leaflet/dist/leaflet.css";
-import {
-  RouterProvider,
-  createHashRouter,
-} from "react-router-dom";
-import LoginPage from "./pages/LoginPage.tsx";
-import OnboardingQuizPage from "./pages/OnboardingQuizPage.tsx";
-import HomePage from "./pages/HomePage.tsx";
-import AdvicePage from "./pages/AdvicePage.tsx";
-import ChatPage from "./pages/ChatPage.tsx";
-import CommunityPage from "./pages/CommunityPage.tsx";
-import FeedbackPage from "./pages/FeedbackPage.tsx";
-import GoalsPage from "./pages/GoalsPage.tsx";
-import ImpactPage from "./pages/ImpactPage.tsx";
-import ProfilePage from "./pages/ProfilePage.tsx";
-import QuizPage from "./pages/QuizPage.tsx";
-import RecomendationPage from "./pages/RecomendationPage.tsx";
-import RegisterPage from "./pages/RegisterPage.tsx";
-import TrackingPage from "./pages/TrackingPage.tsx";
-import InvoiceHistoryPage from "./pages/InvoiceHistoryPage.tsx";
-import TodoPage from "./pages/TodoPage.tsx";
-
-import AuthGate from "./components/app-components/AuthGate.tsx";
-import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
+import { RouterProvider, createHashRouter } from "react-router-dom";
+import { Toaster } from "sonner";
+import { toast } from "sonner";
+import { useAppStore } from "./store/appStore";
 import { getProfile } from "./apis/backend/profile.ts";
-import OnboardingPage from "./pages/OnboardingPage.tsx";
+
+// Components
+import AuthGate from "./components/app-components/AuthGate.tsx";
+// import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
 import GeolocationTracker from "./components/background-worker/GeolocationTracker.tsx";
-import PlantScanHistoryPage from "./pages/PlantScanPage.tsx";
+import NightOutTracker from "./components/background-worker/NightOutTracker.tsx";
 import { AppStateInitializer } from "./components/background-worker/AppStateInitializer.tsx";
 
+// Pages (import trực tiếp tất cả)
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import OnboardingPage from "./pages/OnboardingPage";
+import OnboardingQuizPage from "./pages/OnboardingQuizPage";
+import HomePage from "./pages/HomePage";
+import AdvicePage from "./pages/AdvicePage";
+import ChatPage from "./pages/ChatPage";
+import CommunityPage from "./pages/CommunityPage";
+import FeedbackPage from "./pages/FeedbackPage";
+import GoalsPage from "./pages/GoalsPage";
+import ImpactPage from "./pages/ImpactPage";
+import ProfilePage from "./pages/ProfilePage";
+import QuizPage from "./pages/QuizPage";
+import RecomendationPage from "./pages/RecomendationPage";
+import TrackingPage from "./pages/TrackingPage";
+import InvoiceHistoryPage from "./pages/InvoiceHistoryPage";
+import TodoPage from "./pages/TodoPage";
+import PlantScanHistoryPage from "./pages/PlantScanPage";
+
+// -----------------
+// Auth initializer
+// -----------------
+function AuthStateInitializer() {
+  useEffect(() => {
+    const initializer = async () => {
+      const state = useAppStore.getState();
+      try {
+        const data = await getProfile(state.access_token || "");
+        useAppStore.getState().setAuth({
+          access_token: state.access_token || "",
+          refresh_token: state.refresh_token || "",
+          user: data,
+        });
+      } catch {
+        useAppStore.getState().setAuth({ access_token: "", refresh_token: "", user: null });
+      }
+
+      if (state.user) {
+        toast.success(`Welcome back, ${state.user.full_name}!`);
+      }
+    };
+
+    initializer();
+  }, []);
+
+  return null;
+}
+
+// -----------------
+// Router
+// -----------------
 const router = createHashRouter([
   {
-    element: <AnimatedLayout />,
+    // element: <AnimatedLayout />,
+    element: null,
     children: [
       { path: "/", element: <LoginPage /> },
       { path: "/login", element: <LoginPage /> },
@@ -67,46 +100,15 @@ const router = createHashRouter([
   },
 ]);
 
-function AuthStateInitializer() {
-  useEffect(() => {
-    const initializer = async () => {
-      const state = useAppStore.getState();
-
-      try {
-        const data = await getProfile(state.access_token || "");
-
-        useAppStore.getState().setAuth({
-          access_token: state.access_token || "",
-          refresh_token: state.refresh_token || "",
-          user: data,
-        });
-      } catch (error) {
-        console.error("Failed to get profile:", error);
-
-        useAppStore.getState().setAuth({
-          access_token: "",
-          refresh_token: "",
-          user: null,
-        });
-      }
-
-      if (state.user) {
-        console.log("Token alive", JSON.stringify(state));
-        console.log("user", state.user);
-        toast.success(`Welcome back, ${state.user.full_name}!`);
-      }
-    }
-
-    initializer();
-  }, []);
-  return null;
-}
-
+// -----------------
+// Render
+// -----------------
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthStateInitializer />
     <AppStateInitializer />
-    <GeolocationTracker />
+    <GeolocationTracker logging={true}/>
+    <NightOutTracker timeBetweenCheck={10000}  testMode={true}/>
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />
   </StrictMode>

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,8 +9,11 @@ import type { Todo } from "@/store/todoStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { useTodoStore } from "@/store/todoStore";
-import { useToast } from "@/hooks/useToast";
 import generate_subtasks from "@/apis/ai/todos/todo_generator";
+import list_adherence from "@/apis/ai/monitor_ocean/list_adherence";
+import { useAppStore } from "@/store/appStore";
+import { useOceanUpdate } from "@/hooks/useOceanUpdate";
+import { createTodo, getTodos, batchCreateTodos, deleteTodo as deleteTodoAPI, toggleTodo as toggleTodoAPI, type TodoData } from "@/apis/backend/todo";
 import {
   ChevronDown,
   ChevronRight,
@@ -20,6 +24,7 @@ import {
   Wand2,
   Loader2,
 } from "lucide-react";
+import type { OceanScore } from "@/apis/ai/monitor_ocean";
 
 type TodoItemProps = {
   item: Todo;
@@ -230,12 +235,42 @@ function TodoItemComponent({
 }
 
 export default function TodoPage() {
-  const { todos, addTodo, addSubtask, toggleComplete, removeTodo } = useTodoStore();
-  const toast = useToast();
+  const { todos, addTodo, addSubtask, toggleComplete, removeTodo, setTodos } = useTodoStore();
+  const { updateOcean } = useOceanUpdate();
+  const ocean = useAppStore((state) => state.ocean);
+  const user = useAppStore((state) => state.user);
 
   const [newTodoText, setNewTodoText] = useState("");
   const [editingParentId, setEditingParentId] = useState<string | null>(null);
   const [newChildText, setNewChildText] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Convert backend TodoData to local Todo format
+  const convertTodoData = (todoData: TodoData): Todo => ({
+    id: todoData.id,
+    title: todoData.title,
+    completed: todoData.completed,
+    children: todoData.subtasks?.map(convertTodoData) || [],
+    parent: todoData.parent_id || undefined,
+  });
+
+  // Fetch todos from backend on mount
+  useEffect(() => {
+    const fetchTodosFromBackend = async () => {
+      if (!user?.id) return;
+      setLoading(true);
+      try {
+        const response = await getTodos();
+        const backendTodos = response.data.data.map(convertTodoData);
+        setTodos(backendTodos);
+      } catch (error) {
+        console.error("Failed to fetch todos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTodosFromBackend();
+  }, []);
 
   // Count all todos recursively
   const countAllTodos = (items: Todo[]): number => {
@@ -249,21 +284,68 @@ export default function TodoPage() {
   };
 
   // Add main todo
-  const addMainTodo = () => {
-    if (newTodoText.trim()) {
-      addTodo({
-        id: Date.now().toString(),
+  const addMainTodo = async () => {
+    if (!newTodoText.trim() || !user?.id) return;
+    setLoading(true);
+    try {
+      const response = await createTodo({
         title: newTodoText,
+        parent_id: null,
         completed: false,
-        children: [],
       });
+      const newTodo = convertTodoData(response.data.data);
+      addTodo(newTodo);
       setNewTodoText("");
+    } catch (error) {
+      console.error("Failed to create todo:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Toggle todo completion
-  const toggleTodo = (id: string) => {
-    toggleComplete(id);
+  const toggleTodo = async (id: string) => {
+    try {
+      await toggleTodoAPI(id);
+      toggleComplete(id);
+
+      // Prepare data for the list_adherence API - only top level tasks
+      const flattenTodos = (items: Todo[]): Array<{ task: string; done: boolean }> => {
+        return items.map(item => ({
+          task: item.title,
+          done: item.completed
+        }));
+      };
+
+      const normalizeOceanScores = ({ O, C, E, A, N }: OceanScore) => ({
+        O: O / 100,
+        C: C / 100,
+        E: E / 100,
+        A: A / 100,
+        N: N / 100
+      });
+
+      const flatTodos = flattenTodos(todos);
+      if (!ocean) {
+        console.error("No OCEAN scores available");
+        return;
+      }
+      // Call list_adherence first to calculate new scores
+      const response = await list_adherence({
+        todos: flatTodos,
+        base_likert: 4, // Default base likert scale
+        weight: 0.3,   // Default weight
+        direction: "up", // Default direction
+        sigma_r: 1.0,  // Default sigma
+        alpha: 0.5,   // Default alpha
+        ocean_score: normalizeOceanScores(ocean)
+      });
+
+      // Update the OCEAN scores with the new values from list_adherence
+      await updateOcean(response.new_ocean_score);
+    } catch (error) {
+      console.error("Failed to toggle todo:", error);
+    }
   };
 
   // Toggle expand/collapse
@@ -282,23 +364,31 @@ export default function TodoPage() {
   };
 
   // Delete todo
-  const deleteTodo = (id: string) => {
-    removeTodo(id);
-    if (editingParentId === id) setEditingParentId(null);
+  const deleteTodo = async (id: string) => {
+    try {
+      await deleteTodoAPI(id);
+      removeTodo(id);
+      if (editingParentId === id) setEditingParentId(null);
+    } catch (error) {
+      console.error("Failed to delete todo:", error);
+    }
   };
 
   // Add child todo
-  const addChildTodo = (parentId: string, text: string) => {
-    if (!text.trim()) return;
+  const addChildTodo = async (parentId: string, text: string) => {
+    if (!text.trim() || !user?.id) return;
 
-    const newTodo = {
-      id: `${parentId}-${Date.now()}`,
-      title: text,
-      completed: false,
-      children: [],
-    };
-
-    addSubtask(parentId, newTodo);
+    try {
+      const response = await createTodo({
+        title: text,
+        parent_id: parentId,
+        completed: false,
+      });
+      const newTodo = convertTodoData(response.data.data);
+      addSubtask(parentId, newTodo);
+    } catch (error) {
+      console.error("Failed to create subtask:", error);
+    }
   };
 
   // Track generating states
@@ -306,25 +396,29 @@ export default function TodoPage() {
 
   // Generate AI subtasks
   const handleGenerateSubtasks = async (parentId: string, todoTitle: string) => {
+    if (!user?.id) return;
+    
     setGeneratingIds(prev => new Set(prev).add(parentId));
     try {
       const response = await generate_subtasks({ task: todoTitle });
       
-      response.subtasks.forEach((task: string) => {
-        const newTodo = {
-          id: `${parentId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          title: task.replace('*   ', ''),  // Remove the bullet point
-          completed: false,
-          children: [],
-        };
-        
-        addSubtask(parentId, newTodo);
+      const subtasks = response.subtasks.map((task: string) => ({
+        title: task.replace('*   ', ''),
+        completed: false,
+      }));
+
+      await batchCreateTodos({
+        parent_id: parentId,
+        todos: subtasks,
       });
 
-      toast.success("Generated subtasks successfully!");
+      // Refresh todos to get the updated data
+      const todosResponse = await getTodos();
+      const backendTodos = todosResponse.data.data.map(convertTodoData);
+      setTodos(backendTodos);
+
     } catch (error) {
       console.error("Failed to generate subtasks:", error);
-      toast.error("Failed to generate subtasks");
     } finally {
       setGeneratingIds(prev => {
         const next = new Set(prev);
@@ -340,6 +434,35 @@ export default function TodoPage() {
   return (
     <SafeAreaLayout header={<AppHeader showBack title="Todo" />}>
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
+        {/* OCEAN Score Compact
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-greenery-600" />
+                <span className="text-sm font-medium">OCEAN Score</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-5 gap-1.5">
+              {ocean && Object.entries(ocean).map(([trait, value]) => (
+                <div
+                  key={trait}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-2 h-16 bg-gray-200 relative rounded-sm overflow-hidden mb-1">
+                    <div
+                      className="bg-greenery-500 w-full absolute bottom-0 transition-all duration-300"
+                      style={{ height: `${value}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium text-gray-600">{trait}</span>
+                  <span className="text-[10px] text-gray-500">{Number(value).toFixed(0)}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card> */}
+
         {/* Stats Card */}
         <Card className="border-0 shadow-md bg-gradient-to-r from-greenery-50 to-blue-50">
           <CardContent className="p-4">

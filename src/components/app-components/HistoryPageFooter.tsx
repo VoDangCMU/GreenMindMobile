@@ -64,6 +64,7 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
         console.log("Cannot use server, saving locally:", err);
         toast.warning("Cannot use server, saving locally");
         addAIInvoice(exportedInvoice);
+        
         setOcring(false);
         return;
       }

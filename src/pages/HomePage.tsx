@@ -1,11 +1,12 @@
 import { Card } from "@/components/ui/card";
-import { Target, Award, Users, MessageCircle, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Target, Award, Users, MessageCircle, AlertCircle, CheckCircle2, Leaf } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppHeader from "@/components/app-components/HomeAppHeader";
-import { useEffect, useRef, useState } from "react";
-import { App as CapacitorApp } from "@capacitor/app";
 import BottomNav from "@/components/app-components/HomeBottomNav";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
+import OceanPersonalityCard from "@/components/app-components/OceanPersonalityCard";
+import NightOutCard from "@/components/app-components/NightOutCard";
+import CurrentLocationCard from "@/components/app-components/CurrentLocationCard";
 
 const features = [
   {
@@ -23,8 +24,8 @@ const features = [
         <circle cx="12" cy="12" r="3" />
       </svg>
     ),
-    title: "Scan Rau Củ",
-    desc: "Phân tích tỉ lệ rau củ trong món ăn từ ảnh.",
+    title: "Tỷ lệ thực vật",
+    desc: "Phân tích tỉ lệ thực vật trong món ăn từ ảnh.",
   },
   {
     to: "/invoice-history",
@@ -136,50 +137,16 @@ const features = [
 ];
 
 export default function HomePage() {
-  const backPressCount = useRef(0);
-  const [showToast, setShowToast] = useState(false);
-
-  useEffect(() => {
-    let listenerHandle: any;
-    (async () => {
-      listenerHandle = await CapacitorApp.addListener("backButton", () => {
-        if (window.location.hash === "#/" || window.location.pathname === "/") {
-          backPressCount.current++;
-          if (backPressCount.current < 2) {
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 1500);
-          } else {
-            CapacitorApp.exitApp();
-          }
-        } else {
-          window.history.back();
-        }
-      });
-    })();
-    return () => {
-      if (listenerHandle && typeof listenerHandle.remove === "function") {
-        listenerHandle.remove();
-      } else if (listenerHandle && typeof listenerHandle.then === "function") {
-        listenerHandle.then((h: any) => h.remove && h.remove());
-      }
-    };
-  }, []);
-
   return (
     <SafeAreaLayout
       className="bg-gradient-to-br from-greenery-50 to-greenery-100"
       header={<AppHeader />}
       footer={<BottomNav />}
     >
-      {showToast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-greenery-700 text-white px-4 py-2 rounded-xl shadow z-50 animate-fade-in">
-          Nhấn back lần nữa để thoát
-        </div>
-      )}
       <div className="w-full max-w-md mx-auto pt-10 pb-6 px-4">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-full bg-greenery-500 flex items-center justify-center shadow-md mb-3">
-            <Target className="w-8 h-8 text-white" />
+            <Leaf className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-extrabold text-greenery-700 mb-1 tracking-tight text-center drop-shadow-sm">
             Green Mind
@@ -187,6 +154,16 @@ export default function HomePage() {
           <p className="text-greenery-600 text-center">
             Your journey to a greener, more mindful life starts here.
           </p>
+        </div>
+
+        <OceanPersonalityCard />
+
+        <div className="mb-4">
+          <CurrentLocationCard />
+        </div>
+
+        <div className="mb-6">
+          <NightOutCard />
         </div>
 
         {/* Onboarding Quiz Status */}

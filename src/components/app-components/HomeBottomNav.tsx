@@ -1,4 +1,4 @@
-import { Home, BarChart2, Users, Plus, User } from "lucide-react"
+import { Home, Plus, User, Target, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const BottomNav = () => {
@@ -19,11 +19,11 @@ const BottomNav = () => {
         </Link>
 
         <Link
-          to="/impact"
+          to="/quiz"
           className="flex flex-col items-center justify-center py-2 hover:text-blue-600 text-gray-500 dark:text-gray-400 group"
         >
-          <BarChart2 className="w-6 h-6 mb-1" />
-          <span className="text-xs">Impact</span>
+          <Target className="w-6 h-6 mb-1" />
+          <span className="text-xs">Personality</span>
         </Link>
 
         {/* Floating Add button */}
@@ -37,11 +37,11 @@ const BottomNav = () => {
         </div>
 
         <Link
-          to="/community"
+          to="/todo"
           className="flex flex-col items-center justify-center py-2 hover:text-blue-600 text-gray-500 dark:text-gray-400 group"
         >
-          <Users className="w-6 h-6 mb-1" />
-          <span className="text-xs">Community</span>
+          <CheckCircle2 className="w-6 h-6 mb-1" />
+          <span className="text-xs">Todo</span>
         </Link>
 
         <Link
