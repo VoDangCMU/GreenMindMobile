@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef } from "react";
 import { useGeolocationStore } from "@/store/geolocationStore";
 import { useAppStore } from "@/store/appStore";

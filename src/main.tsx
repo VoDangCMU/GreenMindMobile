@@ -10,7 +10,7 @@ import { getProfile } from "./apis/backend/profile.ts";
 
 // Components
 import AuthGate from "./components/app-components/AuthGate.tsx";
-import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
+// import AnimatedLayout from "./components/layouts/AnimatedLayout.tsx";
 import GeolocationTracker from "./components/background-worker/GeolocationTracker.tsx";
 import NightOutTracker from "./components/background-worker/NightOutTracker.tsx";
 import { AppStateInitializer } from "./components/background-worker/AppStateInitializer.tsx";

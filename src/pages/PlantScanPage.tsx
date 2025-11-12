@@ -5,7 +5,7 @@ import { useState } from "react";
 import ScanHistoryFooter from "@/components/app-components/ScanHistoryFooter";
 import usePlantScanStore, { type PlantScanResult } from "@/store/plantScanStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import analyzeImagePlant, { type AnalyzeImagePlantResult } from "@/apis/ai/analyzeImagePlant";
+import analyzeImagePlant from "@/apis/ai/analyzeImagePlant";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Filesystem } from "@capacitor/filesystem";
 import { healthy_food_ratio } from "@/apis/ai/monitor_ocean";

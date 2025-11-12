@@ -92,7 +92,6 @@ export default function InvoiceHistoryPage() {
       console.log("Fetched invoices:", data);
       useBillStore.getState().setInvoices(data ? data : []);
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
