@@ -140,14 +140,13 @@ export default function PlantScanPage() {
     return 3; // default
   };
 
-  // Example: Call healthy_food_ratio and update ocean
-  async function handleUpdateOcean() {
+  // Update OCEAN after plant scan
+  const updateOceanAfterScan = async () => {
     const { plant_meals, total_meals } = calculateMealStats();
     const base_likert = getBaseLikert();
     
     if (!ocean) {
-      alert("No current OCEAN scores found!");
-      return;
+      return; // No OCEAN scores, skip silently
     }
 
     const data: IHealthyFoodRatio = {
@@ -170,10 +169,11 @@ export default function PlantScanPage() {
       const res = await healthy_food_ratio(data);
       if (res && res.new_ocean_score) {
         setOcean(res.new_ocean_score);
-        alert(`OCEAN updated! Plant meals: ${plant_meals}/${total_meals}, Base: ${base_likert}`);
+        console.log(`OCEAN updated from plant scan! Plant meals: ${plant_meals}/${total_meals}, Base: ${base_likert}`);
       }
-    } catch {
-      alert("Failed to update OCEAN");
+    } catch (error) {
+      // Silently ignore API errors
+      console.warn("Failed to update OCEAN from plant scan:", error);
     }
   };
 
@@ -247,6 +247,8 @@ export default function PlantScanPage() {
         _original_base64: base64,
       };
       addScan(scan);
+      // Auto-update OCEAN after successful camera scan
+      updateOceanAfterScan();
     } catch {
       // handle error or user cancel
     } finally {
@@ -273,6 +275,8 @@ export default function PlantScanPage() {
         _original_base64: base64,
       };
       addScan(scan);
+      // Auto-update OCEAN after successful import scan
+      updateOceanAfterScan();
     } catch {
       // handle error or user cancel
     } finally {
@@ -319,12 +323,6 @@ export default function PlantScanPage() {
         open={showModal}
         onClose={() => setShowModal(false)}
       />
-      <button
-        className="bg-greenery-600 text-white px-4 py-2 rounded-lg mb-4"
-        onClick={handleUpdateOcean}
-      >
-        Update OCEAN (Demo)
-      </button>
     </SafeAreaLayout>
   );
 }
