@@ -243,7 +243,7 @@ export default function TodoPage() {
   const [newTodoText, setNewTodoText] = useState("");
   const [editingParentId, setEditingParentId] = useState<string | null>(null);
   const [newChildText, setNewChildText] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
   // Convert backend TodoData to local Todo format
   const convertTodoData = (todoData: TodoData): Todo => ({
