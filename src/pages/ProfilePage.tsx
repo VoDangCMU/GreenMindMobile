@@ -33,6 +33,8 @@ import AppHeader from "@/components/common/AppHeader";
 import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
 import CurrentLocationCard from "@/components/app-components/CurrentLocationCard";
 import LocationHistoryCard from "@/components/app-components/LocationHistoryCard";
+import HomeLocationCard from "@/components/app-components/HomeLocationCard";
+import NightOutStatusCard from "@/components/app-components/NightOutStatusCard";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -319,6 +321,12 @@ export default function ProfilePage() {
 
         {/* Current Location Card */}
         <CurrentLocationCard />
+
+        {/* Home Location Card */}
+        <HomeLocationCard />
+
+        {/* Night Out Status Card */}
+        <NightOutStatusCard />
 
         {/* Location History Card */}
         <LocationHistoryCard />

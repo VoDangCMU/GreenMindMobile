@@ -1,19 +1,24 @@
 import AppHeader from "@/components/common/AppHeader";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import ScanHistoryFooter from "@/components/app-components/ScanHistoryFooter";
-import usePlantScanStore from "@/store/plantScanStore";
+import usePlantScanStore, { type PlantScanResult } from "@/store/plantScanStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import analyzeImagePlant from "@/apis/ai/analyzeImagePlant";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Filesystem } from "@capacitor/filesystem";
+import { healthy_food_ratio } from "@/apis/ai/monitor_ocean";
+import type { IHealthyFoodRatio } from "@/apis/ai/monitor_ocean";
+import { useAppStore } from "@/store/appStore";
+import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
+import { useOceanUpdate } from "@/hooks/useOceanUpdate";
 
 function PlantScanList({
   scans,
   onScanClick,
 }: {
-  scans: any[];
+  scans: PlantScanResult[];
   onScanClick: (scan: any) => void;
 }) {
   // Helper to check if base64 is valid (not empty/null/undefined)
@@ -27,9 +32,21 @@ function PlantScanList({
           className="bg-white rounded-lg shadow p-4 flex items-center gap-4 cursor-pointer"
           onClick={() => onScanClick(scan)}
         >
-          {isValidBase64(scan._original_base64) ? (
+          {/* {isValidBase64(scan._original_base64) ? (
             <img
               src={`data:image/jpeg;base64,${scan._original_base64}`}
+              alt="Dish"
+              className="w-16 h-16 object-cover rounded"
+              onError={(e) => (e.currentTarget.style.display = "none")}
+            />
+          ) : (
+            <div className="w-16 h-16 bg-gray-100 flex items-center justify-center rounded text-gray-400 text-xs">
+              No image
+            </div>
+          )} */}
+          {isValidBase64(scan.plant_image_base64) ? (
+            <img
+              src={`${scan.plant_image_base64}`}
               alt="Dish"
               className="w-16 h-16 object-cover rounded"
               onError={(e) => (e.currentTarget.style.display = "none")}
@@ -56,7 +73,7 @@ function PlantScanDetailModal({
   open,
   onClose,
 }: {
-  scan: any;
+  scan: PlantScanResult;
   open: boolean;
   onClose: () => void;
 }) {
@@ -74,9 +91,9 @@ function PlantScanDetailModal({
           ×
         </button>
         <div className="mb-4">
-          {isValidBase64(scan._original_base64) ? (
+          {isValidBase64(scan.plant_image_base64) ? (
             <img
-              src={`data:image/jpeg;base64,${scan._original_base64}`}
+              src={`${scan.plant_image_base64}`}
               alt="Dish"
               className="w-full rounded mb-2"
               onError={(e) => (e.currentTarget.style.display = "none")}
@@ -84,18 +101,6 @@ function PlantScanDetailModal({
           ) : (
             <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded mb-2 text-gray-400 text-sm">
               No dish image
-            </div>
-          )}
-          {isValidBase64(scan.plant_image_base64) ? (
-            <img
-              src={`data:image/jpeg;base64,${scan.plant_image_base64}`}
-              alt="Vegetable"
-              className="w-full rounded"
-              onError={(e) => (e.currentTarget.style.display = "none")}
-            />
-          ) : (
-            <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded text-gray-400 text-sm">
-              No vegetable mask
             </div>
           )}
         </div>
@@ -117,6 +122,68 @@ export default function PlantScanPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [selectedScan, setSelectedScan] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
+  const [isUpdatingOcean, setIsUpdatingOcean] = useState(false);
+  const setOcean = useAppStore((state) => state.setOcean);
+  const ocean = useAppStore((state) => state.ocean);
+  const { updateOcean } = useOceanUpdate();
+  const preAppSurveyAnswers = usePreAppSurveyStore((state) => state.answers);
+
+  // Calculate plant_meals and total_meals from scans
+  const calculateMealStats = () => {
+    const totalScans = scans.length;
+    const plantScans = scans.filter(scan => scan.vegetable_ratio_percent > 30).length; // Consider >30% as plant meal
+    return { plant_meals: plantScans, total_meals: totalScans };
+  };
+
+  // Get base_likert from preAppSurvey healthy_food_ratio
+  const getBaseLikert = () => {
+    if (preAppSurveyAnswers?.healthy_food_ratio) {
+      return parseInt(preAppSurveyAnswers.healthy_food_ratio);
+    }
+    return 3; // default
+  };
+
+  // Update OCEAN manually when button is clicked
+  const handleUpdateOcean = async () => {
+    setIsUpdatingOcean(true);
+    const { plant_meals, total_meals } = calculateMealStats();
+    const base_likert = getBaseLikert();
+    
+    if (!ocean) {
+      setIsUpdatingOcean(false);
+      return; // No OCEAN scores, skip silently
+    }
+
+    const data: IHealthyFoodRatio = {
+      plant_meals,
+      total_meals,
+      base_likert,
+      weight: 0.25,
+      direction: "up",
+      sigma_r: 1.0,
+      alpha: 0.5,
+      ocean_score: {
+        O: ocean.O / 100, // Convert back to 0-1 range
+        C: ocean.C / 100,
+        E: ocean.E / 100,
+        A: ocean.A / 100,
+        N: ocean.N / 100,
+      },
+    };
+    try {
+      const res = await healthy_food_ratio(data);
+      if (res && res.new_ocean_score) {
+        updateOcean(res.new_ocean_score);
+        setOcean(res.new_ocean_score);
+        console.log(`OCEAN updated from plant scan! Plant meals: ${plant_meals}/${total_meals}, Base: ${base_likert}`);
+      }
+    } catch (error) {
+      // Silently ignore API errors
+      console.warn("Failed to update OCEAN from plant scan:", error);
+    } finally {
+      setIsUpdatingOcean(false);
+    }
+  };
 
   // Helper to extract base64 from photo (web/native)
   // Always use Capacitor Filesystem API to get base64 from photo
@@ -225,9 +292,20 @@ export default function PlantScanPage() {
     <SafeAreaLayout
       header={
         <AppHeader
-          title="Scan Rau Củ"
+          title="Tỷ lệ thực vật"
           showBack
           rightActions={[
+            <AppHeaderButton
+              key="update-ocean"
+              icon={
+                isUpdatingOcean ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                ) : (
+                  <RefreshCw className="h-6 w-6 text-blue-500" />
+                )
+              }
+              onClick={handleUpdateOcean}
+            />,
             <AppHeaderButton
               key="scan"
               icon={

@@ -23,7 +23,6 @@ export default function LoginPage() {
     if (access_token) {
       navigate("/home");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMockLogin = () => {

@@ -7,7 +7,6 @@ export interface PlantScanResult {
   dish_area: number;
   vegetable_ratio_percent: number;
   plant_image_base64: string;
-  dish_image_base64: string;
 }
 
 interface PlantScanStore {

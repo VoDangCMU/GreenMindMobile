@@ -16,6 +16,7 @@ interface TodoStore {
   toggleComplete: (id: string) => void;
   removeTodo: (id: string) => void;
   updateTodo: (id: string, updates: Partial<Todo>) => void;
+  setTodos: (todos: Todo[]) => void;
 }
 
 export const useTodoStore = create<TodoStore>((set) => ({
@@ -38,13 +39,16 @@ export const useTodoStore = create<TodoStore>((set) => ({
     
   removeTodo: (id) =>
     set((state) => ({
-      todos: state.todos.filter(todo => todo.id !== id)
+      todos: removeTodoById(state.todos, id)
     })),
     
   updateTodo: (id, updates) =>
     set((state) => ({
       todos: updateTodoById(state.todos, id, updates)
-    }))
+    })),
+
+  setTodos: (todos) =>
+    set({ todos })
 }));
 
 // Helper functions
@@ -96,6 +100,18 @@ function updateTodoById(todos: Todo[], id: string, updates: Partial<Todo>): Todo
       return {
         ...todo,
         children: updateTodoById(todo.children, id, updates)
+      };
+    }
+    return todo;
+  });
+}
+
+function removeTodoById(todos: Todo[], id: string): Todo[] {
+  return todos.filter(todo => todo.id !== id).map(todo => {
+    if (todo.children.length > 0) {
+      return {
+        ...todo,
+        children: removeTodoById(todo.children, id)
       };
     }
     return todo;
