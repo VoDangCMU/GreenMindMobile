@@ -1,4 +1,4 @@
-import { Home, BarChart2, Users, Plus, User, Target, CheckCircle2 } from "lucide-react";
+import { Home, Plus, User, Target, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const BottomNav = () => {

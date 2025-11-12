@@ -49,7 +49,7 @@ function AuthStateInitializer() {
           refresh_token: state.refresh_token || "",
           user: data,
         });
-      } catch (error) {
+      } catch {
         useAppStore.getState().setAuth({ access_token: "", refresh_token: "", user: null });
       }
 
@@ -69,7 +69,8 @@ function AuthStateInitializer() {
 // -----------------
 const router = createHashRouter([
   {
-    element: <AnimatedLayout />,
+    // element: <AnimatedLayout />,
+    element: null,
     children: [
       { path: "/", element: <LoginPage /> },
       { path: "/login", element: <LoginPage /> },
@@ -106,8 +107,8 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthStateInitializer />
     <AppStateInitializer />
-    <GeolocationTracker />
-    <NightOutTracker timeBetweenCheck={10000} />
+    <GeolocationTracker logging={true}/>
+    <NightOutTracker timeBetweenCheck={10000}  testMode={true}/>
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />
   </StrictMode>

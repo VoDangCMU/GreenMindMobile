@@ -13,6 +13,7 @@ export interface LocationCreateParams {
   userId: string;
   latitude: number;
   longitude: number;
+  length_to_previous_location?: number | undefined;
 }
 
 export interface LocationUpdateParams {
@@ -59,6 +60,13 @@ export interface IGetLocationResponse {
     address:   string;
     createdAt: Date;
     updatedAt: Date;
+    lengthToPreviousLocation: number | null;
+}
+
+export interface IGetAllLocationsResponse {
+    message: string;
+    data: IGetLocationResponse[];
+    count: number;
 }
 
 
@@ -66,8 +74,8 @@ export async function createLocation(params: LocationCreateParams) {
   return BackendInstance.post<ICreateLocationResponse>("/locations", params, { headers: authHeader() });
 }
 
-export async function getLocationById(id: string) {
-  return BackendInstance.get<IGetLocationResponse>(`/locations/${id}`, { headers: authHeader() });
+export async function getAllUserLocation() {
+  return BackendInstance.get<IGetAllLocationsResponse>(`/locations`, { headers: authHeader() });
 }
 
 export async function updateLocation(id: string, params: LocationUpdateParams) {

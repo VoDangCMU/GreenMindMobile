@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useGeolocationStore } from "@/store/geolocationStore";
 import {
   getCurrentPosition,
@@ -7,7 +7,7 @@ import {
   calculateDistance,
 } from "@/helpers/geolocationHelper";
 import { useAppStore } from "@/store/appStore";
-import { createLocation } from "@/apis/backend/location";
+import { createLocation, type LocationCreateParams } from "@/apis/backend/location";
 
 interface GeolocationTrackerProps {
   timeBetweenTrack?: number;
@@ -15,11 +15,74 @@ interface GeolocationTrackerProps {
 }
 
 function GeolocationTracker({ timeBetweenTrack = 30000, logging = false }: GeolocationTrackerProps) {
-  const { currentPosition, setPosition, setError, setTracking } = useGeolocationStore();
+  const { setPosition, setError, setTracking } = useGeolocationStore();
   const user = useAppStore((s) => s.user);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(false);
+
+  const updatePosition = useCallback(async () => {
+    if (!mountedRef.current) {
+      if (logging) console.warn("⚠️ [Update] Component unmounted, skip update");
+      return;
+    }
+
+    if (logging) console.log("🔄 [Update] Getting current position...");
+
+    try {
+      const newPos = await getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000,
+      });
+
+      if (!mountedRef.current) {
+        if (logging) console.warn("⚠️ [Update] Component unmounted after fetch");
+        return;
+      }
+
+      let lengthToPreviousLocation = 0.1;
+      const currentStorePosition = useGeolocationStore.getState().currentPosition;
+      if (currentStorePosition) {
+        const distance = calculateDistance(
+          currentStorePosition.latitude,
+          currentStorePosition.longitude,
+          newPos.latitude,
+          newPos.longitude
+        );
+        lengthToPreviousLocation = distance * 1000 + 0.1; // convert km to m
+        if (logging) console.log(`📍 [Update] Moved ${distance.toFixed(4)} km since last update (${lengthToPreviousLocation.toFixed(2)} m)`);
+      } else {
+        if (logging) console.log("🆕 [Update] First position recorded");
+      }
+
+      console.log(user)
+      // Call backend location API for realtime tracking
+      if (user?.id) {
+        const payload: LocationCreateParams = {
+          name: "realtime tracking",
+          address: "realtime tracking",
+          coordinates: { lat: newPos.latitude, lng: newPos.longitude },
+          userId: user.id,
+          latitude: newPos.latitude,
+          longitude: newPos.longitude,
+          length_to_previous_location: lengthToPreviousLocation,
+        };
+        
+        if (logging) console.log("[LocationAPI] Sending payload:", payload);
+        
+        createLocation(payload).catch((err) => {
+          if (logging) console.error("[LocationAPI] Failed to create location:", err);
+        });
+      }
+
+      if (logging) console.log("✅ [Update] Setting new position:", newPos);
+      setPosition(newPos);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Lỗi định vị không xác định";
+      if (logging) console.error("❌ [Update] Failed to get position:", msg);
+      setError(msg);
+    }
+  }, [logging, setPosition, setError, user?.id]);
 
   useEffect(() => {
     if (logging) console.log("🟢 [Effect] GeolocationTracker mounted");
@@ -31,60 +94,6 @@ function GeolocationTracker({ timeBetweenTrack = 30000, logging = false }: Geolo
       setError("Thiết bị không hỗ trợ định vị.");
       return;
     }
-
-    const updatePosition = async () => {
-      if (!mountedRef.current) {
-        if (logging) console.warn("⚠️ [Update] Component unmounted, skip update");
-        return;
-      }
-
-      if (logging) console.log("🔄 [Update] Getting current position...");
-
-      try {
-        const newPos = await getCurrentPosition({
-          enableHighAccuracy: true,
-          timeout: 10000,
-        });
-
-        if (!mountedRef.current) {
-          if (logging) console.warn("⚠️ [Update] Component unmounted after fetch");
-          return;
-        }
-
-        if (currentPosition) {
-          const distance = calculateDistance(
-            currentPosition.latitude,
-            currentPosition.longitude,
-            newPos.latitude,
-            newPos.longitude
-          );
-          if (logging) console.log(`📍 [Update] Moved ${distance.toFixed(4)} km since last update`);
-        } else {
-          if (logging) console.log("🆕 [Update] First position recorded");
-        }
-
-        // Call backend location API for realtime tracking
-        if (user?.id) {
-          createLocation({
-            name: "realtime tracking",
-            address: "realtime tracking",
-            coordinates: { lat: newPos.latitude, lng: newPos.longitude },
-            userId: user.id,
-            latitude: newPos.latitude,
-            longitude: newPos.longitude,
-          }).catch((err) => {
-            if (logging) console.error("[LocationAPI] Failed to create location:", err);
-          });
-        }
-
-        if (logging) console.log("✅ [Update] Setting new position:", newPos);
-        setPosition(newPos);
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : "Lỗi định vị không xác định";
-        if (logging) console.error("❌ [Update] Failed to get position:", msg);
-        setError(msg);
-      }
-    };
 
     if (logging) console.log("⚙️ [Init] Start tracking...");
     setTracking(true);
@@ -112,7 +121,7 @@ function GeolocationTracker({ timeBetweenTrack = 30000, logging = false }: Geolo
 
       setTracking(false);
     };
-  }, [logging]); // 👈 chạy lại nếu logging thay đổi
+  }, [logging]);
 
   return null;
 }

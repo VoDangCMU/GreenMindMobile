@@ -24,7 +24,7 @@ const features = [
         <circle cx="12" cy="12" r="3" />
       </svg>
     ),
-    title: "Scan Rau Củ",
+    title: "Tỷ lệ rau củ",
     desc: "Phân tích tỉ lệ rau củ trong món ăn từ ảnh.",
   },
   {

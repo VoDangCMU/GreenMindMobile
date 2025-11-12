@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { useGeolocationStore } from "@/store/geolocationStore";
 import { useAppStore } from "@/store/appStore";
+import { useNightOutHistoryStore } from "@/store/nightOutHistoryStore";
 import { calculateDistance } from "@/helpers/geolocationHelper";
 
 interface NightOutTrackerProps {
@@ -23,6 +24,7 @@ function NightOutTracker({
   const homeLocation = useAppStore((state) => state.homeLocation);
   const nightOutStatus = useAppStore((state) => state.nightOutStatus);
   const setNightOutStatus = useAppStore((state) => state.setNightOutStatus);
+  const { addNightOutRecord, hasNightOutToday } = useNightOutHistoryStore();
   
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(false);
@@ -113,6 +115,8 @@ function NightOutTracker({
         console.log(`🏠 [NightOut] Home location: ${homeLocation.latitude.toFixed(6)}, ${homeLocation.longitude.toFixed(6)}`);
         console.log(`📍 [NightOut] Current location: ${currentPosition.latitude.toFixed(6)}, ${currentPosition.longitude.toFixed(6)}`);
       }
+      
+      // Update current night out status
       setNightOutStatus({
         isNightOut: true,
         lastDetectedTime: currentTime,
@@ -122,6 +126,26 @@ function NightOutTracker({
           longitude: currentPosition.longitude,
         },
       });
+      
+      // Save to night out history (only once per day)
+      if (!hasNightOutToday()) {
+        addNightOutRecord({
+          timestamp: currentTime,
+          distanceFromHome: distanceFromHome,
+          location: {
+            latitude: currentPosition.latitude,
+            longitude: currentPosition.longitude,
+          },
+        });
+        
+        if (logging) {
+          console.log("📝 [NightOut] Added to night out history for today");
+        }
+      } else {
+        if (logging) {
+          console.log("📝 [NightOut] Night out already recorded for today");
+        }
+      }
     } else if (!isCurrentlyNightOut && nightOutStatus.isNightOut) {
       if (logging) {
         if (!isNightTime) {
