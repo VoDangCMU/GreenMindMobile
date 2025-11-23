@@ -1,4 +1,4 @@
-import { StrictMode, useEffect } from "react";
+import { StrictMode, useEffect, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import "leaflet/dist/leaflet.css";
@@ -15,25 +15,32 @@ import GeolocationTracker from "./components/background-worker/GeolocationTracke
 import NightOutTracker from "./components/background-worker/NightOutTracker.tsx";
 import { AppStateInitializer } from "./components/background-worker/AppStateInitializer.tsx";
 
-// Pages (import trực tiếp tất cả)
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import OnboardingPage from "./pages/OnboardingPage";
-import OnboardingQuizPage from "./pages/OnboardingQuizPage";
-import HomePage from "./pages/HomePage";
-import AdvicePage from "./pages/AdvicePage";
-import ChatPage from "./pages/ChatPage";
-import CommunityPage from "./pages/CommunityPage";
-import FeedbackPage from "./pages/FeedbackPage";
-import GoalsPage from "./pages/GoalsPage";
-import ImpactPage from "./pages/ImpactPage";
-import ProfilePage from "./pages/ProfilePage";
-import QuizPage from "./pages/QuizPage";
-import RecomendationPage from "./pages/RecomendationPage";
-import TrackingPage from "./pages/TrackingPage";
-import InvoiceHistoryPage from "./pages/InvoiceHistoryPage";
-import TodoPage from "./pages/TodoPage";
-import PlantScanHistoryPage from "./pages/PlantScanPage";
+// Lazy load pages for better performance
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
+const OnboardingQuizPage = lazy(() => import("./pages/OnboardingQuizPage"));
+const HomePage = lazy(() => import("./pages/HomePage"));
+const AdvicePage = lazy(() => import("./pages/AdvicePage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+const CommunityPage = lazy(() => import("./pages/CommunityPage"));
+const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
+const GoalsPage = lazy(() => import("./pages/GoalsPage"));
+const ImpactPage = lazy(() => import("./pages/ImpactPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const QuizPage = lazy(() => import("./pages/QuizPage"));
+const RecomendationPage = lazy(() => import("./pages/RecomendationPage"));
+const TrackingPage = lazy(() => import("./pages/TrackingPage"));
+const InvoiceHistoryPage = lazy(() => import("./pages/InvoiceHistoryPage"));
+const TodoPage = lazy(() => import("./pages/TodoPage"));
+const PlantScanHistoryPage = lazy(() => import("./pages/PlantScanPage"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+  </div>
+);
 
 // -----------------
 // Auth initializer
@@ -72,28 +79,28 @@ const router = createHashRouter([
     // element: <AnimatedLayout />,
     element: null,
     children: [
-      { path: "/", element: <LoginPage /> },
-      { path: "/login", element: <LoginPage /> },
-      { path: "/register", element: <RegisterPage /> },
+      { path: "/", element: <Suspense fallback={<PageLoader />}><LoginPage /></Suspense> },
+      { path: "/login", element: <Suspense fallback={<PageLoader />}><LoginPage /></Suspense> },
+      { path: "/register", element: <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense> },
       {
         element: <AuthGate />,
         children: [
-          { path: "/onboarding", element: <OnboardingPage /> },
-          { path: "/onboarding-quiz", element: <OnboardingQuizPage /> },
-          { path: "/home", element: <HomePage /> },
-          { path: "/advice", element: <AdvicePage /> },
-          { path: "/chat", element: <ChatPage /> },
-          { path: "/community", element: <CommunityPage /> },
-          { path: "/feedback", element: <FeedbackPage /> },
-          { path: "/goals", element: <GoalsPage /> },
-          { path: "/impact", element: <ImpactPage /> },
-          { path: "/profile", element: <ProfilePage /> },
-          { path: "/quiz", element: <QuizPage /> },
-          { path: "/recommendations", element: <RecomendationPage /> },
-          { path: "/tracking", element: <TrackingPage /> },
-          { path: "/invoice-history", element: <InvoiceHistoryPage /> },
-          { path: "/todo", element: <TodoPage /> },
-          { path: "/plant-scan-history", element: <PlantScanHistoryPage /> },
+          { path: "/onboarding", element: <Suspense fallback={<PageLoader />}><OnboardingPage /></Suspense> },
+          { path: "/onboarding-quiz", element: <Suspense fallback={<PageLoader />}><OnboardingQuizPage /></Suspense> },
+          { path: "/home", element: <Suspense fallback={<PageLoader />}><HomePage /></Suspense> },
+          { path: "/advice", element: <Suspense fallback={<PageLoader />}><AdvicePage /></Suspense> },
+          { path: "/chat", element: <Suspense fallback={<PageLoader />}><ChatPage /></Suspense> },
+          { path: "/community", element: <Suspense fallback={<PageLoader />}><CommunityPage /></Suspense> },
+          { path: "/feedback", element: <Suspense fallback={<PageLoader />}><FeedbackPage /></Suspense> },
+          { path: "/goals", element: <Suspense fallback={<PageLoader />}><GoalsPage /></Suspense> },
+          { path: "/impact", element: <Suspense fallback={<PageLoader />}><ImpactPage /></Suspense> },
+          { path: "/profile", element: <Suspense fallback={<PageLoader />}><ProfilePage /></Suspense> },
+          { path: "/quiz", element: <Suspense fallback={<PageLoader />}><QuizPage /></Suspense> },
+          { path: "/recommendations", element: <Suspense fallback={<PageLoader />}><RecomendationPage /></Suspense> },
+          { path: "/tracking", element: <Suspense fallback={<PageLoader />}><TrackingPage /></Suspense> },
+          { path: "/invoice-history", element: <Suspense fallback={<PageLoader />}><InvoiceHistoryPage /></Suspense> },
+          { path: "/todo", element: <Suspense fallback={<PageLoader />}><TodoPage /></Suspense> },
+          { path: "/plant-scan-history", element: <Suspense fallback={<PageLoader />}><PlantScanHistoryPage /></Suspense> },
         ],
       },
     ],
@@ -104,12 +111,12 @@ const router = createHashRouter([
 // Render
 // -----------------
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  <>
     <AuthStateInitializer />
     <AppStateInitializer />
     <GeolocationTracker logging={true}/>
     <NightOutTracker timeBetweenCheck={10000}  testMode={true}/>
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />
-  </StrictMode>
+  </>
 );
