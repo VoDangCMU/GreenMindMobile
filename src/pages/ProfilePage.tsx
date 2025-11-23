@@ -35,13 +35,14 @@ import CurrentLocationCard from "@/components/app-components/CurrentLocationCard
 import LocationHistoryCard from "@/components/app-components/LocationHistoryCard";
 import HomeLocationCard from "@/components/app-components/HomeLocationCard";
 import NightOutStatusCard from "@/components/app-components/NightOutStatusCard";
+import { useAuthStore } from "@/store/authStore";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const clearAuth = useAppStore((state) => state.clearAuth);
-  const user = useAppStore((state) => state.user);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const user = useAuthStore((state) => state.user);
   const [isEditing, setIsEditing] = useState(false);
-  const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
+  const setBypassAuthGate = useAuthStore((state) => state.setBypassAuthGate);
   const ocean = useAppStore((state) => state.ocean) || MOCKED_OCEAN_SCORE;
   
   // Get Pre-App Survey data

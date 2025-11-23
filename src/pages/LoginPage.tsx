@@ -6,17 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Leaf } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "@/apis/backend/login";
-import { useAppStore } from "@/store/appStore";
+import login from "@/apis/backend/login";
 import { useToast } from "@/hooks/useToast";
+import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const setAuth = useAppStore((state) => state.setAuth);
-  const access_token = useAppStore((state) => state.access_token);
-  const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
+  const setTokens = useAuthStore((state) => state.setTokens);
+  const setUser = useAuthStore((state) => state.setUser);
+  const access_token = useAuthStore((state) => state.tokens?.access_token);
+  const setBypassAuthGate = useAuthStore((state) => state.setBypassAuthGate);
   const { success } = useToast();
 
   useEffect(() => {
@@ -34,12 +35,12 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email || !password) return;
     try {
-      const data = await loginUser({ email, password });
-      setAuth({
+      const data = await login({ email, password });
+      setTokens({
         access_token: data.access_token,
         refresh_token: data.refresh_token,
-        user: data.user,
       });
+      setUser(data.user);
       success("Đăng nhập thành công! " + data.user.full_name);
       navigate("/home");
     } catch (error: any) {

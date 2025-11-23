@@ -1,11 +1,12 @@
 import { useRegisterStore } from "@/store/registerStore";
 import { Link } from "react-router-dom";
-import RegisterFormStep1 from "@/components/app-components/RegisterFormStep1";
-import RegisterFormStep2 from "@/components/app-components/RegisterFormStep2";
-import RegisterFormStep3 from "@/components/app-components/RegisterFormStep3";
+const RegisterFormStep1 = lazy(() => import('@/components/app-components/RegisterFormStep1'));
+const RegisterFormStep2 = lazy(() => import('@/components/app-components/RegisterFormStep2'));
+const RegisterFormStep3 = lazy(() => import('@/components/app-components/RegisterFormStep3'));
 import ProcessIndicator from "@/components/common/ProcessIndicator";
 import { Leaf } from "lucide-react";
-import { useAppStore } from "@/store/appStore";
+import { useAuthStore } from "@/store/authStore";
+import { lazy } from "react";
 
 export default function RegisterPage() {
   const {
@@ -16,7 +17,7 @@ export default function RegisterPage() {
     setShowPassword,
     setShowConfirmPassword,
   } = useRegisterStore();
-  const setBypassAuthGate = useAppStore((state) => state.setBypassAuthGate);
+  const setBypassAuthGate = useAuthStore((state) => state.setBypassAuthGate);
 
 
   const getPasswordStrength = (

@@ -14,6 +14,7 @@ import daily_distance_km, { type IDailyDistanceKm } from "@/apis/ai/monitor_ocea
 import { getAllUserLocation } from "@/apis/backend/location";
 import { updateUserOcean } from "@/apis/backend/ocean";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/authStore";
 
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -41,7 +42,8 @@ function SetMapRef({ setRef }: { setRef: (map: L.Map) => void }) {
 
 export default function CurrentLocationCard() {
   const { currentPosition, isTracking, lastUpdate, error, positionHistory } = useGeolocationStore();
-  const { ocean, setOcean, user } = useAppStore();
+  const { ocean, setOcean } = useAppStore();
+  const user = useAuthStore((s) => s.user);
   const { answers } = usePreAppSurveyStore();
   const mapRef = useRef<L.Map | null>(null);
   const [address, setAddress] = useState<string>("");

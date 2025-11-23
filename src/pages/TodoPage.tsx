@@ -25,6 +25,7 @@ import {
   Loader2,
 } from "lucide-react";
 import type { OceanScore } from "@/apis/ai/monitor_ocean";
+import { useAuthStore } from "@/store/authStore";
 
 type TodoItemProps = {
   item: Todo;
@@ -238,7 +239,7 @@ export default function TodoPage() {
   const { todos, addTodo, addSubtask, toggleComplete, removeTodo, setTodos } = useTodoStore();
   const { updateOcean } = useOceanUpdate();
   const ocean = useAppStore((state) => state.ocean);
-  const user = useAppStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   const [newTodoText, setNewTodoText] = useState("");
   const [editingParentId, setEditingParentId] = useState<string | null>(null);

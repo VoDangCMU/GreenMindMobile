@@ -9,10 +9,11 @@ interface Props {}
 
 import { registerUser } from "@/apis/backend/register";
 import { toast } from "sonner";
-import { useAppStore } from "@/store/appStore";
+import { useAuthStore } from "@/store/authStore";
 const RegisterFormStep3: React.FC<Props> = () => {
   const { isLoading, formData, errors, setFormData, setErrors, setCurrentStep, setIsLoading } = useRegisterStore();
-  const setAuth = useAppStore(state => state.setAuth);
+  const setUser = useAuthStore(state => state.setUser);
+  const setTokens = useAuthStore(state => state.setTokens);
   const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: boolean) => {
@@ -47,11 +48,11 @@ const RegisterFormStep3: React.FC<Props> = () => {
 
       const data = await registerUser(payload);
 
-      setAuth({
+      setTokens({
         access_token: data.access_token,
         refresh_token: data.refresh_token,
-        user: data.user,
       });
+      setUser(data.user);
 
       toast.success("Đăng ký thành công! Đang chuyển hướng...");
 

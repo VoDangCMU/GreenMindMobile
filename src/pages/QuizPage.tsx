@@ -9,7 +9,7 @@ import AppHeader from "@/components/common/AppHeader";
 import { toast } from "sonner";
 import { getQuestionTemplates } from "@/apis/backend/question";
 import { submitUserAnswers } from "@/apis/backend/userAnswer";
-import { useAppStore } from "@/store/appStore";
+import { useAuthStore } from "@/store/authStore";
 
 interface QuestionOption {
   text: string;
@@ -30,7 +30,7 @@ export default function QuizPage() {
   const [showResults, setShowResults] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const user = useAppStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);

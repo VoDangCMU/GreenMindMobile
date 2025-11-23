@@ -1,14 +1,14 @@
 import { useAppStore } from "@/store/appStore";
 import { updateUserOcean } from "@/apis/backend/ocean";
-import type { OceanScores } from "@/apis/backend/ocean";
 import { useToast } from "./useToast";
+import { useAuthStore } from "@/store/authStore";
 
 export function useOceanUpdate() {
-  const user = useAppStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
   const setOcean = useAppStore((state) => state.setOcean);
   const toast = useToast();
 
-  const updateOcean = async (scores: OceanScores) => {
+  const updateOcean = async (scores: IOcean) => {
     if (!user?.id) {
       console.error("Cannot update OCEAN scores: No user ID found");
       toast.error("Cannot update OCEAN scores: Not logged in");

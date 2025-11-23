@@ -1,18 +1,10 @@
 import BackendInstance from "../instances/BackendInstance";
 
-export interface Profile {
-  id: string;
-  username: string;
-  email: string;
-  full_name: string;
-  role: string;
-}
-
-export async function getProfile(token: string): Promise<Profile> {
+export async function getProfile(token: string): Promise<IUserSnakeCase> {
   const res = await BackendInstance.get("/auth/profile", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  return res.data;
+  return res.data as IUserSnakeCase;
 }

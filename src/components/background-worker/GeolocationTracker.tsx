@@ -5,8 +5,8 @@ import {
   isGeolocationAvailable,
   calculateDistance,
 } from "@/helpers/geolocationHelper";
-import { useAppStore } from "@/store/appStore";
-import { createLocation, type LocationCreateParams } from "@/apis/backend/location";
+import { createLocation } from "@/apis/backend/location";
+import { useAuthStore } from "@/store/authStore";
 
 interface GeolocationTrackerProps {
   timeBetweenTrack?: number;
@@ -15,7 +15,7 @@ interface GeolocationTrackerProps {
 
 function GeolocationTracker({ timeBetweenTrack = 30000, logging = false }: GeolocationTrackerProps) {
   const { setPosition, setError, setTracking } = useGeolocationStore();
-  const user = useAppStore((s) => s.user);
+  const user = useAuthStore((s) => s.user);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(false);
@@ -57,7 +57,7 @@ function GeolocationTracker({ timeBetweenTrack = 30000, logging = false }: Geolo
       console.log(user)
       // Call backend location API for realtime tracking
       if (user?.id) {
-        const payload: LocationCreateParams = {
+        const payload: ILocationCreateParams = {
           name: "realtime tracking",
           address: "realtime tracking",
           coordinates: { lat: newPos.latitude, lng: newPos.longitude },

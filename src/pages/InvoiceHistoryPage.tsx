@@ -12,6 +12,7 @@ import InvoiceList from "@/components/app-components/InvoiceList";
 import { avg_daily_spend } from "@/apis/ai/monitor_ocean";
 import type { IAvgDailySpend } from "@/apis/ai/monitor_ocean";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
+import { useAuthStore } from "@/store/authStore";
 
 export default function InvoiceHistoryPage() {
   const invoices = useBillStore((state) => state.invoices);
@@ -19,7 +20,7 @@ export default function InvoiceHistoryPage() {
   const [selectedBill, setSelectedBill] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isUpdatingOcean, setIsUpdatingOcean] = useState(false);
-  const appState = useAppStore.getState();
+  const user = useAuthStore((s) => s.user);
   const setOcean = useAppStore((state) => state.setOcean);
   const ocean = useAppStore((state) => state.ocean);
   const preAppSurveyAnswers = usePreAppSurveyStore((state) => state.answers);
@@ -88,7 +89,7 @@ export default function InvoiceHistoryPage() {
 
    
   useEffect(() => {
-    invoiceApi.getInvoicesByUserId(appState.user?.id!).then((data) => {
+    invoiceApi.getInvoicesByUserId(user?.id!).then((data) => {
       console.log("Fetched invoices:", data);
       useBillStore.getState().setInvoices(data ? data : []);
     });

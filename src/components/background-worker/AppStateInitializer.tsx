@@ -3,6 +3,7 @@ import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyStore, type PreAppSurveyAnswers } from "@/store/preAppSurveyStore";
 import { getUserOcean, createUserOcean, DEFAULT_OCEAN } from "@/apis/backend/ocean";
 import { getPreAppSurveyByUser } from "@/apis/backend/preAppSurvey";
+import { useAuthStore } from "@/store/authStore";
 
 // Map API response to store format
 function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
@@ -20,7 +21,7 @@ function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
 }
 
 export function AppStateInitializer() {
-  const user = useAppStore((s) => s.user);
+  const user = useAuthStore((s) => s.user);
   const setOcean = useAppStore((s) => s.setOcean);
   const preAppSurvey = usePreAppSurveyStore((s) => s.answers);
   const setAnswers = usePreAppSurveyStore((s) => s.setAnswers);

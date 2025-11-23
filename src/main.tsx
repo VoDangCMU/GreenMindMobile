@@ -1,12 +1,9 @@
-import { StrictMode, useEffect, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import "leaflet/dist/leaflet.css";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { Toaster } from "sonner";
-import { toast } from "sonner";
-import { useAppStore } from "./store/appStore";
-import { getProfile } from "./apis/backend/profile.ts";
 
 // Components
 import AuthGate from "./components/app-components/AuthGate.tsx";
@@ -14,6 +11,7 @@ import AuthGate from "./components/app-components/AuthGate.tsx";
 import GeolocationTracker from "./components/background-worker/GeolocationTracker.tsx";
 import NightOutTracker from "./components/background-worker/NightOutTracker.tsx";
 import { AppStateInitializer } from "./components/background-worker/AppStateInitializer.tsx";
+import AuthStateInitializer from "./components/background-worker/AuthStateInitializer.tsx";
 
 // Lazy load pages for better performance
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -41,35 +39,6 @@ const PageLoader = () => (
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
   </div>
 );
-
-// -----------------
-// Auth initializer
-// -----------------
-function AuthStateInitializer() {
-  useEffect(() => {
-    const initializer = async () => {
-      const state = useAppStore.getState();
-      try {
-        const data = await getProfile(state.access_token || "");
-        useAppStore.getState().setAuth({
-          access_token: state.access_token || "",
-          refresh_token: state.refresh_token || "",
-          user: data,
-        });
-      } catch {
-        useAppStore.getState().setAuth({ access_token: "", refresh_token: "", user: null });
-      }
-
-      if (state.user) {
-        toast.success(`Welcome back, ${state.user.full_name}!`);
-      }
-    };
-
-    initializer();
-  }, []);
-
-  return null;
-}
 
 // -----------------
 // Router
