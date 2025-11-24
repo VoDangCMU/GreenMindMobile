@@ -1,30 +1,5 @@
 import { create } from "zustand";
 
-export interface GeolocationPosition {
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-  altitude?: number | null;
-  altitudeAccuracy?: number | null;
-  heading?: number | null;
-  speed?: number | null;
-  timestamp: number;
-}
-
-export interface GeolocationState {
-  currentPosition: GeolocationPosition | null;
-  isTracking: boolean;
-  lastUpdate: Date | null;
-  error: string | null;
-  positionHistory: GeolocationPosition[];
-  // Actions
-  setPosition: (position: GeolocationPosition) => void;
-  setTracking: (isTracking: boolean) => void;
-  setError: (error: string | null) => void;
-  clearPosition: () => void;
-  clearHistory: () => void;
-}
-
 const initialState = {
   currentPosition: null,
   isTracking: false,
@@ -33,7 +8,7 @@ const initialState = {
   positionHistory: [],
 };
 
-export const useGeolocationStore = create<GeolocationState>((set) => ({
+export const useGeolocationStore = create<IGeolocationState>((set) => ({
   ...initialState,
   setPosition: (position) => set((state) => ({
     currentPosition: position,
@@ -41,6 +16,9 @@ export const useGeolocationStore = create<GeolocationState>((set) => ({
     error: null,
     positionHistory: [position, ...state.positionHistory].slice(0, 50), // Keep last 50 positions
   })),
+  setCurrentLocationDisplayName: (displayName: string) => set({
+    currentPositionDisplayName: displayName,
+  }),
   setTracking: (isTracking) => set({ isTracking }),
   setError: (error) => set({ error, isTracking: false }),
   clearPosition: () => set({

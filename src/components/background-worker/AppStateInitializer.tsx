@@ -4,6 +4,7 @@ import { usePreAppSurveyStore, type PreAppSurveyAnswers } from "@/store/preAppSu
 import { getUserOcean, createUserOcean, DEFAULT_OCEAN } from "@/apis/backend/ocean";
 import { getPreAppSurveyByUser } from "@/apis/backend/preAppSurvey";
 import { useAuthStore } from "@/store/authStore";
+import useFetch from "@/hooks/useFetch";
 
 // Map API response to store format
 function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
@@ -23,53 +24,32 @@ function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
 export function AppStateInitializer() {
   const user = useAuthStore((s) => s.user);
   const setOcean = useAppStore((s) => s.setOcean);
-  const preAppSurvey = usePreAppSurveyStore((s) => s.answers);
   const setAnswers = usePreAppSurveyStore((s) => s.setAnswers);
+  const { call } = useFetch();
 
   useEffect(() => {
-    if (user?.id && !preAppSurvey) {
-      async function fetchPreAppData() {
-        try {
-          const res = await getPreAppSurveyByUser(user?.id || "");
-          if (res.data) {
-            // Map the API response to store format
-            const mappedAnswers = mapApiResponseToStore(res.data);
-            setAnswers(mappedAnswers);
-          }
-        } catch (error) {
-          console.error("Failed to fetch pre-app survey:", error);
-        }
+    call([
+      {
+        fn: () => getUserOcean(user?.id || ""),
+        onSuccess: (data) => {
+          setOcean(data.scores);
+        },
+        onFailed: () => {
+          createUserOcean(user?.id || "", DEFAULT_OCEAN);
+          setOcean(DEFAULT_OCEAN);
+        },
+      },
+      {
+        fn: () => getPreAppSurveyByUser(user?.id || ""),
+        onSuccess: (data) => {
+          setAnswers(mapApiResponseToStore(data));
+        },
+        onFailed: () => {
+          //ignore
+        },
       }
-      fetchPreAppData();
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    let ignore = false;
-    async function ensureOcean() {
-      if (!user?.id) return;
-      try {
-        const res = await getUserOcean(user.id);
-        if (!ignore && res?.scores) {
-          setOcean(res.scores);
-        }
-      } catch (err: any) {
-        if (err?.response?.status === 404) {
-          // Not found, create default
-          try {
-            const created = await createUserOcean(user.id, DEFAULT_OCEAN);
-            if (!ignore && created?.scores) {
-              setOcean(created.scores);
-            }
-          } catch {
-            // handle error if needed
-          }
-        }
-      }
-    }
-    ensureOcean();
-    return () => { ignore = true; };
-  }, [user?.id, setOcean]);
+    ]);
+  }, []);
 
   return null;
 }

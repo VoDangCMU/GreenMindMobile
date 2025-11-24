@@ -15,7 +15,7 @@ export default function AuthStateInitializer() {
                 fn: () => getProfile(state.tokens?.access_token || ""),
                 onSuccess: (data) => {
                     useAuthStore.getState().setUser(data)
-                    toast.success(`Welcome back, ${state.user!.full_name}!`);
+                    toast.success(`Welcome back, ${data.full_name}!`);
                 },
                 onFailed: () => {
                     useAuthStore.getState().clearAuth()

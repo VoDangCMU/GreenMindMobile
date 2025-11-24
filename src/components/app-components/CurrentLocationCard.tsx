@@ -46,8 +46,7 @@ export default function CurrentLocationCard() {
   const user = useAuthStore((s) => s.user);
   const { answers } = usePreAppSurveyStore();
   const mapRef = useRef<L.Map | null>(null);
-  const [address, setAddress] = useState<string>("");
-  const [loadingAddress, setLoadingAddress] = useState(false);
+  const address = useGeolocationStore((s) => s.currentPositionDisplayName);
   const [updatingOcean, setUpdatingOcean] = useState(false);
   const [todayDistanceKm, setTodayDistanceKm] = useState<number>(0);
 
@@ -55,25 +54,25 @@ export default function CurrentLocationCard() {
   const formatAccuracy = (accuracy?: number) => accuracy ? `${Math.round(accuracy)}m` : "N/A";
   const formatSpeed = (speed?: number | null) => speed ? `${(speed * 3.6).toFixed(1)} km/h` : "N/A";
   const formatAltitude = (altitude?: number | null) => altitude ? `${Math.round(altitude)}m` : "N/A";
-  
+
   // Fetch today's distance from backend API
   const fetchTodayDistanceFromBackend = async (): Promise<number> => {
     try {
       const response = await getAllUserLocation();
       const locations = response.data.data;
-      
+
       if (!locations || locations.length === 0) return 0;
-      
+
       // Filter locations from today only
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const todayTimestamp = today.getTime();
-      
+
       const todayLocations = locations.filter(location => {
         const locationDate = new Date(location.createdAt).getTime();
         return locationDate >= todayTimestamp;
       });
-      
+
       // Sum up the lengthToPreviousLocation for today's movements
       let totalDistance = 0;
       todayLocations.forEach(location => {
@@ -81,7 +80,7 @@ export default function CurrentLocationCard() {
           totalDistance += location.lengthToPreviousLocation;
         }
       });
-      
+
       // Convert meters to kilometers
       return totalDistance / 1000;
     } catch (error) {
@@ -96,7 +95,7 @@ export default function CurrentLocationCard() {
       const distance = await fetchTodayDistanceFromBackend();
       setTodayDistanceKm(distance);
     };
-    
+
     loadTodayDistance();
     // Refresh every 30 seconds
     const interval = setInterval(loadTodayDistance, 30000);
@@ -115,9 +114,9 @@ export default function CurrentLocationCard() {
       // Get latest distance from backend
       const latestDistance = await fetchTodayDistanceFromBackend();
       setTodayDistanceKm(latestDistance);
-      
+
       const baseAvgDistance = parseFloat(answers.daily_distance_km) || 5; // Default 5km if not available
-      
+
       const payload: IDailyDistanceKm = {
         distance_today: latestDistance,
         base_avg_distance: baseAvgDistance,
@@ -135,7 +134,7 @@ export default function CurrentLocationCard() {
       };
 
       const response = await daily_distance_km(payload);
-      
+
       // Prepare new OCEAN scores
       const newOceanScores = {
         O: response.new_ocean_score.O,
@@ -144,10 +143,10 @@ export default function CurrentLocationCard() {
         A: response.new_ocean_score.A,
         N: response.new_ocean_score.N,
       };
-      
+
       // Update OCEAN scores in the store
       setOcean(newOceanScores);
-      
+
       // Update OCEAN scores in the backend
       if (user?.id) {
         try {
@@ -179,25 +178,13 @@ export default function CurrentLocationCard() {
       // For now, just show the straight-line distance
       const R = 6371000; // meters
       const toRad = (deg: number) => deg * Math.PI / 180;
-      const a = Math.sin(toRad(dLat)/2) * Math.sin(toRad(dLat)/2) +
+      const a = Math.sin(toRad(dLat) / 2) * Math.sin(toRad(dLat) / 2) +
         Math.cos(toRad(prev.latitude)) * Math.cos(toRad(curr.latitude)) *
-        Math.sin(toRad(dLon)/2) * Math.sin(toRad(dLon)/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        Math.sin(toRad(dLon) / 2) * Math.sin(toRad(dLon) / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       lengthToPreviousLocation = R * c;
     }
   }
-
-  useEffect(() => {
-    if (currentPosition) {
-      setLoadingAddress(true);
-      reverseGeocode(currentPosition.latitude, currentPosition.longitude)
-        .then((res) => setAddress(res.display_name))
-        .catch(() => setAddress("Không lấy được địa chỉ"))
-        .finally(() => setLoadingAddress(false));
-    } else {
-      setAddress("");
-    }
-  }, [currentPosition]);
 
   if (!currentPosition && !error) {
     return (
@@ -270,7 +257,7 @@ export default function CurrentLocationCard() {
             <div className="pt-2">
               <span className="text-xs font-medium text-gray-600">Địa chỉ</span>
               <span className="block text-sm text-greenery-700 min-h-[20px]">
-                {loadingAddress ? "Đang lấy địa chỉ..." : address}
+                {address || "Không lấy được địa chỉ"}
               </span>
             </div>
             {/* Distance to Previous Location */}
