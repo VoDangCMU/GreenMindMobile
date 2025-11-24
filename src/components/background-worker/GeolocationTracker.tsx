@@ -13,7 +13,7 @@ interface GeolocationTrackerProps {
   timeBetweenTrack?: number;
 }
 
-function GeolocationTracker({ timeBetweenTrack = 7000 }: GeolocationTrackerProps) {
+function GeolocationTracker({ timeBetweenTrack = 30000 }: GeolocationTrackerProps) {
   const { setPosition, setError, setTracking } = useGeolocationStore();
   const user = useAuthStore((s) => s.user);
 

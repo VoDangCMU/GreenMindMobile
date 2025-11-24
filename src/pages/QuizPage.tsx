@@ -2,14 +2,20 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, ArrowLeft, ArrowRight, Brain, Inbox, Star } from "lucide-react";
+import { CheckCircle, ArrowRight, Brain, Inbox, Star, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import { toast } from "sonner";
-import { getQuestionTemplates } from "@/apis/backend/question";
+import getQuestions from "@/apis/backend/question";
 import { submitUserAnswers } from "@/apis/backend/userAnswer";
 import { useAuthStore } from "@/store/authStore";
+import combineQuestionWithTemplate from "@/helpers/combineQuestionWithTemplate";
+import calculate_ocean from "@/apis/ai/calculate_ocean_score";
+import { useAppStore } from "@/store/appStore";
+import { useToast } from "@/hooks/useToast";
+import OceanPersonalityCard from "@/components/app-components/OceanPersonalityCard";
+import { createUserOcean } from "@/apis/backend/ocean";
+import BottomNav from "@/components/app-components/HomeBottomNav";
 
 interface QuestionOption {
   text: string;
@@ -30,7 +36,10 @@ export default function QuizPage() {
   const [showResults, setShowResults] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rawQuestion, setRawQuestion] = useState<IGetQuestionResponse | null>(null);
   const user = useAuthStore((state) => state.user);
+  const setOcean = useAppStore((state) => state.setOcean);
+  const toast = useToast();
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
@@ -38,8 +47,9 @@ export default function QuizPage() {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const res = await getQuestionTemplates();
-      const raw = res ?? {};
+      const res = await getQuestions();
+      setRawQuestion(res);
+      const raw = res.data ?? {};
       // Flatten nested question object to array
       let flatQuestions: Question[] = [];
       if (Array.isArray(raw)) {
@@ -109,6 +119,43 @@ export default function QuizPage() {
     }));
   };
 
+  const handleAutoAnswer = async () => {
+    const newAnswers = { ...answers };
+
+    // Generate random answers for all questions
+    questions.forEach(q => {
+      if (!newAnswers[q.id]) {
+        const randomOption = q.options[Math.floor(Math.random() * q.options.length)];
+        newAnswers[q.id] = randomOption.value;
+      }
+    });
+
+    setAnswers(newAnswers);
+
+    // Submit answers to backend
+    try {
+      const userId = user?.id || "test-user-id";
+      const payload = {
+        userId,
+        answers: Object.entries(newAnswers).map(([questionId, answer]) => ({ questionId, answer })),
+      };
+
+      const combineRes = combineQuestionWithTemplate(rawQuestion!, payload);
+
+      const ocean = await calculate_ocean(combineRes);
+      await submitUserAnswers(payload);
+
+      console.log("ocean", ocean);
+      setOcean(ocean.scores);
+      createUserOcean(userId, ocean.scores);
+
+      toast.success(`Đã cập nhật điểm O: ${ocean.scores.O} C: ${ocean.scores.C} E: ${ocean.scores.E} A: ${ocean.scores.A} N: ${ocean.scores.N}`);
+    } catch (err) {
+      console.error("submitUserAnswers error:", err);
+    }
+    setShowResults(true);
+  };
+
   const handleNext = async () => {
     const q = questions[current];
     if (!answers[q.id]) {
@@ -126,8 +173,17 @@ export default function QuizPage() {
           userId,
           answers: Object.entries(answers).map(([questionId, answer]) => ({ questionId, answer })),
         };
-        const res = await submitUserAnswers(payload);
-        console.log("submitUserAnswers response:", res);
+
+        const combineRes = combineQuestionWithTemplate(rawQuestion!, payload);
+
+        const ocean = await calculate_ocean(combineRes);
+        await submitUserAnswers(payload);
+
+        console.log("ocean", ocean);
+        setOcean(ocean.scores);
+        createUserOcean(userId, ocean.scores);
+
+        toast.success(`Đã cập nhật điểm O: ${ocean.scores.O} C: ${ocean.scores.C} E: ${ocean.scores.E} A: ${ocean.scores.A} N: ${ocean.scores.N}`);
       } catch (err) {
         console.error("submitUserAnswers error:", err);
       }
@@ -182,7 +238,10 @@ export default function QuizPage() {
   if (showResults) {
     const results = calculateResults();
     return (
-      <SafeAreaLayout header={<AppHeader title="Quiz Tính Cách" showBack />}>
+      <SafeAreaLayout
+        header={<AppHeader title="Quiz Tính Cách" showBack />}
+        footer={<BottomNav></BottomNav>}
+      >
         <div className="min-h-screen flex flex-col items-center justify-center px-2">
           <Card className="max-w-sm w-full border-0 shadow-xl">
             <CardHeader className="text-center pb-4">
@@ -196,6 +255,9 @@ export default function QuizPage() {
                 Bạn đã trả lời {results.answered}/{results.totalQuestions} câu hỏi
               </p>
             </CardHeader>
+
+            <OceanPersonalityCard />
+
             <CardContent className="text-center">
               <Link to="/advice">
                 <Button className="w-full mt-6 bg-greenery-500 hover:bg-greenery-600 text-white rounded-full">
@@ -214,7 +276,17 @@ export default function QuizPage() {
   const progress = ((current + 1) / questions.length) * 100;
 
   return (
-    <SafeAreaLayout header={<AppHeader title="Quiz Tính Cách" showBack />}>
+    <SafeAreaLayout header={
+      <AppHeader
+        title="Quiz Tính Cách"
+        showBack
+        rightActions={[
+          <button key="auto" onClick={handleAutoAnswer} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+            <Zap className="w-5 h-5 text-yellow-500" />
+          </button>
+        ]}
+      />
+    }>
       <div className="w-full min-h-[calc(100vh-64px)] flex flex-col justify-center items-center px-2 pb-24 pt-16">
         <div
           className="w-full max-w-sm flex-1 flex flex-col"
@@ -242,19 +314,17 @@ export default function QuizPage() {
                 <button
                   key={opt.value}
                   onClick={() => handleSelect(opt.text)}
-                  className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                    answers[q.id] === opt.text
-                      ? "border-greenery-500 bg-greenery-50 text-greenery-700"
-                      : "border-gray-200 bg-white hover:border-greenery-300 hover:bg-greenery-25"
-                  }`}
+                  className={`w-full p-4 text-left rounded-lg border-2 transition-all ${answers[q.id] === opt.text
+                    ? "border-greenery-500 bg-greenery-50 text-greenery-700"
+                    : "border-gray-200 bg-white hover:border-greenery-300 hover:bg-greenery-25"
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
                     <div
-                      className={`w-4 h-4 rounded-full border-2 ${
-                        answers[q.id] === opt.text
-                          ? "border-greenery-500 bg-greenery-500"
-                          : "border-gray-300"
-                      }`}
+                      className={`w-4 h-4 rounded-full border-2 ${answers[q.id] === opt.text
+                        ? "border-greenery-500 bg-greenery-500"
+                        : "border-gray-300"
+                        }`}
                     />
                     <span className="text-sm font-medium">{opt.text}</span>
                   </div>
@@ -267,25 +337,18 @@ export default function QuizPage() {
 
       {/* Navigation */}
       <div className="pb-8 w-full max-w-sm mx-auto pb-safe pt-2 fixed left-1/2 -translate-x-1/2 bottom-0 z-10 flex flex-col">
-        <div className="flex justify-between space-x-4 px-2 pb-4">
-          <Button
-            onClick={handlePrev}
-            disabled={current === 0}
-            className="flex-1 rounded-full py-3 bg-white border border-greenery-200 text-greenery-700 shadow-sm hover:bg-greenery-50 disabled:opacity-50"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Trước
-          </Button>
+        <div className="px-2 pb-4">
           <Button
             onClick={handleNext}
             disabled={!answers[q.id]}
-            className="flex-1 rounded-full py-3 bg-greenery-500 text-white shadow-sm hover:bg-greenery-600 ml-2 disabled:opacity-50"
+            className="w-full py-3 bg-greenery-500 text-white shadow-sm hover:bg-greenery-600 disabled:opacity-50 flex justify-center items-center"
           >
             {current === questions.length - 1 ? "Hoàn thành" : "Tiếp theo"}
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
       </div>
+
     </SafeAreaLayout>
   );
 }

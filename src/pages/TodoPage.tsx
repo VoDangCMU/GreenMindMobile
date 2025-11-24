@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -22,6 +22,7 @@ import type { OceanScore } from "@/apis/ai/monitor_ocean";
 import { useAuthStore } from "@/store/authStore";
 
 import { TodoItemComponent } from "@/components/app-components/TodoItem";
+import BottomNav from "@/components/app-components/HomeBottomNav";
 
 export default function TodoPage() {
   const { todos, addTodo, addSubtask, toggleComplete, removeTodo, setTodos } = useTodoStore();
@@ -221,7 +222,10 @@ export default function TodoPage() {
   const completedTodos = countCompletedTodos(todos);
 
   return (
-    <SafeAreaLayout header={<AppHeader showBack title="Todo" />}>
+    <SafeAreaLayout
+      header={<AppHeader showBack title="Todo" />}
+      footer={<BottomNav></BottomNav>}
+    >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
         {/* Stats Card */}
         <Card className="border-0 shadow-md bg-gradient-to-r from-greenery-50 to-blue-50">

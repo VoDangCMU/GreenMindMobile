@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { reverseGeocode } from "@/apis/nominatim/reverseGeocode";
 import daily_distance_km, { type IDailyDistanceKm } from "@/apis/ai/monitor_ocean/daily_distance_km";
 import { getAllUserLocation } from "@/apis/backend/location";
 import { updateUserOcean } from "@/apis/backend/ocean";

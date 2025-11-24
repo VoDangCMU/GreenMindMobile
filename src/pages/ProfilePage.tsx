@@ -36,6 +36,7 @@ import LocationHistoryCard from "@/components/app-components/LocationHistoryCard
 import HomeLocationCard from "@/components/app-components/HomeLocationCard";
 import NightOutStatusCard from "@/components/app-components/NightOutStatusCard";
 import { useAuthStore } from "@/store/authStore";
+import BottomNav from "@/components/app-components/HomeBottomNav";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const setBypassAuthGate = useAuthStore((state) => state.setBypassAuthGate);
   const ocean = useAppStore((state) => state.ocean) || MOCKED_OCEAN_SCORE;
-  
+
   // Get Pre-App Survey data
   const { answers, isCompleted, completedAt } = usePreAppSurveyData();
 
@@ -136,10 +137,10 @@ export default function ProfilePage() {
   ];
 
   const menuItems = [
-    { icon: Bell, label: "Notifications", action: () => {} },
-    { icon: Shield, label: "Privacy & Security", action: () => {} },
-    { icon: HelpCircle, label: "Help & Support", action: () => {} },
-    { icon: Settings, label: "App Settings", action: () => {} },
+    { icon: Bell, label: "Notifications", action: () => { } },
+    { icon: Shield, label: "Privacy & Security", action: () => { } },
+    { icon: HelpCircle, label: "Help & Support", action: () => { } },
+    { icon: Settings, label: "App Settings", action: () => { } },
   ];
 
   const handleSaveProfile = () => {
@@ -150,7 +151,10 @@ export default function ProfilePage() {
   const progressToNextLevel = ((stats.totalPoints % 1000) / 1000) * 100;
 
   return (
-    <SafeAreaLayout header={<AppHeader showBack title="Profile"></AppHeader>}>
+    <SafeAreaLayout
+      header={<AppHeader showBack title="Profile"></AppHeader>}
+      footer={<BottomNav></BottomNav>}
+    >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
         {/* Profile Info */}
         <Card className="border-0 shadow-md">
@@ -161,11 +165,11 @@ export default function ProfilePage() {
                   <span className="text-white text-2xl font-bold">
                     {userInfo.name
                       ? userInfo.name
-                          .split(" ")
-                          .map((w) => w[0])
-                          .join("")
-                          .toUpperCase()
-                          .slice(0, 2)
+                        .split(" ")
+                        .map((w) => w[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)
                       : "--"}
                   </span>
                 </div>
@@ -406,21 +410,18 @@ export default function ProfilePage() {
                 return (
                   <div
                     key={achievement.id}
-                    className={`p-3 rounded-lg text-center ${
-                      achievement.earned
-                        ? "bg-greenery-50 border border-greenery-200"
-                        : "bg-gray-50 border border-gray-200 opacity-50"
-                    }`}
+                    className={`p-3 rounded-lg text-center ${achievement.earned
+                      ? "bg-greenery-50 border border-greenery-200"
+                      : "bg-gray-50 border border-gray-200 opacity-50"
+                      }`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${
-                        achievement.earned ? "bg-greenery-500" : "bg-gray-300"
-                      }`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${achievement.earned ? "bg-greenery-500" : "bg-gray-300"
+                        }`}
                     >
                       <Icon
-                        className={`w-4 h-4 ${
-                          achievement.earned ? "text-white" : "text-gray-500"
-                        }`}
+                        className={`w-4 h-4 ${achievement.earned ? "text-white" : "text-gray-500"
+                          }`}
                       />
                     </div>
                     <h4 className="text-xs font-medium text-gray-800 mb-1">

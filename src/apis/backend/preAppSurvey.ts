@@ -48,9 +48,10 @@ export async function submitPreAppSurvey(params: PreAppSurveySubmitParams) {
     answers: apiAnswers,
     isCompleted: params.isCompleted,
     completedAt: params.completedAt,
-  }, { headers: authHeader() } );
+  }, { headers: authHeader() });
 }
 
 export async function getPreAppSurveyByUser(userId: string) {
-  return BackendInstance.get(`/pre-app-survey/${userId}`, { headers: authHeader() } );
+  return BackendInstance.get(`/pre-app-survey/${userId}`, { headers: authHeader() })
+    .then(res => res.data);
 }

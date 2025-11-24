@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyStore, type PreAppSurveyAnswers } from "@/store/preAppSurveyStore";
 import { getUserOcean, createUserOcean, DEFAULT_OCEAN } from "@/apis/backend/ocean";
 import { getPreAppSurveyByUser } from "@/apis/backend/preAppSurvey";
 import { useAuthStore } from "@/store/authStore";
 import useFetch from "@/hooks/useFetch";
+import { useOcean } from "@/hooks/useOcean";
 
 // Map API response to store format
 function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
@@ -23,9 +23,9 @@ function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
 
 export function AppStateInitializer() {
   const user = useAuthStore((s) => s.user);
-  const setOcean = useAppStore((s) => s.setOcean);
   const setAnswers = usePreAppSurveyStore((s) => s.setAnswers);
   const { call } = useFetch();
+  const { setOcean } = useOcean();
 
   useEffect(() => {
     call([
@@ -42,10 +42,11 @@ export function AppStateInitializer() {
       {
         fn: () => getPreAppSurveyByUser(user?.id || ""),
         onSuccess: (data) => {
-          setAnswers(mapApiResponseToStore(data));
+          const normalizedData = mapApiResponseToStore(data);
+          setAnswers(normalizedData);
         },
         onFailed: () => {
-          //ignore
+          console.log("Failed to fetch pre-app survey");
         },
       }
     ]);
