@@ -5,7 +5,6 @@ import { useState } from "react";
 import ScanHistoryFooter from "@/components/app-components/ScanHistoryFooter";
 import usePlantScanStore, { type PlantScanResult } from "@/store/plantScanStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import analyzeImagePlant from "@/apis/ai/analyzeImagePlant";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Filesystem } from "@capacitor/filesystem";
 import { healthy_food_ratio } from "@/apis/ai/monitor_ocean";
@@ -13,7 +12,7 @@ import type { IHealthyFoodRatio } from "@/apis/ai/monitor_ocean";
 import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { useOceanUpdate } from "@/hooks/useOceanUpdate";
-import healthyFoodRatio from "@/apis/backend/ai-forward/healthyFoodRatio";
+import planScan from "@/apis/backend/ai-forward/image-processing/plan-scan";
 
 function PlantScanList({
   scans,
@@ -236,7 +235,7 @@ export default function PlantScanPage() {
         allowEditing: false,
       });
       // const result = await analyzeImagePlant(photo);
-      const result = await healthyFoodRatio(photo)
+      const result = await planScan(photo)
       const base64 = await getBase64FromPhoto(photo);
       const scan = {
         ...result,
@@ -263,7 +262,7 @@ export default function PlantScanPage() {
         allowEditing: false,
       });
       // const result = await analyzeImagePlant(photo);
-      const result = await healthyFoodRatio(photo)
+      const result = await planScan(photo)
       const base64 = await getBase64FromPhoto(photo);
       const scan = {
         ...result,

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "ENV=production tsc -b && vite build",
+    "build": "ENV=production tsc -b tsconfig.app.json --noEmit --verbose --listFiles && vite build --debug",
     "lint": "eslint .",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "preview": "vite preview"

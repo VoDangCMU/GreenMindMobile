@@ -152,7 +152,7 @@ export const MOCKED_OCEAN_SCORE: IOceanTraitScore = {
 
 export interface IOceanTraitScore { O: number; C: number; E: number; A: number; N: number; }
 
-interface ICalculateOceanResponse { scores: IOceanTraitScore; }
+export interface ICalculateOceanResponse { scores: IOceanTraitScore; }
 export default async function calculate_ocean(question_data: IQuestionData) {
   return AIApi.post('/calculate_ocean', question_data).then(res => res.data as ICalculateOceanResponse);
 }

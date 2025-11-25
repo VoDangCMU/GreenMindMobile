@@ -32,6 +32,14 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
+      sourcemap: false,
+      target: 'esnext',
+      minify: 'esbuild',
+      terserOptions: {
+        compress: {
+          drop_console: true, // Remove console logs for production
+        },
+      },
       rollupOptions: {
         output: {
           manualChunks(id) {

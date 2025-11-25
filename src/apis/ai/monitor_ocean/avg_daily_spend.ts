@@ -1,5 +1,5 @@
 import AIApi from "@/apis/instances/AIInstance";
-import type { IMonitorOceanResponse, OceanScore } from "./types";
+import type { IMonitorOceanResponse } from "./types";
 
 export default async function avg_daily_spend({
   daily_total,
@@ -9,7 +9,7 @@ export default async function avg_daily_spend({
   sigma_r = 1,
   alpha = 0.5,
   ocean_score
-}: IDailySpending) {
+}: IDailySpendingParams) {
   return AIApi.post('/avg_daily_spend', {
     daily_total,
     base_avg,

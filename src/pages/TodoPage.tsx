@@ -10,24 +10,22 @@ import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { useTodoStore } from "@/store/todoStore";
 import generate_subtasks from "@/apis/ai/todos/todo_generator";
-import list_adherence from "@/apis/ai/monitor_ocean/list_adherence";
-import { useAppStore } from "@/store/appStore";
-import { useOceanUpdate } from "@/hooks/useOceanUpdate";
-import { createTodo, getTodos, batchCreateTodos, deleteTodo as deleteTodoAPI, toggleTodo as toggleTodoAPI, type TodoData } from "@/apis/backend/todo";
+import { useTodoAffect } from "@/hooks/metric/useTodoAffect";
+import { createTodo, getTodos, batchCreateTodos, deleteTodo as deleteTodoAPI, updateTodo as updateTodoAPI, type TodoData } from "@/apis/backend/todo";
 import {
   Plus,
   Circle,
 } from "lucide-react";
-import type { OceanScore } from "@/apis/ai/monitor_ocean";
+
 import { useAuthStore } from "@/store/authStore";
 
 import { TodoItemComponent } from "@/components/app-components/TodoItem";
 import BottomNav from "@/components/app-components/HomeBottomNav";
+import OceanPersonalityCard from "@/components/app-components/OceanPersonalityCard";
 
 export default function TodoPage() {
-  const { todos, addTodo, addSubtask, toggleComplete, removeTodo, setTodos } = useTodoStore();
-  const { updateOcean } = useOceanUpdate();
-  const ocean = useAppStore((state) => state.ocean);
+  const { todos, addTodo, addSubtask, removeTodo, setTodos } = useTodoStore();
+
   const user = useAuthStore((state) => state.user);
 
   const [newTodoText, setNewTodoText] = useState("");
@@ -94,10 +92,55 @@ export default function TodoPage() {
   };
 
   // Toggle todo completion
+  const { callTodoAffect } = useTodoAffect();
+
   const toggleTodo = async (id: string) => {
+    // Helper to find todo and its descendants
+    const findTodoAndDescendants = (items: Todo[], targetId: string): { target: Todo | null, descendants: Todo[] } => {
+      for (const item of items) {
+        if (item.id === targetId) {
+          const descendants: Todo[] = [];
+          const collectDescendants = (node: Todo) => {
+            for (const child of node.children) {
+              descendants.push(child);
+              collectDescendants(child);
+            }
+          };
+          collectDescendants(item);
+          return { target: item, descendants };
+        }
+        const result = findTodoAndDescendants(item.children, targetId);
+        if (result.target) return result;
+      }
+      return { target: null, descendants: [] };
+    };
+
+    const { target, descendants } = findTodoAndDescendants(todos, id);
+    if (!target) return;
+
+    const newCompletedStatus = !target.completed;
+    const todosToUpdate = [target, ...descendants];
+
     try {
-      await toggleTodoAPI(id);
-      toggleComplete(id);
+      // Update all todos in parallel
+      await Promise.all(todosToUpdate.map(todo =>
+        updateTodoAPI(todo.id, { completed: newCompletedStatus })
+      ));
+
+      // Update local store recursively
+      const updateTodosRecursively = (items: Todo[]): Todo[] => {
+        return items.map(item => {
+          const shouldUpdate = todosToUpdate.some(t => t.id === item.id);
+          const newItem = shouldUpdate ? { ...item, completed: newCompletedStatus } : item;
+          if (item.children.length > 0) {
+            newItem.children = updateTodosRecursively(item.children);
+          }
+          return newItem;
+        });
+      };
+
+      const newTodos = updateTodosRecursively(todos);
+      setTodos(newTodos);
 
       // Prepare data for the list_adherence API - only top level tasks
       const flattenTodos = (items: Todo[]): Array<{ task: string; done: boolean }> => {
@@ -107,32 +150,11 @@ export default function TodoPage() {
         }));
       };
 
-      const normalizeOceanScores = ({ O, C, E, A, N }: OceanScore) => ({
-        O: O / 100,
-        C: C / 100,
-        E: E / 100,
-        A: A / 100,
-        N: N / 100
-      });
+      const flatTodos = flattenTodos(newTodos);
 
-      const flatTodos = flattenTodos(todos);
-      if (!ocean) {
-        console.error("No OCEAN scores available");
-        return;
-      }
-      // Call list_adherence first to calculate new scores
-      const response = await list_adherence({
-        todos: flatTodos,
-        base_likert: 4, // Default base likert scale
-        weight: 0.3,   // Default weight
-        direction: "up", // Default direction
-        sigma_r: 1.0,  // Default sigma
-        alpha: 0.5,   // Default alpha
-        ocean_score: normalizeOceanScores(ocean)
-      });
+      // Call useTodoAffect to update OCEAN scores
+      await callTodoAffect(flatTodos);
 
-      // Update the OCEAN scores with the new values from list_adherence
-      await updateOcean(response.new_ocean_score);
     } catch (error) {
       console.error("Failed to toggle todo:", error);
     }
@@ -227,6 +249,7 @@ export default function TodoPage() {
       footer={<BottomNav></BottomNav>}
     >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
+        <OceanPersonalityCard />
         {/* Stats Card */}
         <Card className="border-0 shadow-md bg-gradient-to-r from-greenery-50 to-blue-50">
           <CardContent className="p-4">

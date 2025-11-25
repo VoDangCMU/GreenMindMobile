@@ -6,6 +6,7 @@ const initialState = {
   lastUpdate: null,
   error: null,
   positionHistory: [],
+  lengthToPreviousLocation: null,
 };
 
 export const useGeolocationStore = create<IGeolocationState>((set) => ({
@@ -16,6 +17,7 @@ export const useGeolocationStore = create<IGeolocationState>((set) => ({
     error: null,
     positionHistory: [position, ...state.positionHistory].slice(0, 50), // Keep last 50 positions
   })),
+  setLengthToPreviousLocation: (length) => set({ lengthToPreviousLocation: length }),
   setCurrentLocationDisplayName: (displayName: string) => set({
     currentPositionDisplayName: displayName,
   }),

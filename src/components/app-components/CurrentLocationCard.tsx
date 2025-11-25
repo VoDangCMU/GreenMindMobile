@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useGeolocationStore } from "@/store/geolocationStore";
-import { useAppStore } from "@/store/appStore";
+
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Navigation, Compass, Gauge, RefreshCw } from "lucide-react";
@@ -9,11 +9,10 @@ import { Button } from "@/components/ui/button";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import daily_distance_km, { type IDailyDistanceKm } from "@/apis/ai/monitor_ocean/daily_distance_km";
+import { useDailyMoving } from "@/hooks/metric/useDailyMoving";
 import { getAllUserLocation } from "@/apis/backend/location";
-import { updateUserOcean } from "@/apis/backend/ocean";
 import { toast } from "sonner";
-import { useAuthStore } from "@/store/authStore";
+
 
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -40,13 +39,10 @@ function SetMapRef({ setRef }: { setRef: (map: L.Map) => void }) {
 }
 
 export default function CurrentLocationCard() {
-  const { currentPosition, isTracking, lastUpdate, error, positionHistory } = useGeolocationStore();
-  const { ocean, setOcean } = useAppStore();
-  const user = useAuthStore((s) => s.user);
+  const { currentPosition, isTracking, lastUpdate, error } = useGeolocationStore();
   const { answers } = usePreAppSurveyStore();
   const mapRef = useRef<L.Map | null>(null);
   const address = useGeolocationStore((s) => s.currentPositionDisplayName);
-  const [updatingOcean, setUpdatingOcean] = useState(false);
   const [todayDistanceKm, setTodayDistanceKm] = useState<number>(0);
 
   const formatCoordinate = (coord: number) => coord.toFixed(6);
@@ -102,13 +98,14 @@ export default function CurrentLocationCard() {
   }, []);
 
   // Update OCEAN scores using daily distance
+  const { callDailyMoving, loading: updatingOcean } = useDailyMoving();
+
   const updateOceanWithDistance = async () => {
-    if (!ocean || !answers) {
-      toast.error("Missing OCEAN scores or survey data");
+    if (!answers) {
+      toast.error("Missing survey data");
       return;
     }
 
-    setUpdatingOcean(true);
     try {
       // Get latest distance from backend
       const latestDistance = await fetchTodayDistanceFromBackend();
@@ -116,74 +113,16 @@ export default function CurrentLocationCard() {
 
       const baseAvgDistance = parseFloat(answers.daily_distance_km) || 5; // Default 5km if not available
 
-      const payload: IDailyDistanceKm = {
-        distance_today: latestDistance,
-        base_avg_distance: baseAvgDistance,
-        weight: 0.2, // Default weight
-        direction: "up", // Assume positive direction
-        sigma_r: 1.0, // Default sigma
-        alpha: 0.5, // Default alpha
-        ocean_score: {
-          O: ocean.O / 100,
-          C: ocean.C / 100,
-          E: ocean.E / 100,
-          A: ocean.A / 100,
-          N: ocean.N / 100,
-        },
-      };
+      await callDailyMoving(latestDistance, baseAvgDistance);
 
-      const response = await daily_distance_km(payload);
-
-      // Prepare new OCEAN scores
-      const newOceanScores = {
-        O: response.new_ocean_score.O,
-        C: response.new_ocean_score.C,
-        E: response.new_ocean_score.E,
-        A: response.new_ocean_score.A,
-        N: response.new_ocean_score.N,
-      };
-
-      // Update OCEAN scores in the store
-      setOcean(newOceanScores);
-
-      // Update OCEAN scores in the backend
-      if (user?.id) {
-        try {
-          await updateUserOcean(user.id, newOceanScores);
-        } catch (backendError) {
-          console.error("Failed to update OCEAN scores in backend:", backendError);
-          // Continue anyway, as the store is already updated
-        }
-      }
-
-      toast.success("OCEAN scores updated successfully!");
     } catch (error) {
       console.error("Failed to update OCEAN scores:", error);
       // Silently ignore API errors as requested
-    } finally {
-      setUpdatingOcean(false);
     }
   };
   // Distance to previous location (meters)
-  let lengthToPreviousLocation: number | null = null;
-  if (positionHistory && positionHistory.length > 1) {
-    const prev = positionHistory[1];
-    const curr = positionHistory[0];
-    if (prev && curr) {
-      const dLat = curr.latitude - prev.latitude;
-      const dLon = curr.longitude - prev.longitude;
-      // Use helper if needed, but GeolocationTracker already calculates and sends this
-      // For display, use the value from GeolocationTracker if available in backend, but here we recalc for UI
-      // For now, just show the straight-line distance
-      const R = 6371000; // meters
-      const toRad = (deg: number) => deg * Math.PI / 180;
-      const a = Math.sin(toRad(dLat) / 2) * Math.sin(toRad(dLat) / 2) +
-        Math.cos(toRad(prev.latitude)) * Math.cos(toRad(curr.latitude)) *
-        Math.sin(toRad(dLon) / 2) * Math.sin(toRad(dLon) / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      lengthToPreviousLocation = R * c;
-    }
-  }
+  // Use value from store
+  const lengthToPreviousLocation = useGeolocationStore((s) => s.lengthToPreviousLocation);
 
   if (!currentPosition && !error) {
     return (
@@ -260,11 +199,11 @@ export default function CurrentLocationCard() {
               </span>
             </div>
             {/* Distance to Previous Location */}
-            {lengthToPreviousLocation !== null && (
+            {lengthToPreviousLocation !== null && lengthToPreviousLocation !== undefined && (
               <div className="pt-2 border-t border-gray-200">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs font-medium text-gray-600">Distance to Previous Location</span>
-                  <span className="text-sm text-blue-700 font-mono">{lengthToPreviousLocation.toFixed(1)} m</span>
+                  <span className="text-sm text-blue-700 font-mono">{lengthToPreviousLocation.toFixed(2)} m</span>
                 </div>
               </div>
             )}

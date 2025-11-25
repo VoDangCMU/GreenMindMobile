@@ -7,14 +7,9 @@ import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import getQuestions from "@/apis/backend/question";
-import { submitUserAnswers } from "@/apis/backend/userAnswer";
-import { useAuthStore } from "@/store/authStore";
-import combineQuestionWithTemplate from "@/helpers/combineQuestionWithTemplate";
-import calculate_ocean from "@/apis/ai/calculate_ocean_score";
-import { useAppStore } from "@/store/appStore";
+import { useSubmitSurvey } from "@/hooks/useSubmitSurvey";
 import { useToast } from "@/hooks/useToast";
 import OceanPersonalityCard from "@/components/app-components/OceanPersonalityCard";
-import { createUserOcean } from "@/apis/backend/ocean";
 import BottomNav from "@/components/app-components/HomeBottomNav";
 
 interface QuestionOption {
@@ -37,8 +32,6 @@ export default function QuizPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [rawQuestion, setRawQuestion] = useState<IGetQuestionResponse | null>(null);
-  const user = useAuthStore((state) => state.user);
-  const setOcean = useAppStore((state) => state.setOcean);
   const toast = useToast();
 
   const touchStartX = useRef<number | null>(null);
@@ -119,6 +112,8 @@ export default function QuizPage() {
     }));
   };
 
+  const { submitSurvey } = useSubmitSurvey();
+
   const handleAutoAnswer = async () => {
     const newAnswers = { ...answers };
 
@@ -134,22 +129,7 @@ export default function QuizPage() {
 
     // Submit answers to backend
     try {
-      const userId = user?.id || "test-user-id";
-      const payload = {
-        userId,
-        answers: Object.entries(newAnswers).map(([questionId, answer]) => ({ questionId, answer })),
-      };
-
-      const combineRes = combineQuestionWithTemplate(rawQuestion!, payload);
-
-      const ocean = await calculate_ocean(combineRes);
-      await submitUserAnswers(payload);
-
-      console.log("ocean", ocean);
-      setOcean(ocean.scores);
-      createUserOcean(userId, ocean.scores);
-
-      toast.success(`Đã cập nhật điểm O: ${ocean.scores.O} C: ${ocean.scores.C} E: ${ocean.scores.E} A: ${ocean.scores.A} N: ${ocean.scores.N}`);
+      await submitSurvey(newAnswers, rawQuestion!);
     } catch (err) {
       console.error("submitUserAnswers error:", err);
     }
@@ -168,22 +148,7 @@ export default function QuizPage() {
     } else {
       // Submit answers to backend
       try {
-        const userId = user?.id || "test-user-id";
-        const payload = {
-          userId,
-          answers: Object.entries(answers).map(([questionId, answer]) => ({ questionId, answer })),
-        };
-
-        const combineRes = combineQuestionWithTemplate(rawQuestion!, payload);
-
-        const ocean = await calculate_ocean(combineRes);
-        await submitUserAnswers(payload);
-
-        console.log("ocean", ocean);
-        setOcean(ocean.scores);
-        createUserOcean(userId, ocean.scores);
-
-        toast.success(`Đã cập nhật điểm O: ${ocean.scores.O} C: ${ocean.scores.C} E: ${ocean.scores.E} A: ${ocean.scores.A} N: ${ocean.scores.N}`);
+        await submitSurvey(answers, rawQuestion!);
       } catch (err) {
         console.error("submitUserAnswers error:", err);
       }

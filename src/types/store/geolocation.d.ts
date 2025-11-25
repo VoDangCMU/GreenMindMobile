@@ -16,8 +16,10 @@ declare interface IGeolocationState {
     lastUpdate: Date | null;
     error: string | null;
     positionHistory: IGeolocationPosition[];
+    lengthToPreviousLocation?: number | null;
     // Actions
     setPosition: (position: IGeolocationPosition) => void;
+    setLengthToPreviousLocation: (length: number) => void;
     setCurrentLocationDisplayName: (displayName: string) => void;
     setTracking: (isTracking: boolean) => void;
     setError: (error: string | null) => void;

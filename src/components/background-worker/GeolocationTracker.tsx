@@ -5,7 +5,7 @@ import {
   isGeolocationAvailable,
   calculateDistance,
 } from "@/helpers/geolocationHelper";
-import { createLocation } from "@/apis/backend/location";
+import { createLocation, getAllUserLocation } from "@/apis/backend/location";
 import { reverseGeocode } from "@/apis/nominatim/reverseGeocode";
 import { useAuthStore } from "@/store/authStore";
 
@@ -13,7 +13,7 @@ interface GeolocationTrackerProps {
   timeBetweenTrack?: number;
 }
 
-function GeolocationTracker({ timeBetweenTrack = 30000 }: GeolocationTrackerProps) {
+function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps) {
   const { setPosition, setError, setTracking } = useGeolocationStore();
   const user = useAuthStore((s) => s.user);
 
@@ -42,15 +42,22 @@ function GeolocationTracker({ timeBetweenTrack = 30000 }: GeolocationTrackerProp
     // Supress backend error validating
     let lengthToPreviousLocation = 0.01;
 
-    const currentStorePosition = useGeolocationStore.getState().currentPosition;
-    if (currentStorePosition) {
-      const distance = calculateDistance(
-        currentStorePosition.latitude,
-        currentStorePosition.longitude,
-        newUserposition.latitude,
-        newUserposition.longitude
-      );
-      lengthToPreviousLocation = distance * 1000 + 0.01; // convert km to m
+    try {
+      const previousLocations = await getAllUserLocation();
+      if (previousLocations?.data?.data?.length > 0) {
+        const latestLocation = previousLocations.data.data[0];
+        const distance = calculateDistance(
+          latestLocation.latitude,
+          latestLocation.longitude,
+          newUserposition.latitude,
+          newUserposition.longitude
+        );
+        lengthToPreviousLocation = distance * 1000 + 0.001; // convert km to m
+        lengthToPreviousLocation = lengthToPreviousLocation > 1.5 ? lengthToPreviousLocation : 0.01;
+      }
+      useGeolocationStore.getState().setLengthToPreviousLocation(lengthToPreviousLocation);
+    } catch (error) {
+      console.error("Failed to get previous location for distance calculation", error);
     }
 
     try {

@@ -7,27 +7,25 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Moon, RefreshCw } from "lucide-react";
 import { useNightOutHistoryStore } from "@/store/nightOutHistoryStore";
 import { useAppStore } from "@/store/appStore";
-import { useMemo, useState } from "react";
-import { night_out_freq, type INightOutFreq } from "@/apis/ai/monitor_ocean";
-import { useOceanUpdate } from "@/hooks/useOceanUpdate";
-import { useToast } from "@/hooks/useToast";
+import { useMemo } from "react";
+
+import { useNightOutFeq } from "@/hooks/metric/useNightOutFeq";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 
 const COLORS = ["#3b82f6", "#9ca3af"]; // blue - night out, gray - night in
 
 export default function NightOutCard() {
   const { getNightOutRecords, getTotalNightOutDays } = useNightOutHistoryStore();
-  const { updateOcean } = useOceanUpdate();
+  const { callNightOutFeq, loading } = useNightOutFeq();
   const ocean = useAppStore((state) => state.ocean);
   const preAppSurvey = usePreAppSurveyStore((state) => state.answers);
-  const toast = useToast();
-  const [isUpdatingOcean, setIsUpdatingOcean] = useState(false);
+
 
   // Tính toán dữ liệu 7 ngày gần nhất
   const last7Days = useMemo(() => {
     const today = new Date();
     const daysArray = [];
-    
+
     // Tạo mảng 7 ngày gần nhất
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
@@ -35,15 +33,15 @@ export default function NightOutCard() {
       const dateString = date.toISOString().split('T')[0];
       daysArray.push(dateString);
     }
-    
+
     // Lấy records từ store
     const startDate = daysArray[0];
     const endDate = daysArray[daysArray.length - 1];
     const nightOutRecords = getNightOutRecords(startDate, endDate);
-    
+
     // Tạo map để check ngày nào có night out
     const nightOutDates = new Set(nightOutRecords.map(record => record.date));
-    
+
     return daysArray.map(date => ({
       date,
       wentOut: nightOutDates.has(date)
@@ -52,59 +50,15 @@ export default function NightOutCard() {
 
   // Function to update OCEAN based on night out frequency
   const updateOceanWithNightOut = async () => {
-    if (!ocean) {
-      toast.error("No current OCEAN scores found");
-      return;
-    }
+    // Get total night out count from store
+    const totalNightOutDays = getTotalNightOutDays();
 
-    setIsUpdatingOcean(true);
+    // Get baseline night out frequency from pre-app survey
+    const baseNightOut = preAppSurvey?.night_out_freq
+      ? parseInt(preAppSurvey.night_out_freq)
+      : 2; // Fallback to 2 if no pre-app data
 
-    try {
-      // Get total night out count from store
-      const totalNightOutDays = getTotalNightOutDays();
-      
-      // Get baseline night out frequency from pre-app survey
-      const baseNightOut = preAppSurvey?.night_out_freq 
-        ? parseInt(preAppSurvey.night_out_freq) 
-        : 2; // Fallback to 2 if no pre-app data
-      
-      // Prepare data for night_out_freq API
-      const nightOutData: INightOutFreq = {
-        night_out_count: totalNightOutDays,
-        base_night_out: baseNightOut,
-        weight: 0.2,
-        direction: "up",
-        sigma_r: 1.0,
-        alpha: 0.5,
-        ocean_score: {
-          O: ocean.O / 100,
-          C: ocean.C / 100,
-          E: ocean.E / 100,
-          A: ocean.A / 100,
-          N: ocean.N / 100,
-        },
-      };
-
-      // Call night_out_freq API
-      const response = await night_out_freq(nightOutData);
-      
-      // Update OCEAN scores
-      const newOceanScores = {
-        O: response.new_ocean_score.O,
-        C: response.new_ocean_score.C,
-        E: response.new_ocean_score.E,
-        A: response.new_ocean_score.A,
-        N: response.new_ocean_score.N,
-      };
-
-      await updateOcean(newOceanScores);
-      toast.success("OCEAN scores updated successfully!");
-    } catch (error) {
-      console.error("Failed to update OCEAN with night out data:", error);
-      toast.error("Failed to update OCEAN scores");
-    } finally {
-      setIsUpdatingOcean(false);
-    }
+    await callNightOutFeq(totalNightOutDays, baseNightOut);
   };
 
   const outCount = last7Days.filter((d) => d.wentOut).length;
@@ -113,12 +67,12 @@ export default function NightOutCard() {
 
   const chartData = hasAnyData
     ? [
-        { name: "Night Out", value: outCount },
-        { name: "Night In", value: inCount },
-      ]
+      { name: "Night Out", value: outCount },
+      { name: "Night In", value: inCount },
+    ]
     : [
-        { name: "Chưa có dữ liệu", value: 7 }, // Show all 7 days as "no data"
-      ];
+      { name: "Chưa có dữ liệu", value: 7 }, // Show all 7 days as "no data"
+    ];
 
   return (
     <Card className="mb-6 border-0 shadow-lg">
@@ -130,12 +84,12 @@ export default function NightOutCard() {
           </CardTitle>
           <Button
             onClick={updateOceanWithNightOut}
-            disabled={isUpdatingOcean || !ocean}
+            disabled={loading || !ocean}
             size="sm"
             variant="outline"
             className="flex items-center space-x-1"
           >
-            <RefreshCw className={`w-3 h-3 ${isUpdatingOcean ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
             <span className="text-xs">Update OCEAN</span>
           </Button>
         </div>
@@ -153,7 +107,7 @@ export default function NightOutCard() {
                 cx="50%"
                 cy="50%"
                 outerRadius={60}
-                // label={({ name }) => name}
+              // label={({ name }) => name}
               >
                 {chartData.map((_, index) => (
                   <Cell

@@ -4,7 +4,6 @@
  */
 
 export { default as avg_daily_spend } from './avg_daily_spend';
-export type { IAvgDailySpend } from './avg_daily_spend';
 
 export { default as spend_variability } from './spend_variability';
 export type { ISpendVariability } from './spend_variability';

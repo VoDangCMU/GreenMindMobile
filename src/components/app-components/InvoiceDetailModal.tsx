@@ -1,9 +1,6 @@
 import { useState } from "react";
 import useBillStore from "@/store/invoiceStore";
-import type { IInvoice, IInvoiceItem } from "@/apis/backend/invoice";
-import invoiceApi from "@/apis/backend/invoice";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
 
 interface InvoiceDetailModalProps {
   invoice: IInvoice | null;
@@ -18,7 +15,7 @@ export default function InvoiceDetailModal({ invoice, open, onClose }: InvoiceDe
   const [editInvoice, setEditInvoice] = useState<IInvoice | null>(null);
 
   // Khi mở modal mới, reset state edit
-   
+
   if (open && !isEdit && editInvoice !== invoice) setEditInvoice(invoice);
 
   if (!invoice) return null;
@@ -33,13 +30,7 @@ export default function InvoiceDetailModal({ invoice, open, onClose }: InvoiceDe
   };
 
   const handleDelete = () => {
-    if (!invoice) return;
-    invoiceApi.deleteInvoice(invoice.id).then(() => {
-      console.log("Invoice deleted:", invoice.id);
-      toast.success("Invoice deleted successfully");
-    }).catch(err => {
-      console.error("Failed to delete invoice:", err);
-    });
+
   };
 
   return (
@@ -59,9 +50,9 @@ export default function InvoiceDetailModal({ invoice, open, onClose }: InvoiceDe
                 <input
                   className="text-xs text-gray-500 border-b w-full mb-1"
                   value={editInvoice?.vendor.address || ""}
-                  onChange={e => setEditInvoice(editInvoice && { ...editInvoice, vendor: { ...editInvoice.vendor, address: e.target.value, geoHint: editInvoice.vendor.geoHint } })}
+                  onChange={e => setEditInvoice(editInvoice && { ...editInvoice, vendor: { ...editInvoice.vendor, address: e.target.value, geo_hint: editInvoice.vendor.geo_hint } })}
                 />
-                <div className="text-xs text-gray-400">{editInvoice?.issuedDate} {editInvoice?.issuedTime}</div>
+                <div className="text-xs text-gray-400">{editInvoice?.datetime.date} {editInvoice?.datetime.time}</div>
               </div>
               <div>
                 <div className="font-medium mb-1">Items:</div>
@@ -70,7 +61,7 @@ export default function InvoiceDetailModal({ invoice, open, onClose }: InvoiceDe
                     <li key={idx} className="flex flex-wrap gap-1 items-center text-sm">
                       <input
                         className="border-b flex-1 min-w-[80px] max-w-[120px]"
-                        value={item.brand || item.rawName}
+                        value={item.brand || item.raw_name}
                         onChange={e => {
                           const items = editInvoice.items.slice();
                           items[idx] = { ...item, brand: e.target.value };
@@ -93,28 +84,28 @@ export default function InvoiceDetailModal({ invoice, open, onClose }: InvoiceDe
                       <input
                         type="number"
                         className="border-b w-16 text-right"
-                        value={item.lineTotal}
+                        value={item.line_total}
                         min={0}
                         onChange={e => {
                           const items = editInvoice.items.slice();
-                          items[idx] = { ...item, lineTotal: e.target.value };
+                          items[idx] = { ...item, line_total: Number(e.target.value) };
                           setEditInvoice({ ...editInvoice, items });
                         }}
                         placeholder="Price"
                       />
-                      <span className="ml-1">{editInvoice.currency}</span>
+                      <span className="ml-1">{editInvoice.doc.currency}</span>
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="flex justify-between font-semibold border-t pt-2">
                 <span>Total</span>
-                <span>{editInvoice?.grandTotal.toLocaleString()} {editInvoice?.currency}</span>
+                <span>{editInvoice?.totals.grand_total.toLocaleString()} {editInvoice?.doc.currency}</span>
               </div>
               <textarea
                 className="text-xs text-gray-500 mt-2 border rounded w-full p-1"
-                value={editInvoice?.notes || ""}
-                onChange={e => setEditInvoice(editInvoice && { ...editInvoice, notes: e.target.value })}
+                value={editInvoice?.doc.notes || ""}
+                onChange={e => setEditInvoice(editInvoice && { ...editInvoice, doc: { ...editInvoice.doc, notes: e.target.value } })}
                 placeholder="Notes"
               />
               <div className="flex gap-2 mt-4">
@@ -127,25 +118,25 @@ export default function InvoiceDetailModal({ invoice, open, onClose }: InvoiceDe
               <div>
                 <div className="font-semibold">{invoice.vendor.name}</div>
                 <div className="text-xs text-gray-500">{invoice.vendor.address}</div>
-                <div className="text-xs text-gray-400">{invoice.issuedDate} {invoice.issuedTime}</div>
+                <div className="text-xs text-gray-400">{invoice.datetime.date} {invoice.datetime.time}</div>
               </div>
               <div>
                 <div className="font-medium mb-1">Items:</div>
                 <ul className="space-y-1">
                   {invoice.items.map((item: IInvoiceItem, idx: number) => (
                     <li key={idx} className="flex justify-between text-sm">
-                      <span>{item.brand || item.rawName} x{item.quantity}</span>
-                      <span>{item.lineTotal.toLocaleString()} {invoice.currency}</span>
+                      <span>{item.brand || item.raw_name} x{item.quantity}</span>
+                      <span>{item.line_total.toLocaleString()} {invoice.doc.currency}</span>
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="flex justify-between font-semibold border-t pt-2">
                 <span>Total</span>
-                <span>{invoice.grandTotal.toLocaleString()} {invoice.currency}</span>
+                <span>{invoice.totals.grand_total.toLocaleString()} {invoice.doc.currency}</span>
               </div>
-              {invoice.notes && (
-                <div className="text-xs text-gray-500 mt-2">Notes: {invoice.notes}</div>
+              {invoice.doc.notes && (
+                <div className="text-xs text-gray-500 mt-2">Notes: {invoice.doc.notes}</div>
               )}
               <div className="flex gap-2 mt-4">
                 <AlertDialog>
