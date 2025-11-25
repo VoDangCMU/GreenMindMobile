@@ -28,6 +28,16 @@ declare interface IQuestionTemplate {
     question_type: IBehaviorNormalized;
 }
 
+declare interface IQuestionModel {
+    id: string
+    ocean: string
+    behavior: string
+    age: string
+    location: string
+    gender: string
+    keywords: string
+}
+
 declare interface IQuestionData {
     id: string;
     question: string;
@@ -36,6 +46,8 @@ declare interface IQuestionData {
     behaviorNormalized: IBehaviorNormalized;
     template: IQuestionTemplate;
     options: IAnswerOption[];
+    trait: string;
+    model: IQuestionModel;
     createdAt: Date;
     updatedAt: Date;
 }

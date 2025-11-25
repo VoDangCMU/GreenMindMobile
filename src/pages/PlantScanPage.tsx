@@ -13,6 +13,7 @@ import type { IHealthyFoodRatio } from "@/apis/ai/monitor_ocean";
 import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { useOceanUpdate } from "@/hooks/useOceanUpdate";
+import healthyFoodRatio from "@/apis/backend/ai-forward/healthyFoodRatio";
 
 function PlantScanList({
   scans,
@@ -32,18 +33,6 @@ function PlantScanList({
           className="bg-white rounded-lg shadow p-4 flex items-center gap-4 cursor-pointer"
           onClick={() => onScanClick(scan)}
         >
-          {/* {isValidBase64(scan._original_base64) ? (
-            <img
-              src={`data:image/jpeg;base64,${scan._original_base64}`}
-              alt="Dish"
-              className="w-16 h-16 object-cover rounded"
-              onError={(e) => (e.currentTarget.style.display = "none")}
-            />
-          ) : (
-            <div className="w-16 h-16 bg-gray-100 flex items-center justify-center rounded text-gray-400 text-xs">
-              No image
-            </div>
-          )} */}
           {isValidBase64(scan.plant_image_base64) ? (
             <img
               src={`${scan.plant_image_base64}`}
@@ -148,7 +137,7 @@ export default function PlantScanPage() {
     setIsUpdatingOcean(true);
     const { plant_meals, total_meals } = calculateMealStats();
     const base_likert = getBaseLikert();
-    
+
     if (!ocean) {
       setIsUpdatingOcean(false);
       return; // No OCEAN scores, skip silently
@@ -246,7 +235,8 @@ export default function PlantScanPage() {
         saveToGallery: false,
         allowEditing: false,
       });
-      const result = await analyzeImagePlant(photo);
+      // const result = await analyzeImagePlant(photo);
+      const result = await healthyFoodRatio(photo)
       const base64 = await getBase64FromPhoto(photo);
       const scan = {
         ...result,
@@ -272,7 +262,8 @@ export default function PlantScanPage() {
         saveToGallery: false,
         allowEditing: false,
       });
-      const result = await analyzeImagePlant(photo);
+      // const result = await analyzeImagePlant(photo);
+      const result = await healthyFoodRatio(photo)
       const base64 = await getBase64FromPhoto(photo);
       const scan = {
         ...result,

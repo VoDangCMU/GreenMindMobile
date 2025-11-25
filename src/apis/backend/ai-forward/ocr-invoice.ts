@@ -1,6 +1,7 @@
 import type { Photo } from "@capacitor/camera";
 import fileUtils from "@/helpers/fileUtils"
 import BackendInstance from "@/apis/instances/BackendInstance";
+import { authHeader } from "@/apis/instances/getToken";
 
 export interface IAIInvoiceDoc {
     source_id: string;
@@ -47,7 +48,7 @@ export interface IAIInvoice {
 }
 
 
-export default async function ocrBill(photo: Photo) {
+export default async function ocrInvoice(photo: Photo) {
 
     let imageFile: File | null = null;
     if (photo.path) {
@@ -63,5 +64,5 @@ export default async function ocrBill(photo: Photo) {
     const formData = new FormData();
     formData.append("file", imageFile);
 
-    return BackendInstance.post('/ocr', formData).then(res => res.data as IAIInvoice);
+    return BackendInstance.post('/ocr', formData, { headers: authHeader() }).then(res => res.data as IAIInvoice);
 }

@@ -13,6 +13,7 @@ import { avg_daily_spend } from "@/apis/ai/monitor_ocean";
 import type { IAvgDailySpend } from "@/apis/ai/monitor_ocean";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { useAuthStore } from "@/store/authStore";
+import dailySpending from "@/apis/backend/ai-forward/dailySpending";
 
 export default function InvoiceHistoryPage() {
   const invoices = useBillStore((state) => state.invoices);
@@ -47,7 +48,7 @@ export default function InvoiceHistoryPage() {
     setIsUpdatingOcean(true);
     const daily_total = getLatestInvoiceTotal();
     const base_avg = getBaseAvg();
-    
+
     if (!ocean) {
       setIsUpdatingOcean(false);
       return; // No OCEAN scores, skip silently
@@ -61,21 +62,18 @@ export default function InvoiceHistoryPage() {
     const data: IAvgDailySpend = {
       daily_total,
       base_avg,
-      weight: 0.2,
-      direction: "down",
-      sigma_r: 1.0,
-      alpha: 0.5,
       ocean_score: {
-        O: ocean.O / 100, // Convert back to 0-1 range
+        O: ocean.O / 100,
         C: ocean.C / 100,
         E: ocean.E / 100,
         A: ocean.A / 100,
         N: ocean.N / 100,
       },
     };
-    
+
     try {
-      const res = await avg_daily_spend(data);
+      // const res = await avg_daily_spend(data);
+      const res = await dailySpending(data);
       if (res && res.new_ocean_score) {
         setOcean(res.new_ocean_score);
         console.log(`OCEAN updated from invoice! Daily: ${daily_total}, Base: ${base_avg}`);
@@ -87,7 +85,7 @@ export default function InvoiceHistoryPage() {
     }
   };
 
-   
+
   useEffect(() => {
     invoiceApi.getInvoicesByUserId(user?.id!).then((data) => {
       console.log("Fetched invoices:", data);

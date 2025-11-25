@@ -5,6 +5,7 @@ import useInvoiceStore from "@/store/invoiceStore";
 import ocrBill from "@/apis/ai/ocrInvoice";
 import invoiceApi from "@/apis/backend/invoice";
 import { toast } from "sonner";
+import ocrInvoice from "@/apis/backend/ai-forward/ocr-invoice";
 
 interface HistoryPageFooterProps {
   onImport?: () => void;
@@ -38,7 +39,8 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
 
     let exportedInvoice;
     try {
-      exportedInvoice = await ocrBill(photo);
+      // exportedInvoice = await ocrBill(photo);
+      exportedInvoice = await ocrInvoice(photo)
     } catch (err) {
       console.log("OCR error:", err);
       toast.error("OCR error");
@@ -64,7 +66,7 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
         console.log("Cannot use server, saving locally:", err);
         toast.warning("Cannot use server, saving locally");
         addAIInvoice(exportedInvoice);
-        
+
         setOcring(false);
         return;
       }
@@ -87,8 +89,8 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
 
       setOcring(true);
 
-      const exportedInvoice = await ocrBill(photo);
-
+      // const exportedInvoice = await ocrBill(photo);
+      const exportedInvoice = await ocrInvoice(photo)
       if (!exportedInvoice) {
         console.error("No bill data returned from OCR.");
         return;

@@ -42,7 +42,6 @@ const SCORE_PER_QUESTION_TYPE: Record<string, Record<string, number>> = {
     },
 };
 
-// MOCK MOCK MOCK
 function randomOCEAN(): string {
     const traits = ["O", "C", "E", "A", "N"];
     const index = Math.floor(Math.random() * traits.length);
@@ -71,16 +70,12 @@ export default function combineQuestionWithTemplate(
 
         const behavior = q.behaviorNormalized;
 
-        // key theo type câu hỏi
         const key = KEY_PER_QUESTION_TYPE[behavior] ?? "pos";
-
-        // score theo bộ map chuẩn
         const score =
             SCORE_PER_QUESTION_TYPE[behavior]?.[userAnswer.answer] ?? 0;
 
         return {
-            // MOCK MOCK MOCK
-            trait: randomOCEAN(),
+            trait: q.trait ?? randomOCEAN(),
             template_id: q.templateId,
             intent: q.template.intent,
             question: q.question,
