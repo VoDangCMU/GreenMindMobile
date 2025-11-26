@@ -10,6 +10,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useDailyMoving } from "@/hooks/metric/useDailyMoving";
+import { useOcean } from "@/hooks/useOcean";
 import { getAllUserLocation } from "@/apis/backend/location";
 import { toast } from "sonner";
 
@@ -99,6 +100,7 @@ export default function CurrentLocationCard() {
 
   // Update OCEAN scores using daily distance
   const { callDailyMoving, loading: updatingOcean } = useDailyMoving();
+  const { fetchOcean } = useOcean();
 
   const updateOceanWithDistance = async () => {
     if (!answers) {
@@ -114,6 +116,7 @@ export default function CurrentLocationCard() {
       const baseAvgDistance = parseFloat(answers.daily_distance_km) || 5; // Default 5km if not available
 
       await callDailyMoving(latestDistance, baseAvgDistance);
+      await fetchOcean();
 
     } catch (error) {
       console.error("Failed to update OCEAN scores:", error);

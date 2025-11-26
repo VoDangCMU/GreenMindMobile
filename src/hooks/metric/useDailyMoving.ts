@@ -1,15 +1,12 @@
 import { useState } from 'react';
 import dailyMoving from '@/apis/backend/ai-forward/metrics/dailyMoving';
 import { toast } from 'sonner';
-import { useAppStore } from '@/store/appStore';
-import { useAuthStore } from '@/store/authStore';
-import { updateUserOcean } from '@/apis/backend/ocean';
+import { useOcean } from '@/hooks/useOcean';
 
 export const useDailyMoving = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { ocean, setOcean } = useAppStore();
-    const user = useAuthStore((s) => s.user);
+    const { ocean, saveOcean } = useOcean();
 
     const callDailyMoving = async (distance_today: number, base_avg_distance: number) => {
         if (!ocean) {
@@ -50,18 +47,8 @@ export const useDailyMoving = () => {
                 N: result.new_ocean_score.N,
             };
 
-            // Update OCEAN scores in the store
-            setOcean(newOceanScores);
-
-            // Update OCEAN scores in the backend
-            if (user?.id) {
-                try {
-                    await updateUserOcean(user.id, newOceanScores);
-                } catch (backendError) {
-                    console.error("Failed to update OCEAN scores in backend:", backendError);
-                    // Continue anyway, as the store is already updated
-                }
-            }
+            // Update OCEAN scores
+            await saveOcean(newOceanScores);
 
             toast.success("OCEAN scores updated successfully!");
             return result;

@@ -194,7 +194,7 @@ export default function ProfilePage() {
                 {/* Gender */}
                 <div className="flex items-center space-x-1 text-gray-600 mb-1">
                   <User className="w-4 h-4" />
-                  <span>{userInfo.gender}</span>
+                  <span>{userInfo.gender} 25</span>
                 </div>
 
                 {/* Location */}

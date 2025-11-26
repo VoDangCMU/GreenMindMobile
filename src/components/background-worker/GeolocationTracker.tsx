@@ -119,7 +119,7 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
 
       setTracking(false);
     };
-  }, []);
+  }, [user?.id]);
 
   return null;
 }

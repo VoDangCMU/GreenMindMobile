@@ -50,7 +50,7 @@ export function AppStateInitializer() {
         },
       }
     ]);
-  }, []);
+  }, [user?.id]);
 
   return null;
 }

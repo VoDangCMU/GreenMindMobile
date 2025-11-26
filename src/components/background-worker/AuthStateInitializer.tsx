@@ -23,7 +23,7 @@ export default function AuthStateInitializer() {
                 },
             }
         ]);
-    }, []);
+    }, [state.tokens?.access_token]);
 
     return null;
 }

@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import nightOut from '@/apis/backend/ai-forward/metrics/nightOut';
+// import nightOut from '@/apis/backend/ai-forward/metrics/nightOut';
+import nightOut from '@/apis/ai/monitor_ocean/night_out_freq';
 import { toast } from 'sonner';
-import { useAppStore } from '@/store/appStore';
-import { useAuthStore } from '@/store/authStore';
-import { updateUserOcean } from '@/apis/backend/ocean';
+import { useOcean } from '@/hooks/useOcean';
 
 
 export const useNightOutFeq = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { ocean, setOcean } = useAppStore();
-    const user = useAuthStore((s) => s.user);
+    const { ocean, saveOcean } = useOcean();
 
     const callNightOutFeq = async (night_out_count: number, base_night_out: number) => {
         if (!ocean) {
@@ -55,18 +53,8 @@ export const useNightOutFeq = () => {
                 N: result.new_ocean_score.N,
             };
 
-            // Update OCEAN scores in the store
-            setOcean(newOceanScores);
-
-            // Update OCEAN scores in the backend
-            if (user?.id) {
-                try {
-                    await updateUserOcean(user.id, newOceanScores);
-                } catch (backendError) {
-                    console.error("Failed to update OCEAN scores in backend:", backendError);
-                    // Continue anyway, as the store is already updated
-                }
-            }
+            // Update OCEAN scores
+            await saveOcean(newOceanScores);
 
             toast.success("OCEAN scores updated successfully!");
             return result;

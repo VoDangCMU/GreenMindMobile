@@ -1,5 +1,5 @@
 interface ICombineOutput { user_id: string; answers: IAnswer[]; }
-interface IAnswer { trait: string; template_id: string; intent: string; question: string; ans: string; score: number; key: IKey; kind: string; }
+interface IAnswer { trait: string; template_id: string; intent: string; question: string; ans: string | number; score: number; key: IKey; kind: string; }
 declare type IKey = "pos" | "neg";
 
 interface IUserAnswer { userId: string; answers: Array<{ questionId: string; answer: string; }>; }
@@ -42,6 +42,23 @@ const SCORE_PER_QUESTION_TYPE: Record<string, Record<string, number>> = {
     },
 };
 
+const ANS_PER_QUESTION_TYPE: Record<string, Record<string, string>> = {
+    likert5: {
+        "Rất không thích": "1",
+        "Không thích": "2",
+        "Bình thường": "3",
+        "Thích": "4",
+        "Rất thích": "5",
+    },
+    rating: {
+        "Rất tệ": "1",
+        "Tệ": "2",
+        "Bình thường": "3",
+        "Tốt": "4",
+        "Rất tốt": "5",
+    },
+}
+
 function randomOCEAN(): string {
     const traits = ["O", "C", "E", "A", "N"];
     const index = Math.floor(Math.random() * traits.length);
@@ -79,7 +96,8 @@ export default function combineQuestionWithTemplate(
             template_id: q.templateId,
             intent: q.template.intent,
             question: q.question,
-            ans: userAnswer.answer,
+            // ans: userAnswer.answer,
+            ans: ANS_PER_QUESTION_TYPE[behavior]?.[userAnswer.answer] ?? userAnswer.answer,
             score,
             key,
             kind: behavior,
