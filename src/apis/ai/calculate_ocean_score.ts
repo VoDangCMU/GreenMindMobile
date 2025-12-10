@@ -1,20 +1,8 @@
 import AIApi from "../instances/AIInstance";
 
-export interface IQuestionData {
-    user_id: string;
-    answers: Answer[];
-}
+export interface IQuestionData { user_id: string; answers: Answer[]; }
 
-export interface Answer {
-    trait:       string;
-    template_id: string;
-    intent:      string;
-    question:    string;
-    ans:         string;
-    score:       number;
-    key:         Key;
-    kind:        string;
-}
+export interface Answer { trait: string; template_id: string; intent: string; question: string; ans: string; score: number; key: Key; kind: string; }
 
 export type Key = 'neg' | 'pos';
 
@@ -155,21 +143,16 @@ export const MOCKED_QUESTION_DATA: IQuestionData = {
 }
 
 export const MOCKED_OCEAN_SCORE: IOceanTraitScore = {
-    O: 11,
-    C: 10,
-    E: 12,
-    A: 9,
-    N: 8
+  O: 11,
+  C: 10,
+  E: 12,
+  A: 9,
+  N: 8
 };
 
-export interface IOceanTraitScore {
-    O: number;
-    C: number;
-    E: number;
-    A: number;
-    N: number;
-}
+export interface IOceanTraitScore { O: number; C: number; E: number; A: number; N: number; }
 
+export interface ICalculateOceanResponse { scores: IOceanTraitScore; }
 export default async function calculate_ocean(question_data: IQuestionData) {
-  return AIApi.post('/calculate_ocean', question_data).then(res => res.data as IOceanTraitScore);
+  return AIApi.post('/calculate_ocean', question_data).then(res => res.data as ICalculateOceanResponse);
 }

@@ -1,8 +1,10 @@
 import { useEffect } from "react";
-import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyStore, type PreAppSurveyAnswers } from "@/store/preAppSurveyStore";
-import { getUserOcean, createUserOcean, DEFAULT_OCEAN } from "@/apis/backend/ocean";
-import { getPreAppSurveyByUser } from "@/apis/backend/preAppSurvey";
+import { getUserOcean, createUserOcean, DEFAULT_OCEAN } from "@/apis/backend/v1/ocean";
+import { getPreAppSurveyByUser } from "@/apis/backend/v1/preAppSurvey";
+import { useAuthStore } from "@/store/authStore";
+import useFetch from "@/hooks/useFetch";
+import { useOcean } from "@/hooks/v1/useOcean";
 
 // Map API response to store format
 function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
@@ -20,55 +22,35 @@ function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
 }
 
 export function AppStateInitializer() {
-  const user = useAppStore((s) => s.user);
-  const setOcean = useAppStore((s) => s.setOcean);
-  const preAppSurvey = usePreAppSurveyStore((s) => s.answers);
+  const user = useAuthStore((s) => s.user);
   const setAnswers = usePreAppSurveyStore((s) => s.setAnswers);
+  const { call } = useFetch();
+  const { setOcean } = useOcean();
 
   useEffect(() => {
-    if (user?.id && !preAppSurvey) {
-      async function fetchPreAppData() {
-        try {
-          const res = await getPreAppSurveyByUser(user?.id || "");
-          if (res.data) {
-            // Map the API response to store format
-            const mappedAnswers = mapApiResponseToStore(res.data);
-            setAnswers(mappedAnswers);
-          }
-        } catch (error) {
-          console.error("Failed to fetch pre-app survey:", error);
-        }
+    call([
+      {
+        fn: () => getUserOcean(user?.id || ""),
+        onSuccess: (data) => {
+          setOcean(data.scores);
+        },
+        onFailed: () => {
+          createUserOcean(user?.id || "", DEFAULT_OCEAN);
+          setOcean(DEFAULT_OCEAN);
+        },
+      },
+      {
+        fn: () => getPreAppSurveyByUser(user?.id || ""),
+        onSuccess: (data) => {
+          const normalizedData = mapApiResponseToStore(data);
+          setAnswers(normalizedData);
+        },
+        onFailed: () => {
+          console.log("Failed to fetch pre-app survey");
+        },
       }
-      fetchPreAppData();
-    }
+    ]);
   }, [user?.id]);
-
-  useEffect(() => {
-    let ignore = false;
-    async function ensureOcean() {
-      if (!user?.id) return;
-      try {
-        const res = await getUserOcean(user.id);
-        if (!ignore && res?.scores) {
-          setOcean(res.scores);
-        }
-      } catch (err: any) {
-        if (err?.response?.status === 404) {
-          // Not found, create default
-          try {
-            const created = await createUserOcean(user.id, DEFAULT_OCEAN);
-            if (!ignore && created?.scores) {
-              setOcean(created.scores);
-            }
-          } catch {
-            // handle error if needed
-          }
-        }
-      }
-    }
-    ensureOcean();
-    return () => { ignore = true; };
-  }, [user?.id, setOcean]);
 
   return null;
 }

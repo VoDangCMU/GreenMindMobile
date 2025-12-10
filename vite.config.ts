@@ -30,5 +30,72 @@ export default defineConfig(({ mode }) => {
     define: {
       __APP_ENV__: JSON.stringify(env.APP_ENV),
     },
+
+    build: {
+      sourcemap: false,
+      target: 'esnext',
+      minify: 'esbuild',
+      terserOptions: {
+        compress: {
+          drop_console: true, // Remove console logs for production
+        },
+      },
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            // react core
+            if (id.includes('react') && !id.includes('radix')) return 'react'
+
+            // radix UI
+            if (id.includes('@radix-ui')) return 'radix-ui'
+
+            // lucide icons
+            if (id.includes('lucide-react')) return 'icons'
+
+            // charts
+            if (id.includes('recharts')) return 'charts'
+
+            // date utils
+            if (id.includes('date-fns')) return 'date-fns'
+
+            // map
+            if (id.includes('leaflet') || id.includes('react-leaflet')) {
+              return 'map'
+            }
+
+            // capacitor
+            if (id.includes('@capacitor')) return 'capacitor'
+
+            // framer-motion
+            if (id.includes('framer-motion')) return 'motion'
+
+            // UI libs nhỏ khác
+            if (
+              id.includes('sonner') ||
+              id.includes('vaul') ||
+              id.includes('class-variance-authority')
+            ) {
+              return 'ui'
+            }
+
+            // utils
+            if (
+              id.includes('axios') ||
+              id.includes('clsx') ||
+              id.includes('tailwind-merge')
+            ) {
+              return 'utils'
+            }
+
+            // default vendor
+            if (id.includes('node_modules')) {
+              return 'vendor'
+            }
+          },
+        },
+      },
+
+      chunkSizeWarningLimit: 1200,
+    },
   }
 })

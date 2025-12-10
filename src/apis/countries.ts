@@ -1,5 +1,5 @@
-import countriesData from "@/assets/countries.json";
-import citiesData from "@/assets/cities.json";
+const countriesData = (await import("@/assets/countries.json")).default;
+const citiesData = (await import("@/assets/cities.json")).default;
 
 interface Country {
   id: number;
@@ -43,7 +43,7 @@ export const getCountriesByName = (query: string): Country[] => {
 export const getCountryByCode = (code: string): Country | undefined =>
   countries.find(
     c => c.iso2.toLowerCase() === code.toLowerCase() ||
-         c.iso3.toLowerCase() === code.toLowerCase()
+      c.iso3.toLowerCase() === code.toLowerCase()
   );
 
 // Trả về danh sách quốc gia theo mã hoặc tên (tự phát hiện kiểu đầu vào)
@@ -60,8 +60,6 @@ export const getCountries = (input: string): Country[] => {
 
 // Trả về danh sách tên quốc gia để hiển thị Popover
 export const getCountryNames = (): string[] => countries.map(c => c.name);
-
-/* 🌆 ========== CITIES ========== */
 
 // Lấy danh sách thành phố theo tên
 export const getCitiesByName = (query: string): City[] => {
@@ -90,7 +88,7 @@ export const getCities = (input: string): City[] => {
 // Trả về danh sách tên thành phố để hiển thị Popover
 export const getCityNames = (): string[] => cities.map(c => c.name);
 
-// 🏙️ Lấy danh sách thành phố theo quốc gia (tên hoặc mã)
+// Lấy danh sách thành phố theo quốc gia (tên hoặc mã)
 export const getCitiesByCountry = (country: string): City[] => {
   if (!country.trim()) return [];
 
@@ -114,8 +112,6 @@ export const getCitiesByCountry = (country: string): City[] => {
   );
 };
 
-
-/* 🌍 ========== UTILITIES ========== */
 
 // Lấy toàn bộ
 export const getAllCountries = (): Country[] => countries;

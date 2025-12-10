@@ -1,4 +1,4 @@
-import { storageKey } from "@/store/appStore";
+import { storageKey } from "@/store/authStore";
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -6,7 +6,7 @@ export function getToken(): string | null {
     const raw = localStorage.getItem(storageKey);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    return data.state.access_token || null;
+    return data.state.tokens.access_token || null;
   } catch {
     return null;
   }
