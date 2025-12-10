@@ -3,7 +3,7 @@ import { ScanLine } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import useInvoiceStore from "@/store/invoiceStore";
 import { toast } from "sonner";
-import ocrInvoice from "@/apis/backend/ai-forward/image-processing/ocr-invoice";
+import ocrInvoice from "@/apis/backend/v1/ai-forward/image-processing/ocr-invoice";
 
 interface HistoryPageFooterProps {
   onImport?: () => void;

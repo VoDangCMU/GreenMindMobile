@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { usePreAppSurveyStore, type PreAppSurveyAnswers } from "@/store/preAppSurveyStore";
-import { getUserOcean, createUserOcean, DEFAULT_OCEAN } from "@/apis/backend/ocean";
-import { getPreAppSurveyByUser } from "@/apis/backend/preAppSurvey";
+import { getUserOcean, createUserOcean, DEFAULT_OCEAN } from "@/apis/backend/v1/ocean";
+import { getPreAppSurveyByUser } from "@/apis/backend/v1/preAppSurvey";
 import { useAuthStore } from "@/store/authStore";
 import useFetch from "@/hooks/useFetch";
-import { useOcean } from "@/hooks/useOcean";
+import { useOcean } from "@/hooks/v1/useOcean";
 
 // Map API response to store format
 function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {

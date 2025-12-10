@@ -1,4 +1,4 @@
-import { getProfile } from "@/apis/backend/profile";
+import { getProfile } from "@/apis/backend/v1/profile";
 import useFetch from "@/hooks/useFetch";
 import { useToast } from "@/hooks/useToast";
 import { useAuthStore } from "@/store/authStore";

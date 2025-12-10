@@ -2,7 +2,7 @@ import AppHeader from "@/components/common/AppHeader";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
 import { Loader2, Check, RefreshCw } from "lucide-react";
 import { useState } from "react";
-import ScanHistoryFooter from "@/components/app-components/ScanHistoryFooter";
+import ScanHistoryFooter from "@/components/app-components/page-components/plant-scan/ScanHistoryFooter";
 import usePlantScanStore, { type PlantScanResult } from "@/store/plantScanStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
@@ -11,8 +11,8 @@ import { healthy_food_ratio } from "@/apis/ai/monitor_ocean";
 import type { IHealthyFoodRatio } from "@/apis/ai/monitor_ocean";
 import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
-import { useOceanUpdate } from "@/hooks/useOceanUpdate";
-import planScan from "@/apis/backend/ai-forward/image-processing/plan-scan";
+import { useOceanUpdate } from "@/hooks/v1/useOceanUpdate";
+import planScan from "@/apis/backend/v1/ai-forward/image-processing/plan-scan";
 
 function PlantScanList({
   scans,

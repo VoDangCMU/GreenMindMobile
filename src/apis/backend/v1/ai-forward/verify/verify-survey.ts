@@ -1,6 +1,18 @@
 import BackendInstance from "@/apis/instances/BackendInstance";
 import { authHeader } from "@/apis/instances/getToken";
 
+export interface IVerifySurveyPayload {
+    model: string;
+    user_id: string;
+    survey_result: IOcean;
+}
+
+export interface IVerifySurveyResponse {
+    success: boolean;
+    message: string;
+    data?: any;
+}
+
 function normalizeOCEAN(ocean: IOcean): IOcean {
     return {
         O: ocean.O > 1 ? ocean.O / 100 : ocean.O,
@@ -11,7 +23,7 @@ function normalizeOCEAN(ocean: IOcean): IOcean {
     };
 }
 
-export default async function verifySurvey(payload: IVerifySurveyPayload) {
+export async function verifySurvey(payload: IVerifySurveyPayload) {
     const normalizedPayload = {
         ...payload,
         survey_result: normalizeOCEAN(payload.survey_result),

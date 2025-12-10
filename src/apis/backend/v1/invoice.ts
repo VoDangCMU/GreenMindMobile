@@ -1,5 +1,5 @@
-import BackendInstance from "../instances/BackendInstance";
-import { authHeader } from "../instances/getToken";
+import BackendInstance from "../../instances/BackendInstance";
+import { authHeader } from "../../instances/getToken";
 
 export async function getInvoices(): Promise<IInvoice[]> {
   const res = await BackendInstance.get("/ocr/invoices", { headers: authHeader() });

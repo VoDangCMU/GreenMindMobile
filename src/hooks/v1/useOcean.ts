@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useAppStore } from "@/store/appStore";
-import { createUserOcean, getUserOcean, ensureUserOcean } from "@/apis/backend/ocean";
+import { createUserOcean, getUserOcean, ensureUserOcean } from "@/apis/backend/v1/ocean";
 import { useAuthStore } from "@/store/authStore";
 
 

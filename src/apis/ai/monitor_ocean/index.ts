@@ -24,7 +24,6 @@ export { default as public_transit_ratio } from './public_transit_ratio';
 export type { IPublicTransitRatio } from './public_transit_ratio';
 
 export { default as night_out_freq } from './night_out_freq';
-export type { INightOutFreq } from './night_out_freq';
 
 export { default as healthy_food_ratio } from './healthy_food_ratio';
 export type { IHealthyFoodRatio } from './healthy_food_ratio';

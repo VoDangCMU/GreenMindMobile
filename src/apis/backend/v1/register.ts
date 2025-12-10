@@ -1,5 +1,5 @@
 import type { Gender } from "@/store/registerStore";
-import BackendInstance from "../instances/BackendInstance";
+import BackendInstance from "@/apis/instances/BackendInstance";
 
 export interface RegisterPayload {
   email: string;

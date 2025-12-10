@@ -1,8 +1,8 @@
 import { useRegisterStore } from "@/store/registerStore";
 import { Link } from "react-router-dom";
-import RegisterFormStep1 from '@/components/app-components/RegisterFormStep1';
-import RegisterFormStep2 from '@/components/app-components/RegisterFormStep2';
-import RegisterFormStep3 from '@/components/app-components/RegisterFormStep3';
+import RegisterFormStep1 from '@/components/app-components/page-components/register/RegisterFormStep1';
+import RegisterFormStep2 from '@/components/app-components/page-components/register/RegisterFormStep2';
+import RegisterFormStep3 from '@/components/app-components/page-components/register/RegisterFormStep3';
 import ProcessIndicator from "@/components/common/ProcessIndicator";
 import { Leaf } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";

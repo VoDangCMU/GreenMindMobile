@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getPreAppSurveyByUser } from "@/apis/backend/preAppSurvey";
+import { getPreAppSurveyByUser } from "@/apis/backend/v1/preAppSurvey";
 
 export interface PreAppSurveyAnswers extends Record<string, string> {
   avg_daily_spend: string;          // Chi tiêu trung bình mỗi ngày

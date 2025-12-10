@@ -1,5 +1,5 @@
-import BackendInstance from "../instances/BackendInstance";
-import { authHeader } from "../instances/getToken";
+import BackendInstance from "../../instances/BackendInstance";
+import { authHeader } from "../../instances/getToken";
 
 export interface TodoCreateParams {
   title: string;

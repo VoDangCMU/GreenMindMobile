@@ -1,9 +1,11 @@
-export default function extractModelsFormQuestion(
-    questiondata: IGetQuestionResponse,
-) {
-    const models = questiondata.data.map(q => q.model).filter((model) => model !== null);
+import type { ISurveyQuestion } from "@/apis/backend/v2/survey";
 
-    const uniqueModels: IQuestionModel[] = [];
+export default function extractModelsFormQuestion(
+    questiondata: ISurveyQuestion[],
+) {
+    const models = questiondata.map(q => q.model).filter((model) => model !== null);
+
+    const uniqueModels: any[] = [];
 
     models.forEach(model => {
         if (!uniqueModels.find(m => m.id === model.id)) {

@@ -11,22 +11,28 @@ import AppHeader from "@/components/common/AppHeader";
 import { useTodoStore } from "@/store/todoStore";
 import generate_subtasks from "@/apis/ai/todos/todo_generator";
 import { useTodoAffect } from "@/hooks/metric/useTodoAffect";
-import { createTodo, getTodos, batchCreateTodos, deleteTodo as deleteTodoAPI, updateTodo as updateTodoAPI, type TodoData } from "@/apis/backend/todo";
+import { createTodo, getTodos, batchCreateTodos, deleteTodo as deleteTodoAPI, updateTodo as updateTodoAPI, type TodoData } from "@/apis/backend/v1/todo";
+import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
+import { MetricFeedbackCard } from "@/components/app-components/MetricFeedbackCard";
+import AppHeaderButton from "@/components/common/AppHeaderButton";
 import {
   Plus,
   Circle,
+  Lightbulb,
 } from "lucide-react";
 
 import { useAuthStore } from "@/store/authStore";
 
-import { TodoItemComponent } from "@/components/app-components/TodoItem";
-import BottomNav from "@/components/app-components/HomeBottomNav";
-import OceanPersonalityCard from "@/components/app-components/OceanPersonalityCard";
+import { TodoItemComponent } from "@/components/app-components/page-components/todo/TodoItem";
+import BottomNav from "@/components/app-components/page-components/home/HomeBottomNav";
+import OceanPersonalityCard from "@/components/app-components/commons/OceanPersonalityCard";
 
 export default function TodoPage() {
   const { todos, addTodo, addSubtask, removeTodo, setTodos } = useTodoStore();
 
   const user = useAuthStore((state) => state.user);
+  const todoFeedback = useMetricFeedbackStore((s) => s.getFeedback("list_adherence"));
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const [newTodoText, setNewTodoText] = useState("");
   const [editingParentId, setEditingParentId] = useState<string | null>(null);
@@ -245,10 +251,21 @@ export default function TodoPage() {
 
   return (
     <SafeAreaLayout
-      header={<AppHeader showBack title="Todo" />}
+      header={<AppHeader showBack title="Todo" rightActions={todoFeedback ? [
+        <AppHeaderButton
+          key="feedback"
+          icon={<Lightbulb className="w-5 h-5 text-yellow-500" />}
+          onClick={() => setShowFeedback(!showFeedback)}
+        />
+      ] : []} />}
       footer={<BottomNav></BottomNav>}
     >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
+        {/* Show feedback card if available */}
+        {showFeedback && todoFeedback && (
+          <MetricFeedbackCard feedback={todoFeedback} />
+        )}
+        
         <OceanPersonalityCard />
         {/* Stats Card */}
         <Card className="border-0 shadow-md bg-gradient-to-r from-greenery-50 to-blue-50">

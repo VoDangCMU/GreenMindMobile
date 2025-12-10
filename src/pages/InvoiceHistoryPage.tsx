@@ -1,26 +1,30 @@
 import AppHeader from "@/components/common/AppHeader";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
-import { Search, Loader2, Check, RefreshCw } from "lucide-react";
-import InvoiceDetailModal from "@/components/app-components/InvoiceDetailModal";
+import { Search, Loader2, Check, RefreshCw, Lightbulb } from "lucide-react";
+import InvoiceDetailModal from "@/components/app-components/page-components/invoice-history/InvoiceDetailModal";
 import { useEffect, useState } from "react";
-import HistoryPageFooter from "@/components/app-components/HistoryPageFooter";
+import HistoryPageFooter from "@/components/app-components/page-components/invoice-history/HistoryPageFooter";
 import useBillStore from "@/store/invoiceStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import invoiceApi from "@/apis/backend/invoice";
+import invoiceApi from "@/apis/backend/v1/invoice";
 
-import InvoiceList from "@/components/app-components/InvoiceList";
+import InvoiceList from "@/components/app-components/page-components/invoice-history/InvoiceList";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { useDailySpending } from "@/hooks/metric/useDailySpending";
 import useFetch from "@/hooks/useFetch";
+import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
+import { MetricFeedbackCard } from "@/components/app-components/MetricFeedbackCard";
 
 export default function InvoiceHistoryPage() {
   const invoices = useBillStore((state) => state.invoices);
   const isOcring = useBillStore((state) => state.isOcring);
   const [selectedBill, setSelectedBill] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const preAppSurveyAnswers = usePreAppSurveyStore((state) => state.answers);
   const { call } = useFetch();
+  const spendingFeedback = useMetricFeedbackStore((s) => s.getFeedback("avg_daily_spend"));
 
   // Get base_avg from preAppSurvey avg_daily_spend
   const getBaseAvg = () => {
@@ -79,6 +83,13 @@ export default function InvoiceHistoryPage() {
           title="Scanned Bills"
           showBack
           rightActions={[
+            spendingFeedback ? (
+              <AppHeaderButton
+                key="feedback"
+                icon={<Lightbulb className="w-5 h-5 text-yellow-500" />}
+                onClick={() => setShowFeedback(!showFeedback)}
+              />
+            ) : null,
             <AppHeaderButton
               key="update-ocean"
               icon={
@@ -92,13 +103,20 @@ export default function InvoiceHistoryPage() {
             />,
             <AppHeaderButton key="bell" icon={<Search />} />,
             <AppHeaderButton key="settings" icon={isOcring ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : <Check className="h-6 w-6 text-green-500" />} />,
-          ]}
+          ].filter(Boolean)}
         />
       }
       footer={<HistoryPageFooter />}
     >
       <div className="flex flex-col bg-gradient-to-br">
         <div className="flex-1 w-full mx-auto px-3 pb-28">
+          {/* Show feedback card if available */}
+          {showFeedback && spendingFeedback && (
+            <div className="mb-4">
+              <MetricFeedbackCard feedback={spendingFeedback} />
+            </div>
+          )}
+          
           <InvoiceList
             invoices={invoices}
             onInvoiceClick={(invoice) => {

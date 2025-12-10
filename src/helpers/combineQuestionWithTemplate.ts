@@ -1,3 +1,5 @@
+import type { IQuestionResponse } from "@/types/api/question";
+
 interface ICombineOutput { user_id: string; answers: IAnswer[]; }
 interface IAnswer { trait: string; template_id: string; intent: string; question: string; ans: string | number; score: number; key: IKey; kind: string; }
 declare type IKey = "pos" | "neg";
@@ -66,11 +68,11 @@ function randomOCEAN(): string {
 }
 
 export default function combineQuestionWithTemplate(
-    questiondata: IGetQuestionResponse,
+    questiondata: IQuestionResponse,
     userAnswers: IUserAnswer
 ): ICombineOutput {
     const answers: IAnswer[] = userAnswers.answers.map(userAnswer => {
-        const q = questiondata.data.find(q => q.id === userAnswer.questionId);
+        const q = questiondata.data.questions.find(q => q.id === userAnswer.questionId);
 
         if (!q) {
             return {

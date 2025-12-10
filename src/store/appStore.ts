@@ -1,4 +1,4 @@
-import { ensureUserOcean } from "@/apis/backend/ocean";
+import { ensureUserOcean } from "@/apis/backend/v1/ocean";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

@@ -6,11 +6,13 @@ import { CheckCircle, ArrowRight, Brain, Inbox, Star, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import getQuestions from "@/apis/backend/question";
-import { useSubmitSurvey } from "@/hooks/useSubmitSurvey";
+import getQuestions from "@/apis/backend/v1/question";
+import { useSubmitSurvey } from "@/hooks/v1/useSubmitSurvey";
 import { useToast } from "@/hooks/useToast";
-import OceanPersonalityCard from "@/components/app-components/OceanPersonalityCard";
-import BottomNav from "@/components/app-components/HomeBottomNav";
+import OceanPersonalityCard from "@/components/app-components/commons/OceanPersonalityCard";
+import BottomNav from "@/components/app-components/page-components/home/HomeBottomNav";
+import type { IQuestion, IQuestionResponse } from "@/types/api/question";
+import useFetch from "@/hooks/useFetch";
 
 interface QuestionOption {
   text: string;
@@ -31,57 +33,43 @@ export default function QuizPage() {
   const [showResults, setShowResults] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [rawQuestion, setRawQuestion] = useState<IGetQuestionResponse | null>(null);
+  const [rawQuestion, setRawQuestion] = useState<IQuestionResponse | null>(null);
   const toast = useToast();
+  const { call } = useFetch();
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
   const fetchQuestions = async () => {
     setLoading(true);
-    try {
-      const res = await getQuestions();
-      setRawQuestion(res);
-      const raw = res.data ?? {};
-      // Flatten nested question object to array
-      let flatQuestions: Question[] = [];
-      if (Array.isArray(raw)) {
-        flatQuestions = raw;
-      } else if (typeof raw === 'object' && raw !== null) {
-        // OceanTemplateData structure: { R: { rating: [..], ... }, ... }
-        Object.values(raw).forEach((group: any) => {
-          if (group && typeof group === 'object') {
-            Object.values(group).forEach((arr: any) => {
-              if (Array.isArray(arr)) {
-                arr.forEach((q: any) => {
-                  // Map to Question type
-                  flatQuestions.push({
-                    id: q.template_id || q.id || '',
-                    question: q.sentence || q.question || '',
-                    behaviorNormalized: q.slot || '',
-                    options: (q.value_slot || q.options || []).map((v: any, idx: number) => ({
-                      text: v,
-                      value: v,
-                      order: idx,
-                    })),
-                  });
-                });
-              }
-            });
-          }
-        });
-      }
-      setQuestions(flatQuestions);
-    } catch (err) {
-      console.error(err);
-      toast.error("Không thể tải câu hỏi. Vui lòng thử lại sau 😭");
-    } finally {
-      setLoading(false);
-    }
+
+    call({
+      fn: () => getQuestions(),
+      onSuccess: (res) => {
+        setRawQuestion(res);
+
+        const flatQuestions: Question[] = (res.data?.questions || []).map((q: IQuestion) => ({
+          id: q.id,
+          question: q.question,
+          behaviorNormalized: q.behaviorNormalized,
+          options: (q.questionOptions || []).map((opt) => ({
+            text: opt.text,
+            value: opt.value,
+            order: opt.order,
+          })),
+        }));
+
+        setQuestions(flatQuestions);
+      },
+      onFailed: (err) => {
+        console.error(err);
+      },
+      onFinally: () => setLoading(false)
+    })
   };
 
   useEffect(() => {
-    setQuestions([]);
+    // setQuestions([]);
     setShowResults(false);
     setAnswers({});
     setCurrent(0);

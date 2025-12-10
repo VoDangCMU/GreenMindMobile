@@ -5,7 +5,7 @@ import {
   isGeolocationAvailable,
   calculateDistance,
 } from "@/helpers/geolocationHelper";
-import { createLocation, getAllUserLocation } from "@/apis/backend/location";
+import { createLocation, getAllUserLocation } from "@/apis/backend/v1/location";
 import { reverseGeocode } from "@/apis/nominatim/reverseGeocode";
 import { useAuthStore } from "@/store/authStore";
 

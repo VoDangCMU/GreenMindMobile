@@ -3,16 +3,18 @@ import { useGeolocationStore } from "@/store/geolocationStore";
 
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Navigation, Compass, Gauge, RefreshCw } from "lucide-react";
+import { MapPin, Navigation, Compass, Gauge, RefreshCw, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useDailyMoving } from "@/hooks/metric/useDailyMoving";
-import { useOcean } from "@/hooks/useOcean";
-import { getAllUserLocation } from "@/apis/backend/location";
+import { useOcean } from "@/hooks/v1/useOcean";
+import { getAllUserLocation } from "@/apis/backend/v1/location";
 import { toast } from "sonner";
+import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
+import { MetricFeedbackCard } from "@/components/app-components/MetricFeedbackCard";
 
 
 const markerIcon = new L.Icon({
@@ -45,6 +47,8 @@ export default function CurrentLocationCard() {
   const mapRef = useRef<L.Map | null>(null);
   const address = useGeolocationStore((s) => s.currentPositionDisplayName);
   const [todayDistanceKm, setTodayDistanceKm] = useState<number>(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const movingFeedback = useMetricFeedbackStore((s) => s.getFeedback("daily_moving"));
 
   const formatCoordinate = (coord: number) => coord.toFixed(6);
   const formatAccuracy = (accuracy?: number) => accuracy ? `${Math.round(accuracy)}m` : "N/A";
@@ -154,6 +158,16 @@ export default function CurrentLocationCard() {
             <span>Location Data</span>
           </CardTitle>
           <div className="flex items-center space-x-2">
+            {movingFeedback ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFeedback(!showFeedback)}
+                className="h-8 px-2"
+              >
+                <Lightbulb className="w-4 h-4 text-yellow-500" />
+              </Button>
+            ) : null}
             <Button
               variant="outline"
               size="sm"
@@ -174,6 +188,13 @@ export default function CurrentLocationCard() {
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {/* Feedback Card */}
+        {showFeedback && movingFeedback && (
+          <div className="mb-4">
+            <MetricFeedbackCard feedback={movingFeedback} />
           </div>
         )}
 

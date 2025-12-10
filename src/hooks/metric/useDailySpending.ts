@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import dailySpending from '@/apis/backend/ai-forward/metrics/dailySpending';
+import dailySpending from '@/apis/backend/v1/ai-forward/metrics/dailySpending';
 // import dailySpending from '@/apis/ai/monitor_ocean/avg_daily_spend';
 import { toast } from 'sonner';
-import { useOcean } from '@/hooks/useOcean';
+import { useOcean } from '@/hooks/v1/useOcean';
 
 export const useDailySpending = () => {
     const [loading, setLoading] = useState(false);

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import InvoiceCard from "@/components/app-components/InvoiceCard";
+import InvoiceCard from "@/components/app-components/page-components/invoice-history/InvoiceCard";
 
 interface InvoiceListProps {
   invoices: any[];

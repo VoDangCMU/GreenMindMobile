@@ -4,6 +4,7 @@ type CallItem<T = any> = {
   fn: () => Promise<T>;
   onSuccess?: (data: T) => void;
   onFailed?: (error: unknown) => void;
+  onFinally?: () => void;
 };
 
 export default function useFetch() {
@@ -35,6 +36,8 @@ export default function useFetch() {
             } catch (err) {
               item.onFailed?.(err);
               return { data: null, error: err };
+            } finally {
+              item.onFinally?.();
             }
           });
 
@@ -53,6 +56,7 @@ export default function useFetch() {
         input.onFailed?.(err);
         return { data: null, error: err };
       } finally {
+        input.onFinally?.();
         end();
       }
     },

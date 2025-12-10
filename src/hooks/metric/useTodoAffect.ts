@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import todoAffect from '@/apis/backend/ai-forward/metrics/todoAffect';
+import todoAffect from '@/apis/backend/v1/ai-forward/metrics/todoAffect';
 import { toast } from 'sonner';
 import { usePreAppSurveyStore } from '@/store/preAppSurveyStore';
-import { useOcean } from '@/hooks/useOcean';
+import { useOcean } from '@/hooks/v1/useOcean';
+import { useMetricFeedbackStore } from '@/store/v2/metricFeedbackStore';
 
 export const useTodoAffect = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { ocean, saveOcean } = useOcean();
     const { answers } = usePreAppSurveyStore();
+    const { setFeedback } = useMetricFeedbackStore();
 
     const callTodoAffect = async (todos: ITodo[]) => {
         if (!ocean) {
@@ -60,6 +62,13 @@ export const useTodoAffect = () => {
 
             // Update OCEAN scores
             await saveOcean(newOceanScores);
+
+            // Save feedback to store with timestamp
+            setFeedback("list_adherence", {
+                ...result,
+                new_ocean_score: newOceanScores,
+                timestamp: new Date().toISOString(),
+            });
 
             toast.success("OCEAN scores updated successfully!");
             return result;

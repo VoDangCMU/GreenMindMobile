@@ -1,5 +1,5 @@
 import BEApi from "@/apis/instances/BackendInstance";
-import { authHeader } from "../instances/getToken";
+import { authHeader } from "../../instances/getToken";
 
 export interface UserAnswerSubmitParams {
   userId: string;

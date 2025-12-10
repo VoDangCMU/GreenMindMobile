@@ -1,12 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Target, Award, Users, MessageCircle, AlertCircle, CheckCircle2, Leaf } from "lucide-react";
 import { Link } from "react-router-dom";
-import AppHeader from "@/components/app-components/HomeAppHeader";
-import BottomNav from "@/components/app-components/HomeBottomNav";
+import AppHeader from "@/components/app-components/page-components/home/HomeAppHeader";
+import BottomNav from "@/components/app-components/page-components/home/HomeBottomNav";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import OceanPersonalityCard from "@/components/app-components/OceanPersonalityCard";
-import NightOutCard from "@/components/app-components/NightOutCard";
-import CurrentLocationCard from "@/components/app-components/CurrentLocationCard";
+import OceanPersonalityCard from "@/components/app-components/commons/OceanPersonalityCard";
+import NightOutCard from "@/components/app-components/page-components/home/NightOutCard";
+import CurrentLocationCard from "@/components/app-components/page-components/profile/CurrentLocationCard";
 
 const features = [
   {

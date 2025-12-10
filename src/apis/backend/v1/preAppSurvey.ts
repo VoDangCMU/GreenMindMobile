@@ -1,5 +1,5 @@
-import BackendInstance from "../instances/BackendInstance";
-import { authHeader } from "../instances/getToken";
+import BackendInstance from "../../instances/BackendInstance";
+import { authHeader } from "../../instances/getToken";
 
 // API params and response types
 export interface PreAppSurveyAnswers {

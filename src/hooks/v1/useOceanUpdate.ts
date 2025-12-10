@@ -1,6 +1,6 @@
 import { useAppStore } from "@/store/appStore";
-import { updateUserOcean } from "@/apis/backend/ocean";
-import { useToast } from "./useToast";
+import { updateUserOcean } from "@/apis/backend/v1/ocean";
+import { useToast } from "../useToast";
 import { useAuthStore } from "@/store/authStore";
 
 export function useOceanUpdate() {

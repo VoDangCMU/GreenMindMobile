@@ -7,7 +7,7 @@ import { CheckCircle, ArrowLeft, ArrowRight, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import { submitPreAppSurvey } from "@/apis/backend/preAppSurvey";
+import { submitPreAppSurvey } from "@/apis/backend/v1/preAppSurvey";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";

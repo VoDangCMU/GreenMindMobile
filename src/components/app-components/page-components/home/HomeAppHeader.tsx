@@ -1,7 +1,7 @@
 // ...existing code...
 import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Logo from "@/components/app-components/Logo";
+import Logo from "@/components/app-components/page-components/login/Logo";
 
 // No scroll-to-hide logic; header is always visible
 

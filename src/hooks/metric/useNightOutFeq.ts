@@ -2,7 +2,7 @@ import { useState } from 'react';
 // import nightOut from '@/apis/backend/ai-forward/metrics/nightOut';
 import nightOut from '@/apis/ai/monitor_ocean/night_out_freq';
 import { toast } from 'sonner';
-import { useOcean } from '@/hooks/useOcean';
+import { useOcean } from '@/hooks/v1/useOcean';
 
 
 export const useNightOutFeq = () => {

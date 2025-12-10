@@ -84,7 +84,7 @@ createRoot(document.getElementById("root")!).render(
     <AuthStateInitializer />
     <AppStateInitializer />
     <GeolocationTracker timeBetweenTrack={30000} />
-    <NightOutTracker timeBetweenCheck={30000} testMode={true} />
+    <NightOutTracker timeBetweenCheck={30000} />
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />
   </>

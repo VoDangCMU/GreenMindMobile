@@ -1,12 +1,12 @@
-import BackendInstance from "../instances/BackendInstance";
-import { authHeader } from "../instances/getToken";
+import BackendInstance from "../../instances/BackendInstance";
+import { authHeader } from "../../instances/getToken";
 
 export function ensureUserOcean(ocean: IOcean): IOcean {
   const fix = (v: number) => {
-    // nếu đang là scale 0–1 -> convert thành 1–100
+    // nếu đang là scale 0–1 -> convert thành 0–100
     const normalized = v <= 1 ? v * 100 : v;
-    // clamp lại 1–100
-    return Math.min(100, Math.max(1, normalized));
+    // clamp lại 0–100
+    return Math.min(100, Math.max(0, normalized));
   };
 
   return {
