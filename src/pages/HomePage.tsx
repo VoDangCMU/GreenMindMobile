@@ -105,6 +105,12 @@ const features = [
     desc: "Get advice and support from our smart assistant.",
   },
   {
+    to: "/metrics",
+    icon: <Award className="w-8 h-8 text-greenery-600" />,
+    title: "Metrics & Feedback",
+    desc: "View all metric feedbacks and update.",
+  },
+  {
     to: "/feedback",
     icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
     title: "Feedback",

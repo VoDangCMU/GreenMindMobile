@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronDown, ChevronUp, TrendingUp } from "lucide-react";
+import { ChevronDown, ChevronUp, TrendingUp, TrendingDown } from "lucide-react";
 import type { IMetricFeedback } from "@/store/v2/metricFeedbackStore";
 
 interface MetricFeedbackCardProps {
@@ -10,13 +10,27 @@ interface MetricFeedbackCardProps {
 export function MetricFeedbackCard({ feedback }: MetricFeedbackCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Helper function to round to 3 decimal places
+  const round3 = (num: number) => Math.round(num * 1000) / 1000;
+
   return (
     <Card className="mb-4 border-0 shadow-lg">
       <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-green-500" />
+            {feedback.contrib > 0 ? (
+              <TrendingUp className="w-5 h-5 text-green-500" />
+            ) : (
+              <TrendingDown className="w-5 h-5 text-red-500" />
+            )}
             <CardTitle className="text-base capitalize">{feedback.metric}</CardTitle>
+            <span className={`text-xs font-semibold px-2 py-1 rounded ${
+              feedback.contrib > 0 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-red-100 text-red-700'
+            }`}>
+              {feedback.contrib > 0 ? '+' : ''}{round3(feedback.contrib)}
+            </span>
           </div>
           {isExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-500" />
@@ -32,19 +46,19 @@ export function MetricFeedbackCard({ feedback }: MetricFeedbackCardProps) {
           <div className="grid grid-cols-2 gap-2 p-2 bg-gray-50 rounded-lg">
             <div className="text-sm">
               <p className="text-gray-500">Value Today (vt)</p>
-              <p className="font-semibold text-gray-800">{feedback.vt}</p>
+              <p className="font-semibold text-gray-800">{round3(feedback.vt)}</p>
             </div>
             <div className="text-sm">
               <p className="text-gray-500">Baseline (bt)</p>
-              <p className="font-semibold text-gray-800">{feedback.bt}</p>
+              <p className="font-semibold text-gray-800">{round3(feedback.bt)}</p>
             </div>
             <div className="text-sm">
               <p className="text-gray-500">Correlation (r)</p>
-              <p className="font-semibold text-gray-800">{feedback.r.toFixed(2)}</p>
+              <p className="font-semibold text-gray-800">{round3(feedback.r)}</p>
             </div>
             <div className="text-sm">
               <p className="text-gray-500">Contribution (contrib)</p>
-              <p className="font-semibold text-gray-800">{feedback.contrib.toFixed(2)}</p>
+              <p className="font-semibold text-gray-800">{round3(feedback.contrib)}</p>
             </div>
           </div>
 
@@ -84,7 +98,7 @@ export function MetricFeedbackCard({ feedback }: MetricFeedbackCardProps) {
               {Object.entries(feedback.new_ocean_score).map(([trait, score]) => (
                 <div key={trait} className="text-center">
                   <p className="text-xs font-bold text-gray-700">{trait}</p>
-                  <p className="text-sm text-green-600 font-semibold">{(score as number).toFixed(1)}</p>
+                  <p className="text-sm text-green-600 font-semibold">{round3(score as number)}</p>
                 </div>
               ))}
             </div>

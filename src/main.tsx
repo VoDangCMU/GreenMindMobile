@@ -32,6 +32,7 @@ const TrackingPage = lazy(() => import("./pages/TrackingPage"));
 const InvoiceHistoryPage = lazy(() => import("./pages/InvoiceHistoryPage"));
 const TodoPage = lazy(() => import("./pages/TodoPage"));
 const PlantScanHistoryPage = lazy(() => import("./pages/PlantScanPage"));
+const MetricsPage = lazy(() => import("./pages/MetricsPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -70,6 +71,7 @@ const router = createHashRouter([
           { path: "/invoice-history", element: <Suspense fallback={<PageLoader />}><InvoiceHistoryPage /></Suspense> },
           { path: "/todo", element: <Suspense fallback={<PageLoader />}><TodoPage /></Suspense> },
           { path: "/plant-scan-history", element: <Suspense fallback={<PageLoader />}><PlantScanHistoryPage /></Suspense> },
+          { path: "/metrics", element: <Suspense fallback={<PageLoader />}><MetricsPage /></Suspense> },
         ],
       },
     ],

@@ -1,17 +1,19 @@
 import AppHeader from "@/components/common/AppHeader";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
-import { Loader2, Check, RefreshCw } from "lucide-react";
+import { Loader2, Check, RefreshCw, Lightbulb } from "lucide-react";
 import { useState } from "react";
 import ScanHistoryFooter from "@/components/app-components/page-components/plant-scan/ScanHistoryFooter";
 import usePlantScanStore, { type PlantScanResult } from "@/store/plantScanStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Filesystem } from "@capacitor/filesystem";
-import { healthy_food_ratio } from "@/apis/ai/monitor_ocean";
 import type { IHealthyFoodRatio } from "@/apis/ai/monitor_ocean";
 import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { useOceanUpdate } from "@/hooks/v1/useOceanUpdate";
+import { useHealthyFoodRatio } from "@/hooks/metric/useHealthyFoodRatio";
+import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
+import { MetricFeedbackCard } from "@/components/app-components/MetricFeedbackCard";
 import planScan from "@/apis/backend/v1/ai-forward/image-processing/plan-scan";
 
 function PlantScanList({
@@ -111,10 +113,13 @@ export default function PlantScanPage() {
   const [selectedScan, setSelectedScan] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
   const [isUpdatingOcean, setIsUpdatingOcean] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const setOcean = useAppStore((state) => state.setOcean);
   const ocean = useAppStore((state) => state.ocean);
   const { updateOcean } = useOceanUpdate();
+  const { callHealthyFoodRatio } = useHealthyFoodRatio();
   const preAppSurveyAnswers = usePreAppSurveyStore((state) => state.answers);
+  const foodRatioFeedback = useMetricFeedbackStore((s) => s.getFeedback("healthy_food_ratio"));
 
   // Calculate plant_meals and total_meals from scans
   const calculateMealStats = () => {
@@ -159,14 +164,14 @@ export default function PlantScanPage() {
       },
     };
     try {
-      const res = await healthy_food_ratio(data);
+      const res = await callHealthyFoodRatio(data);
       if (res && res.new_ocean_score) {
         updateOcean(res.new_ocean_score);
         setOcean(res.new_ocean_score);
         console.log(`OCEAN updated from plant scan! Plant meals: ${plant_meals}/${total_meals}, Base: ${base_likert}`);
       }
     } catch (error) {
-      // Silently ignore API errors
+      // Error already handled by hook
       console.warn("Failed to update OCEAN from plant scan:", error);
     } finally {
       setIsUpdatingOcean(false);
@@ -286,6 +291,11 @@ export default function PlantScanPage() {
           showBack
           rightActions={[
             <AppHeaderButton
+              key="feedback"
+              icon={<Lightbulb className="w-5 h-5 text-yellow-500" />}
+              onClick={() => setShowFeedback(!showFeedback)}
+            />,
+            <AppHeaderButton
               key="update-ocean"
               icon={
                 isUpdatingOcean ? (
@@ -314,6 +324,20 @@ export default function PlantScanPage() {
     >
       <div className="flex flex-col bg-gradient-to-br">
         <div className="flex-1 w-full mx-auto px-3 pb-28">
+          {/* Feedback Section */}
+          {showFeedback && (
+            <div className="mb-4">
+              {foodRatioFeedback ? (
+                <MetricFeedbackCard feedback={foodRatioFeedback} />
+              ) : (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-sm text-gray-500 text-center">Feedback unavailable</p>
+                  <p className="text-xs text-gray-400 text-center mt-1">Update OCEAN to see feedback</p>
+                </div>
+              )}
+            </div>
+          )}
+
           <PlantScanList
             scans={scans}
             onScanClick={(scan) => {

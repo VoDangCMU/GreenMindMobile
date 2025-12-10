@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import dailyMoving from '@/apis/backend/v1/ai-forward/metrics/dailyMoving';
+import { healthy_food_ratio } from '@/apis/ai/monitor_ocean';
+import type { IHealthyFoodRatio } from '@/apis/ai/monitor_ocean';
 import { toast } from 'sonner';
 import { useOcean } from '@/hooks/v1/useOcean';
 import { useMetricFeedbackStore } from '@/store/v2/metricFeedbackStore';
 
-export const useDailyMoving = () => {
+export const useHealthyFoodRatio = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { ocean, saveOcean } = useOcean();
     const { setFeedback } = useMetricFeedbackStore();
 
-    const callDailyMoving = async (distance_today: number, base_avg_distance: number) => {
+    const callHealthyFoodRatio = async (data: IHealthyFoodRatio) => {
         if (!ocean) {
             const msg = "Missing OCEAN scores";
             toast.error(msg);
@@ -21,19 +22,7 @@ export const useDailyMoving = () => {
         setLoading(true);
         setError(null);
         try {
-            const payload: IDailyMovingParams = {
-                distance_today,
-                base_avg_distance,
-                ocean_score: {
-                    O: ocean.O / 100,
-                    C: ocean.C / 100,
-                    E: ocean.E / 100,
-                    A: ocean.A / 100,
-                    N: ocean.N / 100,
-                },
-            };
-
-            const result = await dailyMoving(payload);
+            const result = await healthy_food_ratio(data);
 
             if (!result || !result.new_ocean_score) {
                 console.warn("API returned invalid response: missing new_ocean_score", result);
@@ -53,7 +42,7 @@ export const useDailyMoving = () => {
             await saveOcean(newOceanScores);
 
             // Save feedback to store with timestamp
-            setFeedback("daily_moving", {
+            setFeedback("healthy_food_ratio", {
                 ...result,
                 new_ocean_score: newOceanScores,
                 timestamp: new Date().toISOString(),
@@ -62,7 +51,7 @@ export const useDailyMoving = () => {
             toast.success("OCEAN scores updated successfully!");
             return result;
         } catch (err: any) {
-            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to update daily moving metrics';
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to update healthy food ratio metrics';
             setError(errorMessage);
             toast.error(errorMessage);
             throw err;
@@ -72,7 +61,7 @@ export const useDailyMoving = () => {
     };
 
     return {
-        callDailyMoving,
+        callHealthyFoodRatio,
         loading,
         error
     };

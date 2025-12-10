@@ -158,16 +158,14 @@ export default function CurrentLocationCard() {
             <span>Location Data</span>
           </CardTitle>
           <div className="flex items-center space-x-2">
-            {movingFeedback ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowFeedback(!showFeedback)}
-                className="h-8 px-2"
-              >
-                <Lightbulb className="w-4 h-4 text-yellow-500" />
-              </Button>
-            ) : null}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFeedback(!showFeedback)}
+              className="h-8 px-2"
+            >
+              <Lightbulb className="w-4 h-4 text-yellow-500" />
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -191,10 +189,17 @@ export default function CurrentLocationCard() {
           </div>
         )}
 
-        {/* Feedback Card */}
-        {showFeedback && movingFeedback && (
+        {/* Feedback Section */}
+        {showFeedback && (
           <div className="mb-4">
-            <MetricFeedbackCard feedback={movingFeedback} />
+            {movingFeedback ? (
+              <MetricFeedbackCard feedback={movingFeedback} />
+            ) : (
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-500 text-center">Feedback unavailable</p>
+                <p className="text-xs text-gray-400 text-center mt-1">Update OCEAN to see feedback</p>
+              </div>
+            )}
           </div>
         )}
 

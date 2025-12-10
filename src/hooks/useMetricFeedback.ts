@@ -27,7 +27,9 @@ export function useMetricFeedback(
  * Hook to get all feedbacks sorted by timestamp (newest first)
  */
 export function useAllMetricFeedbacks(): IMetricFeedback[] {
-  return useMetricFeedbackStore((s) => s.getAllFeedbacksSorted());
+  return useMetricFeedbackStore((s) => Object.values(s.feedbacks).sort((a, b) =>
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  ));
 }
 
 /**
