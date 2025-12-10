@@ -44,10 +44,15 @@ jobs:
           NODE_ENV: production
           ENV: production
 
+      - name: Set up Node 22 for Capacitor
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Copy and sync Capacitor Android
         run: |
-          bunx @capacitor/cli copy android
-          bunx @capacitor/cli sync android
+          npx @capacitor/cli copy android
+          npx @capacitor/cli sync android
         env:
           NODE_ENV: production
           ENV: production
