@@ -7,10 +7,10 @@ import { CheckCircle, ArrowLeft, ArrowRight, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import { submitPreAppSurvey } from "@/apis/backend/preAppSurvey";
-import { useAppStore } from "@/store/appStore";
+import { submitPreAppSurvey } from "@/apis/backend/v1/preAppSurvey";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/authStore";
 
 interface OnboardingQuestion {
   id: string;
@@ -88,7 +88,7 @@ export default function OnboardingQuizPage() {
   const [showResults, setShowResults] = useState(false);
   
   const { setAnswers: saveToStore, markCompleted, getSurveyData } = usePreAppSurveyStore();
-  const user = useAppStore((s) => s.user);
+  const user = useAuthStore((s) => s.user);
 
   // Load existing answers from localStorage on component mount
   useEffect(() => {

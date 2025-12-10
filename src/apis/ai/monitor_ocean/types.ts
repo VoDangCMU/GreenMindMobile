@@ -1,11 +1,13 @@
 export interface IMonitorOceanResponse {
-    metric:          string;
-    vt:              number;
-    bt:              number;
-    r:               number;
-    n:               number;
-    contrib:         number;
+    metric: string;
+    vt: number;
+    bt: number;
+    r: number;
+    n: number;
+    contrib: number;
     new_ocean_score: OceanScore;
+    mechanismFeedback: IMechanismFeedback;
+    reason: string;
 }
 
 export interface OceanScore {
@@ -14,6 +16,13 @@ export interface OceanScore {
     E: number;
     A: number;
     N: number;
+}
+
+export interface IMechanismFeedback {
+    awareness: string;
+    motivation: string;
+    capability: string;
+    opportunity: string;
 }
 
 export const example_response = {
