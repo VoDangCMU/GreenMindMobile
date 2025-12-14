@@ -31,12 +31,11 @@ import { usePreAppSurveyData } from "@/hooks/v1/usePreAppSurveyData";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
-import CurrentLocationCard from "@/components/app-components/page-components/profile/CurrentLocationCard";
 import LocationHistoryCard from "@/components/app-components/page-components/profile/LocationHistoryCard";
 import HomeLocationCard from "@/components/app-components/page-components/home/HomeLocationCard";
 import NightOutStatusCard from "@/components/app-components/page-components/profile/NightOutStatusCard";
 import { useAuthStore } from "@/store/authStore";
-import BottomNav from "@/components/app-components/page-components/home/HomeBottomNav";
+import { HomeBottomNav } from "./HomePage";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -153,7 +152,7 @@ export default function ProfilePage() {
   return (
     <SafeAreaLayout
       header={<AppHeader showBack title="Profile"></AppHeader>}
-      footer={<BottomNav></BottomNav>}
+      footer={<HomeBottomNav />}
     >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
         {/* Profile Info */}
@@ -323,9 +322,6 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Current Location Card */}
-        <CurrentLocationCard />
 
         {/* Home Location Card */}
         <HomeLocationCard />

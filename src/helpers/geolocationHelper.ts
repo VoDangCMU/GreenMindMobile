@@ -105,7 +105,9 @@ export async function requestPermissions(): Promise<{ granted: boolean }> {
 /**
  * Calculate distance between two points
  */
-export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+
+export type kilometer = number;
+export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): kilometer {
   const R = 6371;
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);

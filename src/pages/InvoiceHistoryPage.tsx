@@ -13,7 +13,7 @@ import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { useDailySpending } from "@/hooks/metric/useDailySpending";
 import useFetch from "@/hooks/useFetch";
 import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
-import { MetricFeedbackCard } from "@/components/app-components/MetricFeedbackCard";
+import { MetricFeedbackCard } from "./MetricsPage";
 
 export default function InvoiceHistoryPage() {
   const invoices = useBillStore((state) => state.invoices);

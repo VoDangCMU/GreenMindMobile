@@ -10,9 +10,9 @@ import getQuestions from "@/apis/backend/v1/question";
 import { useSubmitSurvey } from "@/hooks/v1/useSubmitSurvey";
 import { useToast } from "@/hooks/useToast";
 import OceanPersonalityCard from "@/components/app-components/commons/OceanPersonalityCard";
-import BottomNav from "@/components/app-components/page-components/home/HomeBottomNav";
 import type { IQuestion, IQuestionResponse } from "@/types/api/question";
 import useFetch from "@/hooks/useFetch";
+import { HomeBottomNav } from "./HomePage";
 
 interface QuestionOption {
   text: string;
@@ -193,7 +193,7 @@ export default function QuizPage() {
     return (
       <SafeAreaLayout
         header={<AppHeader title="Quiz Tính Cách" showBack />}
-        footer={<BottomNav></BottomNav>}
+        footer={<HomeBottomNav />}
       >
         <div className="min-h-screen flex flex-col items-center justify-center px-2">
           <Card className="max-w-sm w-full border-0 shadow-xl">

@@ -13,7 +13,7 @@ import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { useOceanUpdate } from "@/hooks/v1/useOceanUpdate";
 import { useHealthyFoodRatio } from "@/hooks/metric/useHealthyFoodRatio";
 import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
-import { MetricFeedbackCard } from "@/components/app-components/MetricFeedbackCard";
+import { MetricFeedbackCard } from "./MetricsPage";
 import planScan from "@/apis/backend/v1/ai-forward/image-processing/plan-scan";
 
 function PlantScanList({

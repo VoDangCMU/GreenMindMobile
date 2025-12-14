@@ -5,9 +5,10 @@ import {
   isGeolocationAvailable,
   calculateDistance,
 } from "@/helpers/geolocationHelper";
-import { createLocation, getAllUserLocation } from "@/apis/backend/v1/location";
+import { createLocation, } from "@/apis/backend/v1/location";
 import { reverseGeocode } from "@/apis/nominatim/reverseGeocode";
 import { useAuthStore } from "@/store/authStore";
+import { getLatestLocation } from "@/apis/backend/v2/location";
 
 interface GeolocationTrackerProps {
   timeBetweenTrack?: number;
@@ -39,23 +40,21 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
 
     if (!mountedRef.current) return;
 
-    // Supress backend error validating
-    let lengthToPreviousLocation = 0.01;
+    let distance = 0;
 
     try {
-      const previousLocations = await getAllUserLocation();
-      if (previousLocations?.data?.data?.length > 0) {
-        const latestLocation = previousLocations.data.data[0];
-        const distance = calculateDistance(
-          latestLocation.latitude,
-          latestLocation.longitude,
-          newUserposition.latitude,
-          newUserposition.longitude
-        );
-        lengthToPreviousLocation = distance * 1000 + 0.001; // convert km to m
-        lengthToPreviousLocation = lengthToPreviousLocation > 1.5 ? lengthToPreviousLocation : 0.01;
-      }
-      useGeolocationStore.getState().setLengthToPreviousLocation(lengthToPreviousLocation);
+      const latestlocation = await getLatestLocation();
+
+      distance = calculateDistance(
+        latestlocation?.data.latitude ?? 0,
+        latestlocation?.data.longitude ?? 0,
+        newUserposition.latitude,
+        newUserposition.longitude
+      );
+
+      distance = distance < 0.0015 ? 0 : distance;
+
+      useGeolocationStore.getState().setLengthToPreviousLocation(distance);
     } catch (error) {
       console.error("Failed to get previous location for distance calculation", error);
     }
@@ -81,7 +80,7 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
       userId: user.id,
       latitude: newUserposition.latitude,
       longitude: newUserposition.longitude,
-      length_to_previous_location: lengthToPreviousLocation,
+      length_to_previous_location: distance,
     };
 
     createLocation(payload).catch((error) => {
