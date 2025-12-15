@@ -1,9 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Target, Award, Users, MessageCircle, AlertCircle, CheckCircle2, Leaf, ClipboardList, Bell, User, Home, MapPin, Lightbulb, RefreshCw, Compass, Navigation, Gauge, ListTodo } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Award, AlertCircle, CheckCircle2, Leaf, ClipboardList, Bell, User, Home, MapPin, Lightbulb, RefreshCw, Wand, ListTodo, Camera, FileText, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
-import OceanPersonalityCard from "@/components/app-components/commons/OceanPersonalityCard";
-import NightOutCard from "@/components/app-components/page-components/home/NightOutCard";
+
 import Logo from "@/components/app-components/page-components/login/Logo";
 import { Button } from "@/components/ui/button";
 import L from "leaflet";
@@ -19,16 +18,25 @@ import { MetricFeedbackCard } from "./MetricsPage";
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { getDistanceToday } from "@/apis/backend/v2/location";
+import { useLocationStore } from "@/store/v2/locationStore";
+import OceanRadarChart from "@/components/hardcore-coder/OceanRadarChart";
+// import NightOutCard from "@/components/app-components/page-components/home/NightOutCard";
 
 
 export const APP_HEADER_HEIGHT = 64 + (typeof window !== 'undefined' && window.CSS && CSS.supports('top: env(safe-area-inset-top)') ? 0 : 16);
 
 const features = [
   {
+    to: "/guide",
+    icon: <Lightbulb className="w-5 h-5 text-greenery-600" />,
+    title: "Guide",
+    desc: "Quick start guide for new users.",
+  },
+  {
     to: "/plant-scan-history",
     icon: (
       <svg
-        className="w-8 h-8 text-greenery-600"
+        className="w-5 h-5 text-greenery-600"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -39,14 +47,14 @@ const features = [
         <circle cx="12" cy="12" r="3" />
       </svg>
     ),
-    title: "Tỷ lệ thực vật",
-    desc: "Phân tích tỉ lệ thực vật trong món ăn từ ảnh.",
+    title: "Plant Ratio",
+    desc: "Analyze plant ratio in your dish.",
   },
   {
     to: "/invoice-history",
     icon: (
       <svg
-        className="w-8 h-8 text-greenery-600"
+        className="w-5 h-5 text-greenery-600"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -56,111 +64,111 @@ const features = [
         <path d="M8 2v4M16 2v4M3 10h18" />
       </svg>
     ),
-    title: "Invoice History",
+    title: "Invoices",
     desc: "Show all your scanned invoices.",
   },
   {
     to: "/survey-list",
-    icon: <ClipboardList className="w-8 h-8 text-greenery-600" />,
+    icon: <ClipboardList className="w-6 h-6 text-greenery-600" />,
     title: "Surveys",
-    desc: "Browse and take available surveys to personalize your experience.",
+    desc: "Take surveys to find your type.",
   },
-  {
-    to: "/quiz",
-    icon: <Target className="w-8 h-8 text-greenery-600" />,
-    title: "Personality Quiz",
-    desc: "Discover your unique personality traits and get personalized insights.",
-  },
+  // {
+  //   to: "/quiz",
+  //   icon: <Target className="w-5 h-5 text-greenery-600" />,
+  //   title: "Personality Quiz",
+  //   desc: "Discover your unique personality traits and get personalized insights.",
+  // },
   {
     to: "/todo",
-    icon: <CheckCircle2 className="w-8 h-8 text-greenery-600" />,
+    icon: <CheckCircle2 className="w-5 h-5 text-greenery-600" />,
     title: "Todo",
     desc: "Manage your tasks and subtasks.",
   },
-  {
-    to: "/register",
-    icon: <Users className="w-8 h-8 text-greenery-600" />,
-    title: "Register",
-    desc: "Create a new account.",
-  },
-  {
-    to: "/home",
-    icon: <Target className="w-8 h-8 text-greenery-600" />,
-    title: "Home",
-    desc: "Go to the home dashboard.",
-  },
-  {
-    to: "/onboarding",
-    icon: <Award className="w-8 h-8 text-greenery-600" />,
-    title: "Onboarding",
-    desc: "Complete your onboarding steps.",
-  },
-  {
-    to: "/onboarding-quiz",
-    icon: <Target className="w-8 h-8 text-greenery-600" />,
-    title: "Onboarding Survey",
-    desc: "Take our comprehensive onboarding survey to personalize your experience.",
-  },
-  {
-    to: "/advice",
-    icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
-    title: "Advice",
-    desc: "Get advice and tips.",
-  },
-  {
-    to: "/goals",
-    icon: <Award className="w-8 h-8 text-greenery-600" />,
-    title: "My Goals",
-    desc: "Set, track, and achieve your personal growth goals.",
-  },
-  {
-    to: "/community",
-    icon: <Users className="w-8 h-8 text-greenery-600" />,
-    title: "Community",
-    desc: "Connect, share, and grow with like-minded people.",
-  },
-  {
-    to: "/chat",
-    icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
-    title: "Chat",
-    desc: "Get advice and support from our smart assistant.",
-  },
+  // {
+  //   to: "/register",
+  //   icon: <Users className="w-5 h-5 text-greenery-600" />,
+  //   title: "Register",
+  //   desc: "Create a new account.",
+  // },
+  // {
+  //   to: "/home",
+  //   icon: <Target className="w-5 h-5 text-greenery-600" />,
+  //   title: "Home",
+  //   desc: "Go to the home dashboard.",
+  // },
+  // {
+  //   to: "/onboarding",
+  //   icon: <Award className="w-5 h-5 text-greenery-600" />,
+  //   title: "Onboarding",
+  //   desc: "Complete your onboarding steps.",
+  // },
+  // {
+  //   to: "/onboarding-quiz",
+  //   icon: <Target className="w-5 h-5 text-greenery-600" />,
+  //   title: "Onboarding Survey",
+  //   desc: "Take our comprehensive onboarding survey to personalize your experience.",
+  // },
+  // {
+  //   to: "/advice",
+  //   icon: <MessageCircle className="w-5 h-5 text-greenery-600" />,
+  //   title: "Advice",
+  //   desc: "Get advice and tips.",
+  // },
+  // {
+  //   to: "/goals",
+  //   icon: <Award className="w-5 h-5 text-greenery-600" />,
+  //   title: "My Goals",
+  //   desc: "Set, track, and achieve your personal growth goals.",
+  // },
+  // {
+  //   to: "/community",
+  //   icon: <Users className="w-5 h-5 text-greenery-600" />,
+  //   title: "Community",
+  //   desc: "Connect, share, and grow with like-minded people.",
+  // },
+  // {
+  //   to: "/chat",
+  //   icon: <MessageCircle className="w-5 h-5 text-greenery-600" />,
+  //   title: "Chat",
+  //   desc: "Get advice and support from our smart assistant.",
+  // },
   {
     to: "/metrics",
-    icon: <Award className="w-8 h-8 text-greenery-600" />,
-    title: "Metrics & Feedback",
-    desc: "View all metric feedbacks and update.",
-  },
-  {
-    to: "/feedback",
-    icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
+    icon: <Award className="w-5 h-5 text-greenery-600" />,
     title: "Feedback",
-    desc: "Send us your feedback.",
+    desc: "View all metric feedbacks.",
   },
-  {
-    to: "/impact",
-    icon: <Award className="w-8 h-8 text-greenery-600" />,
-    title: "Impact",
-    desc: "See your impact stats.",
-  },
-  {
-    to: "/profile",
-    icon: <Users className="w-8 h-8 text-greenery-600" />,
-    title: "Profile",
-    desc: "View and edit your profile.",
-  },
-  {
-    to: "/recommendations",
-    icon: <Award className="w-8 h-8 text-greenery-600" />,
-    title: "Recommendations",
-    desc: "See personalized recommendations.",
-  },
-  {
-    to: "/tracking",
-    icon: <MessageCircle className="w-8 h-8 text-greenery-600" />,
-    title: "Tracking",
-    desc: "Track your progress.",
-  },
+  // {
+  //   to: "/feedback",
+  //   icon: <MessageCircle className="w-5 h-5 text-greenery-600" />,
+  //   title: "Feedback",
+  //   desc: "Send us your feedback.",
+  // },
+  // {
+  //   to: "/impact",
+  //   icon: <Award className="w-5 h-5 text-greenery-600" />,
+  //   title: "Impact",
+  //   desc: "See your impact stats.",
+  // },
+  // {
+  //   to: "/profile",
+  //   icon: <Users className="w-5 h-5 text-greenery-600" />,
+  //   title: "Profile",
+  //   desc: "View and edit your profile.",
+  // },
+  // {
+  //   to: "/recommendations",
+  //   icon: <Award className="w-5 h-5 text-greenery-600" />,
+  //   title: "Recommendations",
+  //   desc: "See personalized recommendations.",
+  // },
+  // {
+  //   to: "/tracking",
+  //   icon: <MessageCircle className="w-5 h-5 text-greenery-600" />,
+  //   title: "Tracking",
+  //   desc: "Track your progress.",
+  // },
 ];
 
 export function HomeAppHeader() {
@@ -199,7 +207,7 @@ export function HomeAppHeader() {
   );
 }
 
-export function HomeBottomNav() {
+export function AppBottomNavBar() {
   const unreadCount = useNotificationStore((s) => s.getUnreadCount());
 
   return (
@@ -299,24 +307,25 @@ function SetMapRef({ setRef }: { setRef: (map: L.Map) => void }) {
 }
 
 export function CurrentLocationCard() {
-  const { currentPosition, isTracking, lastUpdate, error } = useGeolocationStore();
+  const { currentPosition, isTracking, error } = useGeolocationStore();
+  const lastCalculatedLocation = useLocationStore(s => s.lastCalculatedlocation);
   const { answers } = usePreAppSurveyStore();
   const mapRef = useRef<L.Map | null>(null);
-  const address = useGeolocationStore((s) => s.currentPositionDisplayName);
   const [todayDistanceKm, setTodayDistanceKm] = useState<number>(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const movingFeedback = useMetricFeedbackStore((s) => s.getFeedback("daily_moving"));
 
-  const formatCoordinate = (coord: number) => coord.toFixed(6);
-  const formatAccuracy = (accuracy?: number) => accuracy ? `${Math.round(accuracy)}m` : "N/A";
-  const formatSpeed = (speed?: number | null) => speed ? `${(speed * 3.6).toFixed(1)} km/h` : "N/A";
-  const formatAltitude = (altitude?: number | null) => altitude ? `${Math.round(altitude)}m` : "N/A";
 
   // Load distance data on component mount
   useEffect(() => {
     const loadTodayDistance = async () => {
-      const distanceTodayData = await getDistanceToday();
-      setTodayDistanceKm(distanceTodayData?.data.total_distance ?? 0);
+      try {
+        const distanceTodayData = await getDistanceToday();
+        setTodayDistanceKm(distanceTodayData?.data.total_distance ?? 0);
+      } catch (error) {
+        console.error("Error loading today's distance:", error);
+        setTodayDistanceKm(0);
+      }
     };
 
     loadTodayDistance();
@@ -340,19 +349,28 @@ export function CurrentLocationCard() {
 
       const baseAvgDistance = parseFloat(answers.daily_distance_km) || 5; // Default 5km if not available
 
-      await callDailyMoving(latestDistance, baseAvgDistance);
-      await fetchOcean();
+      try {
+        await callDailyMoving(latestDistance, baseAvgDistance);
+      } catch (error) {
+        console.error("Error calling dailyMoving API:", error);
+      }
+
+      try {
+        await fetchOcean();
+      } catch (error) {
+        console.error("Error fetching OCEAN scores:", error);
+      }
 
     } catch (error) {
       console.error("Failed to update OCEAN scores:", error);
-      // Silently ignore API errors as requested
+      toast.error("Không thể cập nhật OCEAN scores");
     }
   };
   // Distance to previous location (meters)
   // Use value from store
   const lengthToPreviousLocation = useGeolocationStore((s) => s.lengthToPreviousLocation);
 
-  if (!currentPosition && !error) {
+  if (!lastCalculatedLocation && !error) {
     return (
       <Card className="border-0 shadow-md">
         <CardHeader className="pb-3">
@@ -363,7 +381,7 @@ export function CurrentLocationCard() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8 text-gray-500">
-            <p className="text-sm">Chưa có dữ liệu vị trí</p>
+            <p className="text-sm">No location data available</p>
           </div>
         </CardContent>
       </Card>
@@ -423,28 +441,28 @@ export function CurrentLocationCard() {
           </div>
         )}
 
-        {currentPosition && (
+        {lastCalculatedLocation && (
           <>
             {/* Coordinates */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col">
                 <span className="text-xs font-medium text-gray-600">Latitude</span>
                 <span className="text-sm font-mono text-blue-700">
-                  {formatCoordinate(currentPosition.latitude)}
+                  {formatCoordinate(lastCalculatedLocation.latitude)}
                 </span>
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-medium text-gray-600">Longitude</span>
                 <span className="text-sm font-mono text-blue-700">
-                  {formatCoordinate(currentPosition.longitude)}
+                  {formatCoordinate(lastCalculatedLocation.longitude)}
                 </span>
               </div>
-            </div>
+            </div> */}
             {/* Reverse Geocode Address */}
             <div className="pt-2">
-              <span className="text-xs font-medium text-gray-600">Địa chỉ</span>
+              <span className="text-xs font-medium text-gray-600">Address</span>
               <span className="block text-sm text-greenery-700 min-h-[20px]">
-                {address || "Không lấy được địa chỉ"}
+                {lastCalculatedLocation.name || "Unable to retrieve address"}
               </span>
             </div>
             {/* Distance to Previous Location */}
@@ -463,47 +481,16 @@ export function CurrentLocationCard() {
                 <span className="text-sm text-green-700 font-mono">{todayDistanceKm.toFixed(2)} km</span>
               </div>
             </div>
-            {/* Accuracy & Speed */}
-            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
-              <div className="flex items-center space-x-2">
-                <Compass className="w-4 h-4 text-orange-500" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-gray-600">Accuracy</span>
-                  <span className="text-sm text-orange-700">{formatAccuracy(currentPosition.accuracy)}</span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Gauge className="w-4 h-4 text-green-500" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-gray-600">Speed</span>
-                  <span className="text-sm text-green-700">{formatSpeed(currentPosition.speed)}</span>
-                </div>
-              </div>
-            </div>
-            {/* Altitude */}
-            {currentPosition.altitude !== null && (
-              <div className="pt-2 border-t border-gray-200">
-                <div className="flex items-center space-x-2">
-                  <Navigation className="w-4 h-4 text-purple-500" />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-gray-600">Altitude</span>
-                    <span className="text-sm text-purple-700">{formatAltitude(currentPosition.altitude)}</span>
-                  </div>
-                </div>
-              </div>
-            )}
             {/* Timestamp */}
-            {lastUpdate && (
-              <div className="pt-2 border-t border-gray-200">
-                <p className="text-xs text-gray-500">
-                  Last updated: {lastUpdate.toLocaleTimeString()}
-                </p>
-              </div>
-            )}
+            <div className="pt-2 border-t border-gray-200">
+              <p className="text-xs text-gray-500">
+                Last updated: {lastCalculatedLocation.issueAt?.toLocaleTimeString()}
+              </p>
+            </div>
             {/* Map Section */}
             <div className="h-60 rounded-lg overflow-hidden border border-gray-200 mt-3">
               <MapContainer
-                center={[currentPosition.latitude, currentPosition.longitude]}
+                center={[lastCalculatedLocation.latitude, lastCalculatedLocation.longitude]}
                 zoom={16}
                 scrollWheelZoom={false}
                 className="h-full w-full z-0 [&_.leaflet-control-zoom]:hidden"
@@ -514,14 +501,14 @@ export function CurrentLocationCard() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
                 />
                 <Marker
-                  position={[currentPosition.latitude, currentPosition.longitude]}
+                  position={[lastCalculatedLocation.latitude, lastCalculatedLocation.longitude]}
                   icon={markerIcon}
                 >
-                  <Popup>Bạn đang ở đây</Popup>
+                  <Popup>You're here</Popup>
                 </Marker>
                 <RecenterMap
-                  lat={currentPosition.latitude}
-                  lng={currentPosition.longitude}
+                  lat={lastCalculatedLocation.latitude}
+                  lng={lastCalculatedLocation.longitude}
                 />
                 <SetMapRef setRef={(map) => (mapRef.current = map)} />
               </MapContainer>
@@ -534,77 +521,167 @@ export function CurrentLocationCard() {
 }
 
 export default function HomePage() {
+  const preAppSurveyAnswers = usePreAppSurveyStore((s) => s.answers);
+  const navigate = useNavigate();
+  const [showQuickActions, setShowQuickActions] = useState(false);
+
+  const handleScanBill = () => {
+    setShowQuickActions(false);
+    navigate('/invoice-history', { state: { startScan: true } });
+  };
+
+  const handleScanPlant = () => {
+    setShowQuickActions(false);
+    navigate('/plant-scan-history', { state: { startScan: true } });
+  };
+
+  const handleCheckin = () => {
+    setShowQuickActions(false);
+    toast('Check-in is coming soon');
+  };
+
+  useEffect(() => {
+    if (!showQuickActions) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowQuickActions(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showQuickActions]);
+
   return (
     <SafeAreaLayout
       className="bg-gradient-to-br from-greenery-50 to-greenery-100"
       header={<HomeAppHeader />}
-      footer={<HomeBottomNav />}
+      footer={<AppBottomNavBar />}
     >
       <div className="w-full max-w-md mx-auto pt-10 pb-6 px-4">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-full bg-greenery-500 flex items-center justify-center shadow-md mb-3">
-            <Leaf className="w-8 h-8 text-white" />
+            <Leaf className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-3xl font-extrabold text-greenery-700 mb-1 tracking-tight text-center drop-shadow-sm">
             Green Mind
           </h1>
           <p className="text-greenery-600 text-center">
-            Your journey to a greener, more mindful life starts here.
+            Welcome back
           </p>
         </div>
 
-        <OceanPersonalityCard />
+        <div className="mb-6">
+          <OceanRadarChart/>
+        </div>
 
         <div className="mb-4">
           <CurrentLocationCard />
         </div>
 
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <NightOutCard />
-        </div>
+        </div> */}
 
         {/* Onboarding Quiz Status */}
-        <Card className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-md">
+        {!preAppSurveyAnswers && 
+          <Card className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-md">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <AlertCircle className="w-6 h-6 text-blue-600" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-blue-800 mb-1">
-                Hoàn thành khảo sát onboarding
+                Complete the onboarding survey
               </h3>
               <p className="text-sm text-blue-600 mb-3">
-                Để GreenMind hiểu rõ hơn về bạn và đưa ra những gợi ý phù hợp nhất.
+                Help GreenMind understand you better and provide personalized suggestions.
               </p>
-              <Link to="/onboarding-quiz">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                  Bắt đầu khảo sát
-                </button>
-              </Link>
+              <div className="flex gap-2">
+                <Link to="/onboarding-quiz">
+                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Start Survey
+                  </button>
+                </Link>
+                <Link to="/guide">
+                  <Button variant="outline" size="sm" className="h-8">Quick Guide</Button>
+                </Link>
+              </div>
             </div>
           </div>
         </Card>
+        }
+        
 
-        <div className="flex flex-col gap-5">
+        <div className="grid gap-2 grid-cols-2">
           {features.map((f) => (
             <Link to={f.to} key={f.title} className="block group">
               <Card className="flex flex-row items-center gap-4 rounded-2xl shadow-lg p-5 bg-white/95 hover:bg-greenery-50 transition-all border border-greenery-100 group-hover:scale-[1.025]">
                 <div className="flex-shrink-0">{f.icon}</div>
                 <div className="flex flex-col flex-1 min-w-0">
-                  <span className="font-semibold text-greenery-700 text-lg mb-1 truncate group-hover:text-greenery-600 transition-colors">
+                  <span className="font-semibold text-greenery-700 text-xs mb-1 truncate group-hover:text-greenery-600 transition-colors">
                     {f.title}
                   </span>
-                  <span className="text-xs text-greenery-500 leading-tight truncate">
+                  <span className="text-[8px] text-greenery-500 leading-tight whitespace-normal break-words">
                     {f.desc}
                   </span>
                 </div>
-                <span className="ml-auto text-greenery-400 text-xl font-bold group-hover:text-greenery-600 transition-colors">
+                <span className="ml-auto text-greenery-400 text-sm font-bold group-hover:text-greenery-600 transition-colors">
                   ›
                 </span>
               </Card>
             </Link>
           ))}
         </div>
+
+        {/* Floating Action Button (fixed above footer) */}
+        <button
+          aria-label="Quick actions"
+          onClick={() => setShowQuickActions((s) => !s)}
+          className="fixed right-4 z-40"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)' }}
+        >
+          <Button size="icon" className="rounded-full shadow-lg bg-greenery-500 text-white hover:bg-greenery-600 h-12 w-12 flex items-center justify-center">
+            <Wand className="w-5 h-5" />
+          </Button>
+        </button>
+
+        {/* Quick Actions overlay & card */}
+        {showQuickActions && (
+          <>
+            <div
+              className="fixed inset-0 z-30 bg-black/20"
+              onClick={() => setShowQuickActions(false)}
+              aria-hidden
+            />
+
+            <div
+              className="fixed right-4 z-40 w-64 bg-white rounded-xl shadow-lg p-3"
+              style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 136px)' }}
+              role="dialog"
+              aria-label="Quick actions"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-semibold">Quick actions</div>
+                <button className="p-1 rounded-md text-gray-500 hover:bg-gray-100" onClick={() => setShowQuickActions(false)} aria-label="Close">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button onClick={handleScanBill} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+                  <FileText className="w-5 h-5 text-greenery-600" />
+                  <div className="flex-1 text-sm text-left">Scan bill</div>
+                </button>
+
+                <button onClick={handleScanPlant} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+                  <Camera className="w-5 h-5 text-greenery-600" />
+                  <div className="flex-1 text-sm text-left">Scan plant</div>
+                </button>
+
+                <button onClick={handleCheckin} className="flex items-center gap-3 p-2 rounded-lg opacity-60 cursor-not-allowed" aria-disabled>
+                  <MapPin className="w-5 h-5 text-gray-400" />
+                  <div className="flex-1 text-sm text-left">Check-in (coming soon)</div>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </SafeAreaLayout>
   );

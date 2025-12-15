@@ -1,8 +1,8 @@
-import { Capacitor } from '@capacitor/core';
-import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from "@capacitor/core";
+import { BackgroundGeolocation } from "@capgo/background-geolocation";
 
 /**
- * Geolocation Helper - Unified API for Web and Mobile
+ * Unified Geolocation Helper (Web + Native)
  */
 
 export interface GeolocationPosition {
@@ -10,122 +10,137 @@ export interface GeolocationPosition {
   longitude: number;
   accuracy?: number;
   altitude?: number | null;
-  altitudeAccuracy?: number | null;
   heading?: number | null;
   speed?: number | null;
   timestamp: number;
 }
 
-export interface GeolocationOptions {
-  enableHighAccuracy?: boolean;
-  timeout?: number;
-  maximumAge?: number;
-}
+let lastPosition: GeolocationPosition | null = null;
+let webWatchId: number | null = null;
+let nativeStarted = false;
 
-export interface GeolocationError {
-  code: number;
-  message: string;
-  PERMISSION_DENIED: 1;
-  POSITION_UNAVAILABLE: 2;
-  TIMEOUT: 3;
-}
-
-/**
- * Get current geolocation position
- */
-export async function getCurrentPosition(options?: GeolocationOptions): Promise<GeolocationPosition> {
-  try {
-    if (Capacitor.isNativePlatform()) {
-      const position = await Geolocation.getCurrentPosition(options);
-      return {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        altitude: position.coords.altitude,
-        altitudeAccuracy: position.coords.altitudeAccuracy,
-        heading: position.coords.heading,
-        speed: position.coords.speed,
-        timestamp: position.timestamp,
-      };
-    } else {
-      return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-          reject(new Error('Geolocation is not supported'));
-          return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            altitude: position.coords.altitude,
-            altitudeAccuracy: position.coords.altitudeAccuracy,
-            heading: position.coords.heading,
-            speed: position.coords.speed,
-            timestamp: position.timestamp,
-          }),
-          (error) => reject(new Error(getErrorMessage(error.code))),
-          options
-        );
-      });
+/* =========================
+   START TRACKING
+========================= */
+export async function startTracking(
+  onLocation?: (pos: GeolocationPosition) => void
+) {
+  // 🌐 WEB
+  if (Capacitor.getPlatform() === "web") {
+    if (!navigator.geolocation) {
+      throw new Error("Geolocation not supported");
     }
-  } catch (error) {
-    throw error instanceof Error ? error : new Error('Failed to get location');
+
+    webWatchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        lastPosition = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          altitude: pos.coords.altitude,
+          heading: pos.coords.heading,
+          speed: pos.coords.speed,
+          timestamp: pos.timestamp,
+        };
+
+        onLocation?.(lastPosition);
+      },
+      (err) => {
+        console.error("Web geolocation error", err);
+      },
+      { enableHighAccuracy: true }
+    );
+
+    return;
+  }
+
+  // 📱 NATIVE (Capgo)
+  if (nativeStarted) return;
+
+  await BackgroundGeolocation.start(
+    {
+      requestPermissions: true,
+      stale: false,
+      distanceFilter: 0.05,
+    },
+    (location, error) => {
+      if (error) {
+        console.error("BG Geolocation error", error);
+        return;
+      }
+
+      if (!location) {
+        return;
+      }
+
+      lastPosition = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy,
+        altitude: location.altitude,
+        heading: null,
+        speed: location.speed,
+        timestamp: Date.now(),
+      };
+
+      onLocation?.(lastPosition);
+    }
+  );
+
+  nativeStarted = true;
+}
+
+/* =========================
+   STOP TRACKING
+========================= */
+export async function stopTracking() {
+  if (Capacitor.getPlatform() === "web") {
+    if (webWatchId !== null) {
+      navigator.geolocation.clearWatch(webWatchId);
+      webWatchId = null;
+    }
+    return;
+  }
+
+  if (nativeStarted) {
+    await BackgroundGeolocation.stop();
+    nativeStarted = false;
   }
 }
 
-/**
- * Watch position changes (Disabled due to type issues)
- */
+/* =========================
+   GET LAST POSITION
+========================= */
+export function getLastKnownPosition(): GeolocationPosition | null {
+  return lastPosition;
+}
 
-/**
- * Check if geolocation is available
- */
+/* =========================
+   UTILS
+========================= */
+
 export function isGeolocationAvailable(): boolean {
   return Capacitor.isNativePlatform() || !!navigator.geolocation;
 }
 
-/**
- * Request permissions
- */
-export async function requestPermissions(): Promise<{ granted: boolean }> {
-  if (Capacitor.isNativePlatform()) {
-    return { granted: true };
-  } else {
-    try {
-      const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-      return { granted: result.state === 'granted' };
-    } catch {
-      return { granted: false };
-    }
-  }
-}
-
-/**
- * Calculate distance between two points
- */
-
 export type kilometer = number;
-export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): kilometer {
+export function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): kilometer {
   const R = 6371;
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-function toRadians(degrees: number): number {
-  return degrees * (Math.PI / 180);
-}
-
-function getErrorMessage(code: number): string {
-  switch (code) {
-    case 1: return 'Location access denied';
-    case 2: return 'Location unavailable';
-    case 3: return 'Location request timeout';
-    default: return 'Unknown location error';
-  }
+function toRadians(deg: number): number {
+  return deg * (Math.PI / 180);
 }

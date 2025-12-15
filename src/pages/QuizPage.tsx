@@ -1,307 +1,368 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { CheckCircle, ArrowRight, Brain, Inbox, Star, Zap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import getQuestions from "@/apis/backend/v1/question";
-import { useSubmitSurvey } from "@/hooks/v1/useSubmitSurvey";
-import { useToast } from "@/hooks/useToast";
-import OceanPersonalityCard from "@/components/app-components/commons/OceanPersonalityCard";
-import type { IQuestion, IQuestionResponse } from "@/types/api/question";
-import useFetch from "@/hooks/useFetch";
-import { HomeBottomNav } from "./HomePage";
 
-interface QuestionOption {
-  text: string;
-  value: string;
-  order: number;
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+import { Check } from "lucide-react";
+
+import getQuestionSetById from "@/apis/backend/v2/survey/getQuestionSetById";
+import { submitUserAnswers } from "@/apis/backend/v1/userAnswer";
+
+import { useToast } from "@/hooks/useToast";
+import { useAuthStore } from "@/store/authStore";
+
+/* =========================
+   Progress Icon Bar
+========================= */
+
+interface QuestionIconListProps {
+  total: number;
+  active?: number;
+  selected?: number | null;
+  onSelect?: (index: number) => void;
 }
 
-interface Question {
+export function ProgressIconBar({
+  total,
+  active,
+  selected,
+  onSelect,
+}: QuestionIconListProps) {
+  const items = Array.from({ length: total }, (_, i) => i + 1);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (selected == null) return;
+    const el = scrollRef.current?.querySelector(
+      `[data-num="${selected}"]`
+    ) as HTMLElement | null;
+    el?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+  }, [selected]);
+
+  return (
+    <div className="w-full rounded-xl border bg-background p-2 overflow-hidden">
+      <div className="overflow-x-auto" ref={scrollRef}>
+        <div className="grid grid-flow-col grid-rows-1 gap-2 w-max pb-1">
+          {items.map((num) => {
+            const isActive = num === active;
+
+            return (
+              <Button
+                key={num}
+                size="icon"
+                variant={isActive ? "default" : "outline"}
+                data-num={num}
+                onClick={() => onSelect?.(num - 1)}
+                className={cn(
+                  "h-11 w-11 rounded-full shrink-0",
+                  num === selected && "ring-2 ring-primary ring-inset"
+                )}
+              >
+                <span className="text-xs font-semibold">{num}</span>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================
+   MCQ Card
+========================= */
+
+export interface MCQOption {
+  id: string;
+  text: string;
+}
+
+interface MCQCardProps {
+  question: string;
+  options: MCQOption[];
+  selected?: string | null;
+  onSelect?: (id: string) => void;
+  footer?: React.ReactNode;
+  className?: string;
+}
+
+export function MCQCard({
+  question,
+  options,
+  selected,
+  onSelect,
+  footer,
+  className,
+}: MCQCardProps) {
+  return (
+    <Card className={cn("w-full h-full border-0 shadow-xl flex flex-col", className)}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold text-gray-800">
+          {question}
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="flex-1 space-y-3 overflow-hidden">
+        <div className="grid gap-3 overflow-auto pr-1">
+          {options.map((opt, i) => {
+            const isSelected = selected === opt.id;
+            const label = String.fromCharCode(65 + i);
+
+            return (
+              <button
+                key={opt.id}
+                onClick={() => onSelect?.(opt.id)}
+                aria-pressed={isSelected}
+                className={cn(
+                  "w-full p-3 rounded-lg border transition flex items-center gap-3 text-left",
+                  isSelected
+                    ? "bg-greenery-50 border-greenery-300"
+                    : "bg-white border-gray-200 hover:border-greenery-200"
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold",
+                    isSelected
+                      ? "bg-greenery-500 text-white"
+                      : "bg-gray-100 text-gray-700"
+                  )}
+                >
+                  {label}
+                </div>
+
+                <div className="flex-1 text-sm text-gray-800">
+                  {opt.text}
+                </div>
+
+                <div className="w-6 flex items-center justify-center">
+                  {isSelected && (
+                    <Check className="w-4 h-4 text-greenery-600" />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {footer && (
+          <div className="pt-2 border-t border-gray-100 flex justify-end">
+            {footer}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* =========================
+   Quiz Page
+========================= */
+
+export interface INormalizeSurveyQuestion {
   id: string;
   question: string;
-  behaviorNormalized: string;
-  options: QuestionOption[];
+  options: MCQOption[];
+  type: string;
+  trait: string;
+  templateId: string;
 }
 
 export default function QuizPage() {
-  const [current, setCurrent] = useState(0);
+  const [questions, setQuestions] = useState<INormalizeSurveyQuestion[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [showResults, setShowResults] = useState(false);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [rawQuestion, setRawQuestion] = useState<IQuestionResponse | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [searchParams] = useSearchParams();
+  const qsId = searchParams.get("surveyId");
+
   const toast = useToast();
-  const { call } = useFetch();
+  const user = useAuthStore((s) => s.user);
 
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
+  /* Fetch questions */
+  useEffect(() => {
+    if (!qsId) return;
 
-  const fetchQuestions = async () => {
-    setLoading(true);
-
-    call({
-      fn: () => getQuestions(),
-      onSuccess: (res) => {
-        setRawQuestion(res);
-
-        const flatQuestions: Question[] = (res.data?.questions || []).map((q: IQuestion) => ({
-          id: q.id,
-          question: q.question,
-          behaviorNormalized: q.behaviorNormalized,
-          options: (q.questionOptions || []).map((opt) => ({
+    getQuestionSetById(qsId)
+      .then((data) => {
+        const normalized = data.data.items.map((curr: any) => ({
+          id: curr.id,
+          question: curr.question,
+          options: curr.questionOptions.map((opt: any) => ({
+            id: opt.id,
             text: opt.text,
-            value: opt.value,
-            order: opt.order,
           })),
+          type: curr.behaviorNormalized,
+          trait: curr.trait,
+          templateId: curr.templateId,
         }));
 
-        setQuestions(flatQuestions);
-      },
-      onFailed: (err) => {
+        setQuestions(normalized);
+        setCurrentIndex(0);
+      })
+      .catch((err) => {
         console.error(err);
-      },
-      onFinally: () => setLoading(false)
-    })
-  };
+      });
+  }, [qsId]);
 
-  useEffect(() => {
-    // setQuestions([]);
-    setShowResults(false);
-    setAnswers({});
-    setCurrent(0);
-    fetchQuestions();
-  }, []);
+  /* Swipe handlers */
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
+
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.touches[0].clientX;
   };
+
   const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
+    if (touchStartX.current == null || touchEndX.current == null) return;
     const delta = touchStartX.current - touchEndX.current;
+
     if (Math.abs(delta) > 50) {
-      if (delta > 0) handleNext();
-      else handlePrev();
+      if (delta > 0)
+        setCurrentIndex((i) => Math.min(i + 1, questions.length - 1));
+      else
+        setCurrentIndex((i) => Math.max(i - 1, 0));
     }
+
     touchStartX.current = null;
     touchEndX.current = null;
   };
 
-  const handleSelect = (option: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questions[current].id]: option,
-    }));
+  /* Answer select */
+  const handleSelect = (optionId: string) => {
+    const q = questions[currentIndex];
+    setAnswers((prev) => ({ ...prev, [q.id]: optionId }));
+
+    if (currentIndex < questions.length - 1) {
+      setTimeout(() => {
+        setCurrentIndex((i) => i + 1);
+      }, 180);
+    }
   };
 
-  const { submitSurvey } = useSubmitSurvey();
-
-  const handleAutoAnswer = async () => {
-    const newAnswers = { ...answers };
-
-    // Generate random answers for all questions
-    questions.forEach(q => {
-      if (!newAnswers[q.id]) {
-        const randomOption = q.options[Math.floor(Math.random() * q.options.length)];
-        newAnswers[q.id] = randomOption.value;
-      }
-    });
-
-    setAnswers(newAnswers);
-
-    // Submit answers to backend
+  /* Submit */
+  const handleSubmitAnswers = async () => {
+    setSubmitting(true);
     try {
-      await submitSurvey(newAnswers, rawQuestion!);
+      await submitUserAnswers({
+        userId: user?.id || "test-user",
+        answers: Object.entries(answers).map(([questionId, answer]) => ({
+          questionId,
+          answer,
+        })),
+      });
+      toast.success("Câu trả lời đã được gửi");
     } catch (err) {
-      console.error("submitUserAnswers error:", err);
-    }
-    setShowResults(true);
-  };
-
-  const handleNext = async () => {
-    const q = questions[current];
-    if (!answers[q.id]) {
-      toast.warning("Bạn cần chọn một đáp án trước khi tiếp tục 💡");
-      return;
-    }
-
-    if (current < questions.length - 1) {
-      setCurrent((c) => c + 1);
-    } else {
-      // Submit answers to backend
-      try {
-        await submitSurvey(answers, rawQuestion!);
-      } catch (err) {
-        console.error("submitUserAnswers error:", err);
-      }
-      setShowResults(true);
+      console.error(err);
+      toast.error("Không thể gửi câu trả lời");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handlePrev = () => {
-    if (current > 0) setCurrent((c) => c - 1);
-  };
+  const isLastQuestion = currentIndex === questions.length - 1;
+  const allAnswered =
+    questions.length > 0 &&
+    Object.keys(answers).length === questions.length;
 
-  const calculateResults = () => ({
-    totalQuestions: questions.length,
-    answered: Object.keys(answers).length,
-  });
-
-  // 🧠 Loading
-  if (loading) {
-    return (
-      <SafeAreaLayout header={<AppHeader title="Quiz Tính Cách" showBack />}>
-        <div className="h-screen flex flex-col items-center justify-center space-y-3 text-center animate-pulse">
-          <Brain className="w-12 h-12 text-greenery-500 animate-bounce" />
-          <p className="text-gray-500 text-sm">Đang tải câu hỏi...</p>
-        </div>
-      </SafeAreaLayout>
-    );
-  }
-
-  // 📭 Không có câu hỏi
-  if (!loading && questions.length === 0) {
-    return (
-      <SafeAreaLayout header={<AppHeader title="Quiz Tính Cách" showBack />}>
-        <div className="h-screen flex flex-col items-center justify-center text-center space-y-5">
-          <div className="flex flex-col items-center space-y-2 animate-bounce">
-            <Inbox className="w-14 h-14 text-gray-400" />
-            <p className="text-gray-600 font-medium">
-              Không có câu hỏi khả dụng 😢
-            </p>
-          </div>
+  /* Footer */
+  const FooterContent = (
+    <div className="w-full bg-white border-t" style={{paddingBottom: "env(safe-area-inset-bottom)",}}>
+      <div className="max-w-md mx-auto p-3">
+        {!isLastQuestion && (
           <Button
-            onClick={fetchQuestions}
-            className="bg-greenery-500 hover:bg-greenery-600 text-white rounded-full px-6"
+            className="w-full"
+            onClick={() =>
+              setCurrentIndex((i) =>
+                Math.min(i + 1, questions.length - 1)
+              )
+            }
           >
-            Thử lại
+            Next
           </Button>
-        </div>
-      </SafeAreaLayout>
-    );
-  }
+        )}
 
-  // 🎉 Kết quả
-  if (showResults) {
-    const results = calculateResults();
-    return (
-      <SafeAreaLayout
-        header={<AppHeader title="Quiz Tính Cách" showBack />}
-        footer={<HomeBottomNav />}
-      >
-        <div className="min-h-screen flex flex-col items-center justify-center px-2">
-          <Card className="max-w-sm w-full border-0 shadow-xl">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 bg-greenery-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                <CheckCircle className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-xl text-greenery-700">
-                Hoàn thành khảo sát 🎉
-              </CardTitle>
-              <p className="text-sm text-gray-600">
-                Bạn đã trả lời {results.answered}/{results.totalQuestions} câu hỏi
-              </p>
-            </CardHeader>
-
-            <OceanPersonalityCard />
-
-            <CardContent className="text-center">
-              <Link to="/advice">
-                <Button className="w-full mt-6 bg-greenery-500 hover:bg-greenery-600 text-white rounded-full">
-                  Xem gợi ý cá nhân hóa
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </SafeAreaLayout>
-    );
-  }
-
-  // 📝 Quiz đang diễn ra
-  const q: Question = questions[current];
-  const progress = ((current + 1) / questions.length) * 100;
+        {isLastQuestion && (
+          <Button
+            className="w-full h-14 bg-greenery-500 text-white"
+            disabled={!allAnswered || submitting}
+            onClick={handleSubmitAnswers}
+          >
+            {submitting
+              ? "Đang gửi..."
+              : allAnswered
+              ? "Submit"
+              : "Trả lời tất cả để gửi"}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <SafeAreaLayout header={
-      <AppHeader
-        title="Quiz Tính Cách"
-        showBack
-        rightActions={[
-          <button key="auto" onClick={handleAutoAnswer} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-            <Zap className="w-5 h-5 text-yellow-500" />
-          </button>
-        ]}
-      />
-    }>
-      <div className="w-full min-h-[calc(100vh-64px)] flex flex-col justify-center items-center px-2 pb-24 pt-16">
-        <div
-          className="w-full max-w-sm flex-1 flex flex-col"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div className="mb-6">
-            <Progress value={progress} className="h-2 mb-2" />
-            <p className="text-xs text-gray-600 text-center">
-              {Math.round(progress)}% Hoàn thành
-            </p>
+    <SafeAreaLayout
+      header={<AppHeader title="Quiz" showBack />}
+      footer={FooterContent}
+    >
+      <>
+        <div className="px-2">
+          <ProgressIconBar
+            total={questions.length}
+            active={currentIndex + 1}
+            selected={currentIndex + 1}
+            onSelect={setCurrentIndex}
+          />
+        </div>
+
+        {questions.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-gray-500">Loading questions...</p>
           </div>
-
-          {/* 🧩 --- Chỗ hiển thị câu hỏi --- */}
-          <Card className="border-0 shadow-xl mb-6 transition-all">
-            <CardHeader className="flex items-start gap-2">
-              <Star className="w-5 h-5 text-greenery-500 mt-1 animate-pulse" />
-              <CardTitle className="text-base text-gray-800 leading-relaxed">
-                {q.question}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {q.options.map((opt: QuestionOption) => (
-                <button
-                  key={opt.value}
-                  onClick={() => handleSelect(opt.text)}
-                  className={`w-full p-4 text-left rounded-lg border-2 transition-all ${answers[q.id] === opt.text
-                    ? "border-greenery-500 bg-greenery-50 text-greenery-700"
-                    : "border-gray-200 bg-white hover:border-greenery-300 hover:bg-greenery-25"
-                    }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-4 h-4 rounded-full border-2 ${answers[q.id] === opt.text
-                        ? "border-greenery-500 bg-greenery-500"
-                        : "border-gray-300"
-                        }`}
-                    />
-                    <span className="text-sm font-medium">{opt.text}</span>
-                  </div>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="pb-8 w-full max-w-sm mx-auto pb-safe pt-2 fixed left-1/2 -translate-x-1/2 bottom-0 z-10 flex flex-col">
-        <div className="px-2 pb-4">
-          <Button
-            onClick={handleNext}
-            disabled={!answers[q.id]}
-            className="w-full py-3 bg-greenery-500 text-white shadow-sm hover:bg-greenery-600 disabled:opacity-50 flex justify-center items-center"
+        ) : (
+          <div
+            className="flex-1 p-2 flex flex-col"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
-            {current === questions.length - 1 ? "Hoàn thành" : "Tiếp theo"}
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-        </div>
-      </div>
-
+            <MCQCard
+              question={questions[currentIndex].question}
+              options={questions[currentIndex].options}
+              selected={answers[questions[currentIndex].id] ?? null}
+              onSelect={handleSelect}
+              className="flex-1"
+              footer={
+                <Button
+                  variant="ghost"
+                  onClick={() =>
+                    setAnswers((a) => {
+                      const copy = { ...a };
+                      delete copy[questions[currentIndex].id];
+                      return copy;
+                    })
+                  }
+                >
+                  Clear
+                </Button>
+              }
+            />
+          </div>
+        )}
+      </>
     </SafeAreaLayout>
   );
 }

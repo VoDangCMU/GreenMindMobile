@@ -2,7 +2,11 @@ import { Link } from "react-router-dom";
 import AppHeader from "@/components/common/AppHeader";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, Clock, PlayCircle, Award, Users } from "lucide-react";
+import { CheckCircle2, Clock, PlayCircle, Users } from "lucide-react";
+import { AppBottomNavBar } from "./HomePage";
+import { useEffect, useState } from "react";
+import { getUserQuestionSet, type IQuestionSetData } from "@/apis/backend/v2/survey";
+// import { set } from "date-fns";
 
 interface Survey {
   id: string;
@@ -15,115 +19,45 @@ interface Survey {
   participants: number;
 }
 
-// Mock survey data
-const mockSurveys: Survey[] = [
-  {
-    id: "1",
-    title: "Personality Assessment",
-    description: "Discover your unique personality traits through OCEAN model analysis",
-    questionsCount: 15,
-    estimatedTime: 5,
-    category: "Personality",
-    completed: false,
-    participants: 1234,
-  },
-  {
-    id: "2",
-    title: "Lifestyle Survey",
-    description: "Tell us about your daily habits and lifestyle choices",
-    questionsCount: 20,
-    estimatedTime: 8,
-    category: "Lifestyle",
-    completed: true,
-    participants: 892,
-  },
-  {
-    id: "3",
-    title: "Environmental Awareness",
-    description: "Assess your knowledge and practices for sustainable living",
-    questionsCount: 12,
-    estimatedTime: 6,
-    category: "Environment",
-    completed: false,
-    participants: 2341,
-  },
-  {
-    id: "4",
-    title: "Health & Wellness",
-    description: "Evaluate your physical and mental health habits",
-    questionsCount: 18,
-    estimatedTime: 7,
-    category: "Health",
-    completed: false,
-    participants: 1567,
-  },
-  {
-    id: "5",
-    title: "Social Connections",
-    description: "Understand your social relationships and networking patterns",
-    questionsCount: 10,
-    estimatedTime: 4,
-    category: "Social",
-    completed: true,
-    participants: 678,
-  },
-  {
-    id: "6",
-    title: "Financial Behavior",
-    description: "Analyze your spending habits and financial decision-making",
-    questionsCount: 14,
-    estimatedTime: 5,
-    category: "Finance",
-    completed: false,
-    participants: 1890,
-  },
-];
-
 export default function SurveyListPage() {
+  const [surveyList, setSurveyList] = useState<Survey[]>([]);
 
-  const filteredSurveys = mockSurveys;
+  useEffect(() => {
 
-  const completedCount = mockSurveys.filter((s) => s.completed).length;
+    getUserQuestionSet()
+      .then((res) => {
+
+
+        const surveys = res.data.reduce((acc: Survey[], item: IQuestionSetData) => {
+          acc.push({
+            id: item.id,
+            title: item.name,
+            completed: false,
+            description: item.description,
+            questionsCount: item.items.length,
+            estimatedTime: Math.ceil(item.items.length / 3), 
+            category: "General",
+            participants: 0,
+          });
+
+          return acc;
+        }, []);
+      
+        setSurveyList(surveys);
+      });
+  }, []);
 
   return (
     <SafeAreaLayout
       header={<AppHeader title="Surveys" showBack />}
+      footer={<AppBottomNavBar />}
     >
       <div className="flex flex-col bg-gradient-to-br from-greenery-50 to-greenery-100 min-h-screen">
         <div className="flex-1 w-full mx-auto px-4 pb-6">
-          {/* Stats Overview */}
-          <div className="grid grid-cols-3 gap-3 mb-6 mt-4">
-            <Card className="p-3 bg-white/90 border-greenery-200">
-              <div className="flex flex-col items-center">
-                <Award className="w-6 h-6 text-greenery-600 mb-1" />
-                <p className="text-xs text-gray-500">Total</p>
-                <p className="text-lg font-bold text-greenery-700">{mockSurveys.length}</p>
-              </div>
-            </Card>
-            <Card className="p-3 bg-white/90 border-green-200">
-              <div className="flex flex-col items-center">
-                <CheckCircle2 className="w-6 h-6 text-green-600 mb-1" />
-                <p className="text-xs text-gray-500">Completed</p>
-                <p className="text-lg font-bold text-green-700">{completedCount}</p>
-              </div>
-            </Card>
-            <Card className="p-3 bg-white/90 border-blue-200">
-              <div className="flex flex-col items-center">
-                <Clock className="w-6 h-6 text-blue-600 mb-1" />
-                <p className="text-xs text-gray-500">Pending</p>
-                <p className="text-lg font-bold text-blue-700">{mockSurveys.length - completedCount}</p>
-              </div>
-            </Card>
-          </div>
-
-          {/* categories removed per request */}
 
           {/* Survey List */}
           <div className="space-y-4">
-            <p className="text-sm font-semibold text-gray-700 mb-4">
-              Available Surveys ({filteredSurveys.length})
-            </p>
-            {filteredSurveys.map((survey) => (
+            {surveyList.map((survey) => (
               <Link to={`/quiz?surveyId=${survey.id}`} key={survey.id}>
                 <Card className="p-5 bg-white/95 hover:bg-greenery-50 transition-all border border-greenery-100 hover:shadow-lg group">
                   <div className="flex flex-col">
@@ -166,7 +100,7 @@ export default function SurveyListPage() {
             ))}
           </div>
 
-          {filteredSurveys.length === 0 && (
+          {surveyList.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16">
               <p className="text-gray-500 text-center">No surveys found in this category</p>
             </div>

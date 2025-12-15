@@ -26,16 +26,17 @@ import {
   MapPin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAppStore } from "@/store/appStore";
+// import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyData } from "@/hooks/v1/usePreAppSurveyData";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
+// import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
 import LocationHistoryCard from "@/components/app-components/page-components/profile/LocationHistoryCard";
 import HomeLocationCard from "@/components/app-components/page-components/home/HomeLocationCard";
 import NightOutStatusCard from "@/components/app-components/page-components/profile/NightOutStatusCard";
 import { useAuthStore } from "@/store/authStore";
-import { HomeBottomNav } from "./HomePage";
+import { AppBottomNavBar } from "./HomePage";
+import OceanRadarChart from "@/components/hardcore-coder/OceanRadarChart";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export default function ProfilePage() {
   const user = useAuthStore((state) => state.user);
   const [isEditing, setIsEditing] = useState(false);
   const setBypassAuthGate = useAuthStore((state) => state.setBypassAuthGate);
-  const ocean = useAppStore((state) => state.ocean) || MOCKED_OCEAN_SCORE;
+  // const ocean = useAppStore((state) => state.ocean) || MOCKED_OCEAN_SCORE;
 
   // Get Pre-App Survey data
   const { answers, isCompleted, completedAt } = usePreAppSurveyData();
@@ -152,7 +153,7 @@ export default function ProfilePage() {
   return (
     <SafeAreaLayout
       header={<AppHeader showBack title="Profile"></AppHeader>}
-      footer={<HomeBottomNav />}
+      footer={<AppBottomNavBar />}
     >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
         {/* Profile Info */}
@@ -268,7 +269,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* OCEAN Score Vertical */}
-        <Card className="border-0 shadow-md">
+        {/* <Card className="border-0 shadow-md">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center space-x-2">
               <Users className="w-4 h-4 text-greenery-600" />
@@ -294,7 +295,9 @@ export default function ProfilePage() {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
+
+        <OceanRadarChart />
 
         {/* Pre-App Survey Card */}
         {answers && (

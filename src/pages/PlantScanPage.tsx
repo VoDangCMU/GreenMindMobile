@@ -1,7 +1,8 @@
 import AppHeader from "@/components/common/AppHeader";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
 import { Loader2, Check, RefreshCw, Lightbulb } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from 'react-router-dom';
 import ScanHistoryFooter from "@/components/app-components/page-components/plant-scan/ScanHistoryFooter";
 import usePlantScanStore, { type PlantScanResult } from "@/store/plantScanStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
@@ -120,6 +121,18 @@ export default function PlantScanPage() {
   const { callHealthyFoodRatio } = useHealthyFoodRatio();
   const preAppSurveyAnswers = usePreAppSurveyStore((state) => state.answers);
   const foodRatioFeedback = useMetricFeedbackStore((s) => s.getFeedback("healthy_food_ratio"));
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto-trigger camera if navigated with { state: { startScan: true } }
+  useEffect(() => {
+    if ((location as any)?.state?.startScan) {
+      handleScan();
+      // clear state to avoid re-trigger on back navigation
+      navigate(location.pathname, { replace: true });
+    }
+  }, []);
 
   // Calculate plant_meals and total_meals from scans
   const calculateMealStats = () => {

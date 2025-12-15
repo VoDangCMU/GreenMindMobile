@@ -24,7 +24,7 @@ import {
 import { useAuthStore } from "@/store/authStore";
 
 import { TodoItemComponent } from "@/components/app-components/page-components/todo/TodoItem";
-import {HomeBottomNav} from "@/pages/HomePage";
+import {AppBottomNavBar} from "@/pages/HomePage";
 import OceanPersonalityCard from "@/components/app-components/commons/OceanPersonalityCard";
 
 export default function TodoPage() {
@@ -258,7 +258,7 @@ export default function TodoPage() {
           onClick={() => setShowFeedback(!showFeedback)}
         />
       ] : []} />}
-      footer={<HomeBottomNav />}
+      footer={<AppBottomNavBar />}
     >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
         {/* Show feedback card if available */}

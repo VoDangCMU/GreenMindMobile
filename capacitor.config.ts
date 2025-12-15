@@ -12,9 +12,11 @@ const config: CapacitorConfig = {
   appId: 'com.vodang.greenmind',
   appName: 'GreenMind',
   webDir: 'dist',
-  server
+  server,
+  android: {
+    useLegacyBridge: true,
+  }
 };
 
-console.log('Capacitor server config:', process.env);
 
 export default config;

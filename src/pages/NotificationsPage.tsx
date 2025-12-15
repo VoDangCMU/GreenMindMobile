@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNotificationStore } from "@/store/notificationStore";
 import { Check, CheckCheck, Trash2, Bell, BellOff } from "lucide-react";
+import { AppBottomNavBar } from "./HomePage";
 
 interface SwipeState {
   id: string;
@@ -235,6 +236,7 @@ export default function NotificationsPage() {
           ]}
         />
       }
+      footer={<AppBottomNavBar />}
     >
       <div className="flex flex-col bg-gradient-to-br from-greenery-50 to-greenery-100 min-h-screen">
         <div className="flex-1 w-full mx-auto px-4 pb-6">

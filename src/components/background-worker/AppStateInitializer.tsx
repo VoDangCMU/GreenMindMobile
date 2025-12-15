@@ -5,6 +5,7 @@ import { getPreAppSurveyByUser } from "@/apis/backend/v1/preAppSurvey";
 import { useAuthStore } from "@/store/authStore";
 import useFetch from "@/hooks/useFetch";
 import { useOcean } from "@/hooks/v1/useOcean";
+import { App } from "@capacitor/app";
 
 // Map API response to store format
 function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
@@ -51,6 +52,26 @@ export function AppStateInitializer() {
       }
     ]);
   }, [user?.id]);
+
+  // Listen for app state changes (pause/resume)
+  useEffect(() => {
+    const appStateListener = App.addListener("appStateChange", ({ isActive }) => {
+      console.log("App state changed. isActive:", isActive);
+      
+      if (isActive) {
+        console.log("App resumed from background");
+        // App is back to foreground - state should be preserved by Zustand persist
+        // No need to do anything as Zustand will restore from localStorage
+      } else {
+        console.log("App went to background");
+        // App is going to background - Zustand automatically persists
+      }
+    });
+
+    return () => {
+      appStateListener.then((listener) => listener.remove());
+    };
+  }, []);
 
   return null;
 }

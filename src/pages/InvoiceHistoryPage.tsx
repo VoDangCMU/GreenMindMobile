@@ -3,6 +3,10 @@ import AppHeaderButton from "@/components/common/AppHeaderButton";
 import { Search, Loader2, Check, RefreshCw, Lightbulb } from "lucide-react";
 import InvoiceDetailModal from "@/components/app-components/page-components/invoice-history/InvoiceDetailModal";
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { toast } from 'sonner';
+import ocrInvoice from '@/apis/backend/v1/ai-forward/image-processing/ocr-invoice';
 import HistoryPageFooter from "@/components/app-components/page-components/invoice-history/HistoryPageFooter";
 import useBillStore from "@/store/invoiceStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
@@ -25,6 +29,85 @@ export default function InvoiceHistoryPage() {
   const preAppSurveyAnswers = usePreAppSurveyStore((state) => state.answers);
   const { call } = useFetch();
   const spendingFeedback = useMetricFeedbackStore((s) => s.getFeedback("avg_daily_spend"));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const addInvoice = useBillStore((state) => state.addInvoice);
+  const setOcring = useBillStore((state) => state.setOcring);
+
+  // Scan handler (can be triggered from footer or auto-start)
+  const handleScan = async () => {
+    setOcring(true);
+    let photo;
+    try {
+      photo = await Camera.getPhoto({
+        quality: 90,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        saveToGallery: false,
+        allowEditing: false,
+      });
+    } catch (err) {
+      console.log("Camera error:", err);
+      toast.error("Camera error");
+      setOcring(false);
+      return;
+    }
+
+    let exportedInvoice;
+    try {
+      exportedInvoice = await ocrInvoice(photo)
+    } catch (err) {
+      console.log("OCR error:", err);
+      toast.error("OCR error");
+      setOcring(false);
+      return;
+    }
+
+    addInvoice(exportedInvoice);
+    setOcring(false);
+    toast.success("Invoice added successfully");
+  };
+
+  const handleImport = async () => {
+    let photo;
+    try {
+      photo = await Camera.getPhoto({
+        quality: 90,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Photos,
+        saveToGallery: false,
+        allowEditing: false,
+      });
+    } catch (err) {
+      console.log("Camera error:", err);
+      toast.error("Camera error");
+      setOcring(false);
+      return;
+    }
+
+    setOcring(true);
+
+    const exportedInvoice = await ocrInvoice(photo)
+    if (!exportedInvoice) {
+      console.error("No bill data returned from OCR.");
+      setOcring(false);
+      return;
+    }
+
+    addInvoice(exportedInvoice);
+    setOcring(false);
+    toast.success("Invoice added successfully");
+  };
+
+  // If page was opened with state.startScan, trigger scan on mount
+  useEffect(() => {
+    if ((location as any)?.state?.startScan) {
+      handleScan();
+      // clear state to avoid re-trigger on navigation back
+      navigate(location.pathname, { replace: true });
+    }
+  }, []);
+
 
   // Get base_avg from preAppSurvey avg_daily_spend
   const getBaseAvg = () => {
@@ -106,7 +189,7 @@ export default function InvoiceHistoryPage() {
           ].filter(Boolean)}
         />
       }
-      footer={<HistoryPageFooter />}
+      footer={<HistoryPageFooter onScan={handleScan} onImport={handleImport} />}
     >
       <div className="flex flex-col bg-gradient-to-br">
         <div className="flex-1 w-full mx-auto px-3 pb-28">

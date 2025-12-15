@@ -168,3 +168,91 @@ export async function getPreAppSurvey(userId: string) {
     const res = await BackendInstance.get(`/pre-app-survey/${userId}`, { headers: authHeader() })
     return res.data as IPreAppSurveyResponse;
 }
+
+export async function getAllQuestionSet() {
+  const res = await BackendInstance.get(`/question-sets`, { headers: authHeader() })
+    return res.data as IPreAppSurveyResponse;
+}
+
+// QS
+export interface IQuestionSetResponse {
+  message: string
+  data: IQuestionSetData[]
+  count: number
+}
+
+
+
+
+export async function getUserQuestionSet() {
+  const res = await BackendInstance.get(`/question-sets/my-sets`, { headers: authHeader() })
+    return res.data as IQuestionSetResponse;
+}
+
+export interface IQuestionSetData {
+  id: string
+  name: string
+  description: string
+  ownerId: string
+  createdAt: string
+  updatedAt: string
+  owner: IOwner
+  items: IQuestionItem[]
+}
+
+export interface IOwner {
+  id: string
+  username: string
+  email: string
+  phoneNumber: any
+  fullName: string
+  gender: string
+  location: string
+  role: string
+  dateOfBirth: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface IQuestionItem {
+  id: string
+  question: string
+  templateId: string
+  behaviorInput: string
+  behaviorNormalized: string
+  normalizeScore: any
+  trait: string
+  ownerId: any
+  createdAt: string
+  updatedAt: string
+  questionOptions: IQuestionOption[]
+  template: ITemplate
+}
+
+export interface IQuestionOption {
+  id: string
+  text: string
+  value: string
+  order: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ITemplate {
+  id: string
+  name: string
+  description: string
+  intent: string
+  prompt: string
+  used_placeholders: string[]
+  question_type: string
+  filled_prompt: string
+  trait: ITrait
+  createdAt: string
+  updatedAt: string
+}
+
+export async function getQuestionSetById(id: string) {
+  const res = await BackendInstance.get(`/question-sets/${id}`, { headers: authHeader() })
+    return res.data as ISurveyResponse;
+}

@@ -17,6 +17,7 @@ import AuthStateInitializer from "./components/background-worker/AuthStateInitia
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
 const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
+const GuidePage = lazy(() => import("./pages/GuidePage"));
 const OnboardingQuizPage = lazy(() => import("./pages/OnboardingQuizPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const AdvicePage = lazy(() => import("./pages/archive/AdvicePage"));
@@ -26,7 +27,7 @@ const FeedbackPage = lazy(() => import("./pages/archive/FeedbackPage"));
 const GoalsPage = lazy(() => import("./pages/archive/GoalsPage"));
 const ImpactPage = lazy(() => import("./pages/archive/ImpactPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const QuizPage = lazy(() => import("./pages/QuizPage"));
+const QuizPage = lazy(() => import("./pages/QuizPage.tsx"));
 const RecomendationPage = lazy(() => import("./pages/archive/RecomendationPage"));
 const TrackingPage = lazy(() => import("./pages/archive/TrackingPage"));
 const InvoiceHistoryPage = lazy(() => import("./pages/InvoiceHistoryPage"));
@@ -35,6 +36,7 @@ const PlantScanHistoryPage = lazy(() => import("./pages/PlantScanPage"));
 const MetricsPage = lazy(() => import("./pages/MetricsPage"));
 const SurveyListPage = lazy(() => import("./pages/SurveyListPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const QuizPageDebug = lazy(() => import("./pages/debug/QuizPage.tsx"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -75,7 +77,9 @@ const router = createHashRouter([
           { path: "/plant-scan-history", element: <Suspense fallback={<PageLoader />}><PlantScanHistoryPage /></Suspense> },
           { path: "/metrics", element: <Suspense fallback={<PageLoader />}><MetricsPage /></Suspense> },
           { path: "/survey-list", element: <Suspense fallback={<PageLoader />}><SurveyListPage /></Suspense> },
+          { path: "/guide", element: <Suspense fallback={<PageLoader />}><GuidePage /></Suspense> },
           { path: "/notifications", element: <Suspense fallback={<PageLoader />}><NotificationsPage /></Suspense> },
+          { path: "/debug/quiz", element: <Suspense fallback={<PageLoader />}><QuizPageDebug /></Suspense> },
         ],
       },
     ],
@@ -89,7 +93,7 @@ createRoot(document.getElementById("root")!).render(
   <>
     <AuthStateInitializer />
     <AppStateInitializer />
-    <GeolocationTracker timeBetweenTrack={7000} />
+    <GeolocationTracker timeBetweenTrack={10000} />
     <NightOutTracker timeBetweenCheck={30000} />
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />
