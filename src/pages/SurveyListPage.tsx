@@ -5,7 +5,9 @@ import { Card } from "@/components/ui/card";
 import { CheckCircle2, Clock, PlayCircle, Users } from "lucide-react";
 import { AppBottomNavBar } from "./HomePage";
 import { useEffect, useState } from "react";
-import { getUserQuestionSet, type IQuestionSetData } from "@/apis/backend/v2/survey";
+import { getUserQuestionSet, type IQuestionSetData } from "@/apis/backend/v2/survey/getUserQuestionSet";
+// import { getUserQuestionSet, type IQuestionSetData } from "@/apis/backend/v2/survey";
+
 // import { set } from "date-fns";
 
 interface Survey {
@@ -30,12 +32,12 @@ export default function SurveyListPage() {
 
         const surveys = res.data.reduce((acc: Survey[], item: IQuestionSetData) => {
           acc.push({
-            id: item.id,
-            title: item.name,
+            id: item.scenario.questionSet.id,
+            title: item.scenario.questionSet.name,
             completed: false,
-            description: item.description,
-            questionsCount: item.items.length,
-            estimatedTime: Math.ceil(item.items.length / 3), 
+            description: item.scenario.questionSet.description,
+            questionsCount: item.scenario.questionSet.items.length,
+            estimatedTime: Math.ceil(item.scenario.questionSet.items.length / 3), 
             category: "General",
             participants: 0,
           });

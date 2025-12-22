@@ -12,7 +12,8 @@ import { DatePickerField } from "@/components/native-wrapper/DatePicker";
 import { Drawer } from "vaul";
 import React from "react";
 import { getCountryNames, getCitiesByCountry } from "@/apis/countries";
-import { registerUser } from "@/apis/backend/v1/register";
+import { registerUser } from "@/apis/backend/v2/register";
+import type { TRegion } from "@/apis/backend/v2/register";
 import { getGeocode } from "@/apis/nominatim/reverseGeocode";
 import { toast } from "sonner";
 
@@ -791,6 +792,7 @@ export default function RegisterPage() {
         date_of_birth: formData.dateOfBirth,
         location: formData.location,
         gender: formData.gender,
+        region: (detectedRegion || 'Unknown') as TRegion,
       };
 
       console.log("Submitting registration with payload:", payload);
@@ -801,7 +803,19 @@ export default function RegisterPage() {
         access_token: data.access_token,
         refresh_token: data.refresh_token,
       });
-      setUser(data.user);
+
+      // Map backend v2 user shape to application IUser shape
+      const mappedUser = {
+        id: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        full_name: (data.user as any).full_name || (data.user as any).fullName || "",
+        role: data.user.role,
+        gender: data.user.gender,
+        location: data.user.location,
+      };
+
+      setUser(mappedUser as any);
 
       toast.success("Đăng ký thành công! Đang chuyển hướng...");
 

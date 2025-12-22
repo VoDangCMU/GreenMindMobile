@@ -11,10 +11,12 @@ import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
 import getQuestionSetById from "@/apis/backend/v2/survey/getQuestionSetById";
-import { submitUserAnswers } from "@/apis/backend/v1/userAnswer";
 
 import { useToast } from "@/hooks/useToast";
-import { useAuthStore } from "@/store/authStore";
+import OceanRadarChart from "@/components/hardcore-coder/OceanCard";
+import calculate_ocean from "@/apis/ai/calculate_ocean_score";
+import type { IQuestionData, IOceanTraitScore } from "@/apis/ai/calculate_ocean_score";
+import { useAppStore } from "@/store/appStore";
 
 /* =========================
    Progress Icon Bar
@@ -183,11 +185,14 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
+  const [showOceanResult, setShowOceanResult] = useState(false);
+  const [oceanResult, setOceanResult] = useState<IOceanTraitScore | null>(null);
+
   const [searchParams] = useSearchParams();
   const qsId = searchParams.get("surveyId");
 
   const toast = useToast();
-  const user = useAuthStore((s) => s.user);
+  const currentOcean = useAppStore((s) => s.ocean);
 
   /* Fetch questions */
   useEffect(() => {
@@ -195,6 +200,7 @@ export default function QuizPage() {
 
     getQuestionSetById(qsId)
       .then((data) => {
+        // Map to normalized questions for UI
         const normalized = data.data.items.map((curr: any) => ({
           id: curr.id,
           question: curr.question,
@@ -258,17 +264,74 @@ export default function QuizPage() {
   const handleSubmitAnswers = async () => {
     setSubmitting(true);
     try {
-      await submitUserAnswers({
-        userId: user?.id || "test-user",
-        answers: Object.entries(answers).map(([questionId, answer]) => ({
-          questionId,
-          answer,
-        })),
-      });
-      toast.success("Câu trả lời đã được gửi");
+      // Build IQuestionData from current questions + answers (no combine or store usage)
+      const userId = 'user_' + (Date.now());
+      const payload: IQuestionData = { user_id: userId, answers: [] };
+
+      const KEY_PER_QUESTION_TYPE: Record<string, 'pos' | 'neg'> = {
+        yesno: 'pos',
+        likert5: 'pos',
+        frequency: 'pos',
+        rating: 'pos',
+      };
+
+      const SCORE_PER_QUESTION_TYPE: Record<string, Record<string, number>> = {
+        yesno: { 'Không': 0, 'Có': 1 },
+        likert5: { 'Rất không thích': 1, 'Không thích': 2, 'Bình thường': 3, 'Thích': 4, 'Rất thích': 5 },
+        frequency: { 'Không bao giờ': 1, 'Hiếm khi': 1, 'Thỉnh thoảng': 2, 'Thường xuyên': 3, 'Rất thường xuyên': 4 },
+        rating: { 'Rất tệ': 1, 'Tệ': 2, 'Bình thường': 3, 'Tốt': 4, 'Rất tốt': 5 },
+      };
+
+      const ANS_PER_QUESTION_TYPE: Record<string, Record<string, string>> = {
+        likert5: { 'Rất không thích': '1', 'Không thích': '2', 'Bình thường': '3', 'Thích': '4', 'Rất thích': '5' },
+        rating: { 'Rất tệ': '1', 'Tệ': '2', 'Bình thường': '3', 'Tốt': '4', 'Rất tốt': '5' },
+      };
+
+      const isNumeric = (v: string) => /^\d+$/.test(String(v));
+
+      for (const q of questions) {
+        const selectedOptionId = answers[q.id];
+        const opt = q.options.find((o) => o.id === selectedOptionId);
+        const rawAns = opt?.text ?? '';
+        const kind = q.type || 'unknown';
+        const key = KEY_PER_QUESTION_TYPE[kind] ?? 'pos';
+        const score = SCORE_PER_QUESTION_TYPE[kind]?.[rawAns] ?? (isNumeric(rawAns) ? parseInt(rawAns) : 0);
+        const ans = ANS_PER_QUESTION_TYPE[kind]?.[rawAns] ?? rawAns;
+
+        payload.answers.push({
+          trait: q.trait ?? 'O',
+          template_id: q.templateId ?? '',
+          intent: kind,
+          question: q.question,
+          ans: String(ans),
+          score,
+          key,
+          kind,
+        });
+      }
+
+      // Call calculate_ocean directly
+      try {
+        const res = await calculate_ocean(payload);
+        setShowOceanResult(true);
+        setOceanResult(res.scores);
+        toast.success('OCEAN calculated');
+      } catch (err) {
+        console.error('calculate_ocean failed:', err);
+        toast.error('Không tính được OCEAN, hiển thị OCEAN hiện có');
+
+        // Fallback: use ocean currently in store (if available), otherwise zeros
+        if (currentOcean) {
+          setOceanResult(currentOcean);
+        } else {
+          setOceanResult({ O: 0, C: 0, E: 0, A: 0, N: 0 });
+        }
+        setShowOceanResult(true);
+      }
+
     } catch (err) {
       console.error(err);
-      toast.error("Không thể gửi câu trả lời");
+      toast.error('Không thể gửi câu trả lời');
     } finally {
       setSubmitting(false);
     }
@@ -360,6 +423,24 @@ export default function QuizPage() {
                 </Button>
               }
             />
+          </div>
+        )}
+
+        {/* Ocean result modal / card */}
+        {showOceanResult && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+            <div className="max-w-xl w-full bg-white rounded-xl p-4 shadow-lg">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Your OCEAN Result</h3>
+                <button className="p-1 rounded-md text-gray-500 hover:bg-gray-100" onClick={() => setShowOceanResult(false)} aria-label="Close">
+                  ✕
+                </button>
+              </div>
+              <OceanRadarChart scores={oceanResult ?? undefined} />
+              <div className="mt-4 flex justify-end">
+                <Button onClick={() => setShowOceanResult(false)}>Close</Button>
+              </div>
+            </div>
           </div>
         )}
       </>

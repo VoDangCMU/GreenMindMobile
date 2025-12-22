@@ -4,6 +4,7 @@ import "./index.css";
 import "leaflet/dist/leaflet.css";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { Toaster } from "sonner";
+import { initDevTools } from "@/lib/devTools";
 
 // Components
 import AuthGate from "./components/app-components/AuthGate.tsx";
@@ -37,6 +38,8 @@ const MetricsPage = lazy(() => import("./pages/MetricsPage"));
 const SurveyListPage = lazy(() => import("./pages/SurveyListPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const QuizPageDebug = lazy(() => import("./pages/debug/QuizPage.tsx"));
+const DevSettingsPage = lazy(() => import("./pages/DevSettingsPage"));
+const CheckinsPage = lazy(() => import("./pages/CheckinsPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -80,6 +83,8 @@ const router = createHashRouter([
           { path: "/guide", element: <Suspense fallback={<PageLoader />}><GuidePage /></Suspense> },
           { path: "/notifications", element: <Suspense fallback={<PageLoader />}><NotificationsPage /></Suspense> },
           { path: "/debug/quiz", element: <Suspense fallback={<PageLoader />}><QuizPageDebug /></Suspense> },
+          { path: "/dev-settings", element: <Suspense fallback={<PageLoader />}><DevSettingsPage /></Suspense> },
+          { path: "/checkins", element: <Suspense fallback={<PageLoader />}><CheckinsPage /></Suspense> },
         ],
       },
     ],
@@ -89,6 +94,9 @@ const router = createHashRouter([
 // -----------------
 // Render
 // -----------------
+// Initialize dev tools early so they can capture logs and requests
+initDevTools();
+
 createRoot(document.getElementById("root")!).render(
   <>
     <AuthStateInitializer />

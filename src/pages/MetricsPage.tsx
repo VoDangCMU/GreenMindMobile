@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppHeader from "@/components/common/AppHeader";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
@@ -106,9 +106,39 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+// Metric hooks and stores
+import { useDailyMoving } from "@/hooks/metric/useDailyMoving";
+import { useDailySpending } from "@/hooks/metric/useDailySpending";
+import { useHealthyFoodRatio } from "@/hooks/metric/useHealthyFoodRatio";
+import { useTodoAffect } from "@/hooks/metric/useTodoAffect";
+import { useNightOutFeq } from "@/hooks/metric/useNightOutFeq";
+
+import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
+import useInvoiceStore from "@/store/invoiceStore";
+import usePlantScanStore from "@/store/plantScanStore";
+import { useTodoStore } from "@/store/todoStore";
+import { useNightOutHistoryStore } from "@/store/nightOutHistoryStore";
+import { getDistanceToday } from "@/apis/backend/v2/location";
+import { useAppStore } from "@/store/appStore";
+
 export default function MetricsPage() {
     const [isUpdatingAll, setIsUpdatingAll] = useState(false);
     const feedbacks = useMetricFeedbackStore((s) => s.feedbacks);
+
+    // Metric hooks
+    const { callDailyMoving } = useDailyMoving();
+    const { callDailySpending } = useDailySpending();
+    const { callHealthyFoodRatio } = useHealthyFoodRatio();
+    const { callTodoAffect } = useTodoAffect();
+    const { callNightOutFeq } = useNightOutFeq();
+
+    // Stores for inputs
+    const preAppAnswers = usePreAppSurveyStore((s) => s.answers);
+    const invoices = useInvoiceStore((s) => s.invoices);
+    const plantScans = usePlantScanStore((s) => s.scans);
+    const todos = useTodoStore((s) => s.todos);
+    const nightOutHistory = useNightOutHistoryStore((s) => s.records);
+    const currentOcean = useAppStore((s) => s.ocean);
 
     // Get all feedbacks - simple selector
     const allFeedbacks = useMemo(() => {
@@ -118,17 +148,83 @@ export default function MetricsPage() {
         );
     }, [feedbacks]);
 
-    const handleUpdateAllMetrics = async () => {
+    // Single function to update all metrics
+    const updateAllMetrics = async () => {
         setIsUpdatingAll(true);
         try {
-            toast.info("Update all metrics feature coming soon!");
-            // TODO: Implement metric updates
+            // 1) Daily moving (use backend v2 helper to get today's distance)
+            try {
+                const distRes = await getDistanceToday();
+                const distance_today = distRes?.data?.total_distance ?? 0;
+                const base_avg_distance = parseFloat(preAppAnswers?.daily_distance_km || '5') || 5;
+                await callDailyMoving(distance_today, base_avg_distance);
+            } catch (err) {
+                console.error('dailyMoving failed:', err);
+            }
+
+            // 2) Daily spending
+            try {
+                const latestInvoice = invoices && invoices.length > 0 ? invoices[0] : null;
+                const daily_total = latestInvoice ? parseFloat(latestInvoice.totals?.grand_total ?? 0) : 0;
+                const base_avg = parseFloat(preAppAnswers?.avg_daily_spend || '500000') || 500000;
+                if (daily_total > 0) await callDailySpending(daily_total, base_avg);
+            } catch (err) {
+                console.error('dailySpending failed:', err);
+            }
+
+            // 3) Healthy food ratio (plant scans)
+            try {
+                const totalScans = plantScans.length;
+                if (totalScans > 0) {
+                    const plantScansCount = plantScans.filter(s => (s.vegetable_ratio_percent ?? 0) > 30).length;
+                    const base_likert = parseFloat(preAppAnswers?.healthy_food_ratio || '3') || 3;
+                    const payload = {
+                        plant_meals: plantScansCount,
+                        total_meals: totalScans,
+                        base_likert,
+                        ocean_score: currentOcean ? { O: currentOcean.O/100, C: currentOcean.C/100, E: currentOcean.E/100, A: currentOcean.A/100, N: currentOcean.N/100 } : { O:0, C:0, E:0, A:0, N:0 }
+                    } as any;
+                    await callHealthyFoodRatio(payload);
+                }
+            } catch (err) {
+                console.error('healthyFoodRatio failed:', err);
+            }
+
+            // 4) Todo affect
+            try {
+                if (todos && todos.length > 0) {
+                    await callTodoAffect(todos as any);
+                }
+            } catch (err) {
+                console.error('todoAffect failed:', err);
+            }
+
+            // 5) Night out frequency
+            try {
+                const night_out_count = (nightOutHistory || []).length;
+                const base_night_out = parseFloat(preAppAnswers?.night_out_freq || '0') || 0;
+                if (night_out_count > 0) await callNightOutFeq(night_out_count, base_night_out);
+            } catch (err) {
+                console.error('nightOutFeq failed:', err);
+            }
+
+            toast.success('Metric updates triggered');
         } catch (err) {
-            console.error("Update failed:", err);
-            toast.error("Failed to update metrics");
+            console.error('Update failed:', err);
+            toast.error('Failed to update metrics');
         } finally {
             setIsUpdatingAll(false);
         }
+    };
+
+    // Call on mount once
+    useEffect(() => {
+        updateAllMetrics();
+    }, []);
+
+    // Reuse for button
+    const handleUpdateAllMetrics = async () => {
+        await updateAllMetrics();
     };
 
     return (

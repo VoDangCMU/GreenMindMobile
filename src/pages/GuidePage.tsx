@@ -1,4 +1,3 @@
-import React from "react";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 import { AppBottomNavBar } from "./HomePage";

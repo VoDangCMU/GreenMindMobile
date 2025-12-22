@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award, AlertCircle, CheckCircle2, Leaf, ClipboardList, Bell, User, Home, MapPin, Lightbulb, RefreshCw, Wand, ListTodo, Camera, FileText, X } from "lucide-react";
+import { Award, AlertCircle, CheckCircle2, Leaf, ClipboardList, Bell, User, Home, MapPin, Lightbulb, RefreshCw, Wand, ListTodo, Camera, FileText, X, Bus, Trees, Coffee, ShoppingBag, Book, Dumbbell } from "lucide-react";
+import { createCheckin } from "@/apis/backend/v2/checkin";
 import { Link, useNavigate } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 
@@ -19,7 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
 import { getDistanceToday } from "@/apis/backend/v2/location";
 import { useLocationStore } from "@/store/v2/locationStore";
-import OceanRadarChart from "@/components/hardcore-coder/OceanRadarChart";
+import { useAppStore } from "@/store/appStore";
+import OceanChart from "@/components/hardcore-coder/OceanChart";
+import { useAuthStore } from "@/store/authStore";
 // import NightOutCard from "@/components/app-components/page-components/home/NightOutCard";
 
 
@@ -83,7 +86,7 @@ const features = [
     to: "/todo",
     icon: <CheckCircle2 className="w-5 h-5 text-greenery-600" />,
     title: "Todo",
-    desc: "Manage your tasks and subtasks.",
+    desc: "Manage your tasks.",
   },
   // {
   //   to: "/register",
@@ -524,6 +527,28 @@ export default function HomePage() {
   const preAppSurveyAnswers = usePreAppSurveyStore((s) => s.answers);
   const navigate = useNavigate();
   const [showQuickActions, setShowQuickActions] = useState(false);
+  const [isQuickActionsMounted, setIsQuickActionsMounted] = useState(false);
+  const [cardVisible, setCardVisible] = useState(false);
+
+  // Check-in modal states
+  const [isCheckInMounted, setIsCheckInMounted] = useState(false);
+  const [checkInVisible, setCheckInVisible] = useState(false);
+  const [selectedCheckIn, setSelectedCheckIn] = useState<string | null>(null);
+
+  const user = useAuthStore((s) => s.user) || { full_name: '' };
+
+  useEffect(() => {
+    if (showQuickActions) {
+      setIsQuickActionsMounted(true);
+      // allow next paint to apply transition
+      requestAnimationFrame(() => setCardVisible(true));
+    } else {
+      setCardVisible(false);
+      const t = setTimeout(() => setIsQuickActionsMounted(false), 220); // match transition duration
+      return () => clearTimeout(t);
+    }
+  }, [showQuickActions]);
+  const scores = useAppStore((s) => s.ocean);
 
   const handleScanBill = () => {
     setShowQuickActions(false);
@@ -537,7 +562,61 @@ export default function HomePage() {
 
   const handleCheckin = () => {
     setShowQuickActions(false);
-    toast('Check-in is coming soon');
+    // Open check-in modal with transition
+    setIsCheckInMounted(true);
+    requestAnimationFrame(() => setCheckInVisible(true));
+  };
+
+  const closeCheckIn = () => {
+    setCheckInVisible(false);
+    // unmount after animation
+    setTimeout(() => setIsCheckInMounted(false), 220);
+    // ensure no selection remains visible
+    setSelectedCheckIn(null);
+  };
+
+  const checkInPlaces = [
+    { id: 'bus_station', label: 'Bus Station', icon: <Bus className="w-6 h-6 text-greenery-600" /> },
+    { id: 'park', label: 'Park', icon: <Trees className="w-6 h-6 text-greenery-600" /> },
+    { id: 'restaurant', label: 'Restaurant', icon: <MapPin className="w-6 h-6 text-greenery-600" /> },
+    { id: 'cafe', label: 'Cafe', icon: <Coffee className="w-6 h-6 text-greenery-600" /> },
+    { id: 'mall', label: 'Shopping Mall', icon: <ShoppingBag className="w-6 h-6 text-greenery-600" /> },
+    { id: 'museum', label: 'Museum', icon: <Book className="w-6 h-6 text-greenery-600" /> },
+    { id: 'gym', label: 'Gym', icon: <Dumbbell className="w-6 h-6 text-greenery-600" /> },
+    { id: 'library', label: 'Library', icon: <Book className="w-6 h-6 text-greenery-600" /> },
+    { id: 'market', label: 'Market', icon: <ShoppingBag className="w-6 h-6 text-greenery-600" /> },
+    { id: 'school', label: 'School', icon: <Home className="w-6 h-6 text-greenery-600" /> },
+  ];
+
+  // Prefer location from locationStore (updated by GeolocationTracker), fallback to geolocationStore, then 0
+  const lastCalculatedLocation = useLocationStore((s) => s.lastCalculatedlocation);
+  const currentLoc = useLocationStore((s) => s.currentLocation);
+  const gpsPosition = useGeolocationStore((s) => s.currentPosition);
+
+  const handleCheckInPlace = async (_id: string, label: string) => {
+    // Close modal immediately (per UX requirement)
+    closeCheckIn();
+
+    // Prefer lastCalculatedLocation -> currentLoc -> gpsPosition -> fallback 0,0
+    const latitude = lastCalculatedLocation?.latitude ?? currentLoc?.latitude ?? gpsPosition?.latitude ?? 0;
+    const longitude = lastCalculatedLocation?.longitude ?? currentLoc?.longitude ?? gpsPosition?.longitude ?? 0;
+
+    try {
+      const payload = { location: label, coordinate: { latitude, longitude } };
+      const res = await createCheckin(payload);
+      // Broadcast new check-in so other pages (e.g., CheckinsPage) can update immediately
+      try {
+        if (res?.checkin) {
+          window.dispatchEvent(new CustomEvent('checkin:created', { detail: res.checkin }));
+        }
+      } catch (e) {
+        console.error('Failed to dispatch checkin:created event', e);
+      }
+      toast.success(res?.message ?? `Checked in to ${label}`);
+    } catch (error) {
+      console.error("createCheckin failed:", error);
+      toast.error("Failed to create check-in");
+    }
   };
 
   useEffect(() => {
@@ -546,6 +625,13 @@ export default function HomePage() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [showQuickActions]);
+
+  useEffect(() => {
+    if (!checkInVisible) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setCheckInVisible(false); setTimeout(() => setIsCheckInMounted(false), 220); } };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [checkInVisible]);
 
   return (
     <SafeAreaLayout
@@ -562,12 +648,12 @@ export default function HomePage() {
             Green Mind
           </h1>
           <p className="text-greenery-600 text-center">
-            Welcome back
+            Welcome back {user.full_name}
           </p>
         </div>
 
-        <div className="mb-6">
-          <OceanRadarChart/>
+        <div className="mb-6 max-h-100 flex items-center justify-center">
+          <OceanChart scores={scores!} size="sm" />
         </div>
 
         <div className="mb-4">
@@ -632,26 +718,27 @@ export default function HomePage() {
         {/* Floating Action Button (fixed above footer) */}
         <button
           aria-label="Quick actions"
+          aria-expanded={showQuickActions}
           onClick={() => setShowQuickActions((s) => !s)}
           className="fixed right-4 z-40"
           style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)' }}
         >
-          <Button size="icon" className="rounded-full shadow-lg bg-greenery-500 text-white hover:bg-greenery-600 h-12 w-12 flex items-center justify-center">
-            <Wand className="w-5 h-5" />
+          <Button size="icon" className={`rounded-full shadow-lg bg-greenery-500 text-white hover:bg-greenery-600 h-12 w-12 flex items-center justify-center transform transition-all duration-200 ${showQuickActions ? 'rotate-0 scale-95' : 'rotate-6 scale-100'}`}>
+            {showQuickActions ? <X className="w-5 h-5" /> : <Wand className="w-5 h-5" />}
           </Button>
         </button>
 
         {/* Quick Actions overlay & card */}
-        {showQuickActions && (
+        {isQuickActionsMounted && (
           <>
             <div
-              className="fixed inset-0 z-30 bg-black/20"
+              className={`fixed inset-0 z-30 bg-black/20 transition-opacity duration-200 ${cardVisible ? 'opacity-100' : 'opacity-0'}`}
               onClick={() => setShowQuickActions(false)}
               aria-hidden
             />
 
             <div
-              className="fixed right-4 z-40 w-64 bg-white rounded-xl shadow-lg p-3"
+              className={`fixed right-4 z-40 w-64 bg-white rounded-xl shadow-lg p-3 transform transition-all duration-200 ${cardVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
               style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 136px)' }}
               role="dialog"
               aria-label="Quick actions"
@@ -674,14 +761,58 @@ export default function HomePage() {
                   <div className="flex-1 text-sm text-left">Scan plant</div>
                 </button>
 
-                <button onClick={handleCheckin} className="flex items-center gap-3 p-2 rounded-lg opacity-60 cursor-not-allowed" aria-disabled>
-                  <MapPin className="w-5 h-5 text-gray-400" />
-                  <div className="flex-1 text-sm text-left">Check-in (coming soon)</div>
+                <button onClick={handleCheckin} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+                  <MapPin className="w-5 h-5 text-greenery-600" />
+                  <div className="flex-1 text-sm text-left">Check-in</div>
                 </button>
               </div>
             </div>
           </>
         )}
+
+        {/* Check-in Modal (UI-only) */}
+        {isCheckInMounted && (
+          <>
+            <div
+              className={`fixed inset-0 z-30 bg-black/20 transition-opacity duration-200 ${checkInVisible ? 'opacity-100' : 'opacity-0'}`}
+              onClick={() => closeCheckIn()}
+              aria-hidden
+            />
+
+            <div
+              className={`fixed left-1/2 top-1/2 z-40 w-[90%] max-w-md -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg p-4 transform transition-all duration-200 ${checkInVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+              role="dialog"
+              aria-label="Check-in"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm font-semibold">Check-in</div>
+                <button onClick={() => closeCheckIn()} className="p-1 rounded-md text-gray-500 hover:bg-gray-100" aria-label="Close check-in">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {checkInPlaces.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => handleCheckInPlace(p.id, p.label)}
+                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg text-center min-h-[88px] hover:bg-gray-50 ${selectedCheckIn === p.id ? 'bg-greenery-50 border border-greenery-200' : 'bg-white'}`}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedCheckIn === p.id ? 'bg-greenery-100' : 'bg-gray-100'}`}>
+                      {p.icon}
+                    </div>
+                    <div className="text-sm mt-1">{p.label}</div>
+                    {selectedCheckIn === p.id && (
+                      <div className="absolute translate-y-[-10px] translate-x-10">{/* decorative */}</div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+
       </div>
     </SafeAreaLayout>
   );
