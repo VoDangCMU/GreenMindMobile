@@ -19,5 +19,8 @@ export default async function ocrInvoice(photo: Photo) {
     const formData = new FormData();
     formData.append("file", imageFile);
 
-    return BackendInstance.post('/ocr', formData, { headers: authHeader() }).then(res => res.data as IInvoice);
+    return BackendInstance.post('/ocr', formData, {
+        headers: authHeader(),
+        timeout: 60000
+    }).then(res => res.data as IInvoice);
 }

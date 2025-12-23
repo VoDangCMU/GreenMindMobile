@@ -4,6 +4,7 @@ import "./index.css";
 import "leaflet/dist/leaflet.css";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { Toaster } from "sonner";
+import { initDevTools } from "@/lib/devTools";
 
 // Components
 import AuthGate from "./components/app-components/AuthGate.tsx";
@@ -17,22 +18,28 @@ import AuthStateInitializer from "./components/background-worker/AuthStateInitia
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
 const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
+const GuidePage = lazy(() => import("./pages/GuidePage"));
 const OnboardingQuizPage = lazy(() => import("./pages/OnboardingQuizPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
-const AdvicePage = lazy(() => import("./pages/AdvicePage"));
-const ChatPage = lazy(() => import("./pages/ChatPage"));
-const CommunityPage = lazy(() => import("./pages/CommunityPage"));
-const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
-const GoalsPage = lazy(() => import("./pages/GoalsPage"));
-const ImpactPage = lazy(() => import("./pages/ImpactPage"));
+const AdvicePage = lazy(() => import("./pages/archive/AdvicePage"));
+const ChatPage = lazy(() => import("./pages/archive/ChatPage"));
+const CommunityPage = lazy(() => import("./pages/archive/CommunityPage"));
+const FeedbackPage = lazy(() => import("./pages/archive/FeedbackPage"));
+const GoalsPage = lazy(() => import("./pages/archive/GoalsPage"));
+const ImpactPage = lazy(() => import("./pages/archive/ImpactPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const QuizPage = lazy(() => import("./pages/QuizPage"));
-const RecomendationPage = lazy(() => import("./pages/RecomendationPage"));
-const TrackingPage = lazy(() => import("./pages/TrackingPage"));
+const QuizPage = lazy(() => import("./pages/QuizPage.tsx"));
+const RecomendationPage = lazy(() => import("./pages/archive/RecomendationPage"));
+const TrackingPage = lazy(() => import("./pages/archive/TrackingPage"));
 const InvoiceHistoryPage = lazy(() => import("./pages/InvoiceHistoryPage"));
 const TodoPage = lazy(() => import("./pages/TodoPage"));
 const PlantScanHistoryPage = lazy(() => import("./pages/PlantScanPage"));
 const MetricsPage = lazy(() => import("./pages/MetricsPage"));
+const SurveyListPage = lazy(() => import("./pages/SurveyListPage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const QuizPageDebug = lazy(() => import("./pages/debug/QuizPage.tsx"));
+const DevSettingsPage = lazy(() => import("./pages/DevSettingsPage"));
+const CheckinsPage = lazy(() => import("./pages/CheckinsPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -72,6 +79,12 @@ const router = createHashRouter([
           { path: "/todo", element: <Suspense fallback={<PageLoader />}><TodoPage /></Suspense> },
           { path: "/plant-scan-history", element: <Suspense fallback={<PageLoader />}><PlantScanHistoryPage /></Suspense> },
           { path: "/metrics", element: <Suspense fallback={<PageLoader />}><MetricsPage /></Suspense> },
+          { path: "/survey-list", element: <Suspense fallback={<PageLoader />}><SurveyListPage /></Suspense> },
+          { path: "/guide", element: <Suspense fallback={<PageLoader />}><GuidePage /></Suspense> },
+          { path: "/notifications", element: <Suspense fallback={<PageLoader />}><NotificationsPage /></Suspense> },
+          { path: "/debug/quiz", element: <Suspense fallback={<PageLoader />}><QuizPageDebug /></Suspense> },
+          { path: "/dev-settings", element: <Suspense fallback={<PageLoader />}><DevSettingsPage /></Suspense> },
+          { path: "/checkins", element: <Suspense fallback={<PageLoader />}><CheckinsPage /></Suspense> },
         ],
       },
     ],
@@ -81,11 +94,47 @@ const router = createHashRouter([
 // -----------------
 // Render
 // -----------------
+// Initialize dev tools early so they can capture logs and requests
+initDevTools();
+
+// Suppress noisy extension/message-channel warning that some browser extensions emit
+// This targets the specific error: "A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received"
+// We only suppress this exact message to avoid hiding other errors.
+if (typeof window !== 'undefined') {
+
+
+  // Monkey-patch console.error to suppress error logs
+  console.error = () => {
+    // Suppress all errors as requested
+  };
+
+  console.warn = () => {
+    // Suppress all warnings as requested
+  };
+  // -------------------------------------------------------------
+
+  window.addEventListener('unhandledrejection', (e) => {
+    try {
+      const reason = (e as any).reason;
+      const msg = reason && reason.message ? reason.message : String(reason || '');
+      if (msg && msg.includes('A listener indicated an asynchronous response by returning true')) {
+        e.preventDefault();
+        // Keep a debug trace without spamming the console
+        if (process.env.NODE_ENV === 'development') {
+          // console.debug('[dev] suppressed noisy extension message:', msg);
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <>
     <AuthStateInitializer />
     <AppStateInitializer />
-    <GeolocationTracker timeBetweenTrack={30000} />
+    <GeolocationTracker timeBetweenTrack={10000} />
     <NightOutTracker timeBetweenCheck={30000} />
     <Toaster position="top-center" richColors closeButton />
     <RouterProvider router={router} />

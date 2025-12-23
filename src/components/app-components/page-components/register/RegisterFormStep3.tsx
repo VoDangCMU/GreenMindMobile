@@ -5,16 +5,18 @@ import { Link, useNavigate } from "react-router-dom";
 import React from "react";
 import { useRegisterStore } from "@/store/registerStore";
 
-interface Props {}
+interface Props { }
 
 import { registerUser } from "@/apis/backend/v1/register";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 import { useAuthStore } from "@/store/authStore";
 const RegisterFormStep3: React.FC<Props> = () => {
   const { isLoading, formData, errors, setFormData, setErrors, setCurrentStep, setIsLoading } = useRegisterStore();
   const setUser = useAuthStore(state => state.setUser);
   const setTokens = useAuthStore(state => state.setTokens);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleInputChange = (field: string, value: boolean) => {
     setFormData({ [field]: value });

@@ -26,3 +26,40 @@ export async function reverseGeocode(lat: number, lon: number, language: string 
   const res = await NominatimInstance.get<ReverseGeocodeResult>("/reverse", { params });
   return res.data;
 }
+
+export interface Address {
+  city: string
+  "ISO3166-2-lvl4": string
+  country: string
+  country_code: string
+}
+
+export interface GetGeocode {
+  place_id: number
+  licence: string
+  osm_type: string
+  osm_id: number
+  lat: string
+  lon: string
+  class: string
+  type: string
+  place_rank: number
+  importance: number
+  addresstype: string
+  name: string
+  display_name: string
+  address: Address
+  boundingbox: string[]
+}
+
+export async function getGeocode(location: string): Promise<ReverseGeocodeResult> {
+  const res = await NominatimInstance.get<ReverseGeocodeResult>("/search", { 
+    params: {
+      q: location,
+      format: "json",
+      addressdetails: 1,
+      limit: 1,
+    }
+  });
+  return res.data;
+}

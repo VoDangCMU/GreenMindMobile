@@ -10,4 +10,5 @@ export default {
   AI_HOST,
   BACKEND_HOST,
   MOCK_API_HOST,
+  VPS_HOST: "https://green-api-vps.khoav4.com",
 }

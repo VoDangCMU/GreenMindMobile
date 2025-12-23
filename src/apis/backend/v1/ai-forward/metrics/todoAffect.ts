@@ -5,7 +5,7 @@ export default async function todoAffect({
     todos,
     base_likert,
     weight = 0.2,
-    direction = "down",
+    direction = "up",
     sigma_r = 1,
     alpha = 0.5,
     ocean_score
