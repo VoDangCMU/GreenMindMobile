@@ -66,6 +66,7 @@ export default function ProfilePage() {
     bio: "Passionate about sustainable living and helping others make eco-friendly choices.",
     location: user?.location || "Unknown",
     joinDate: "",
+    age: user?.age || "25",
   });
 
   // Inline component: Step 1 survey editor
@@ -279,7 +280,7 @@ export default function ProfilePage() {
                 {/* Gender */}
                 <div className="flex items-center space-x-1 text-gray-600 mb-1">
                   <User className="w-4 h-4" />
-                  <span>{userInfo.gender} 25</span>
+                  <span>{userInfo.gender} {userInfo.age}</span>
                 </div>
 
                 {/* Location */}
@@ -382,29 +383,29 @@ export default function ProfilePage() {
           </CardContent>
         </Card> */}
 
-        <OceanRadarChart scores={oce}/>
+        <OceanRadarChart scores={oce} />
 
         {/* Pre-App Survey Card */}
         <Card className="border-0 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center space-x-2">
-                <MapPin className="w-4 h-4 text-blue-600" />
-                <span>Pre-App Survey</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SurveyStep1Editor answers={answers} onSave={(vals) => {
-                // save converted to strings
-                setPreAppAnswers({ ...answers, ...Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, String(v)])) } as any);
-                toast.success('Saved survey (Step 1)');
-              }} editable={false} />
-              {isCompleted && completedAt && (
-                <div className="mt-3 text-xs text-gray-500">
-                  Đã hoàn thành: {new Date(completedAt).toLocaleString()}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center space-x-2">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <span>Pre-App Survey</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SurveyStep1Editor answers={answers} onSave={(vals) => {
+              // save converted to strings
+              setPreAppAnswers({ ...answers, ...Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, String(v)])) } as any);
+              toast.success('Saved survey (Step 1)');
+            }} editable={false} />
+            {isCompleted && completedAt && (
+              <div className="mt-3 text-xs text-gray-500">
+                Đã hoàn thành: {new Date(completedAt).toLocaleString()}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Home Location Card */}
         <HomeLocationCard />

@@ -27,11 +27,13 @@ export const useAuthStore = create<IAuthState>()(
           isAuthenticated: true,
         }),
 
-      clearAuth: () =>
+      clearAuth: () => {
+        localStorage.clear();
         set({
           ...initialState,
           bypassAuthGate: false, // Explicitly reset bypass on logout
-        }),
+        });
+      },
 
       setBypassAuthGate: (value) =>
         set({

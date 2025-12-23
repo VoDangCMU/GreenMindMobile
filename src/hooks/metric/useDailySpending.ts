@@ -3,11 +3,13 @@ import dailySpending from '@/apis/backend/v1/ai-forward/metrics/dailySpending';
 // import dailySpending from '@/apis/ai/monitor_ocean/avg_daily_spend';
 import { toast } from 'sonner';
 import { useOcean } from '@/hooks/v1/useOcean';
+import { useMetricFeedbackStore } from '@/store/v2/metricFeedbackStore';
 
 export const useDailySpending = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { ocean, saveOcean } = useOcean();
+    const { setFeedback } = useMetricFeedbackStore();
 
     const callDailySpending = async (daily_total: number, base_avg: number) => {
         if (!ocean) {
@@ -50,6 +52,13 @@ export const useDailySpending = () => {
 
             // Update OCEAN scores
             await saveOcean(newOceanScores);
+
+            // Save feedback to store
+            setFeedback("daily_spending", {
+                ...result,
+                new_ocean_score: newOceanScores,
+                timestamp: new Date().toISOString(),
+            });
 
             toast.success("OCEAN scores updated successfully!");
             return result;

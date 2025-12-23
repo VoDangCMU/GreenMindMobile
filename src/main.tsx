@@ -97,6 +97,27 @@ const router = createHashRouter([
 // Initialize dev tools early so they can capture logs and requests
 initDevTools();
 
+// Suppress noisy extension/message-channel warning that some browser extensions emit
+// This targets the specific error: "A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received"
+// We only suppress this exact message to avoid hiding other errors.
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (e) => {
+    try {
+      const reason = (e as any).reason;
+      const msg = reason && reason.message ? reason.message : String(reason || '');
+      if (msg && msg.includes('A listener indicated an asynchronous response by returning true')) {
+        e.preventDefault();
+        // Keep a debug trace without spamming the console
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('[dev] suppressed noisy extension message:', msg);
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <>
     <AuthStateInitializer />

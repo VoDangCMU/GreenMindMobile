@@ -44,7 +44,6 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
             name: addressRes?.display_name ?? undefined
           });
         } catch (error) {
-          console.error("Error reverse geocoding initial position:", error);
           locationStore.setLastCalculatedlocation({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
@@ -52,13 +51,11 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
           });
         }
       } catch (error) {
-        console.error("Error getting initial position:", error);
       }
     })();
 
     try {
       startTracking((pos) => {
-        console.log("New position from tracker:", pos);
         locationStore.setCurrentLocation({
           latitude: pos.latitude,
           longitude: pos.longitude,
@@ -66,14 +63,12 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
         });
       });
     } catch (error) {
-      console.error("Error starting tracking:", error);
     }
 
     return () => {
       try {
         stopTracking();
       } catch (error) {
-        console.error("Error stopping tracking:", error);
       }
     };
   }, []);
@@ -86,7 +81,6 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
       try {
         latestPosition = await getLatestLocation();
       } catch (error) {
-        console.error("Error fetching latest location:", error);
       }
 
       const state = await App.getState();
@@ -105,7 +99,6 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
             longitude: data.coords.longitude,
           };
         } catch (error) {
-          console.error("Error getting current position:", error);
           return;
         }
       } else {
@@ -118,7 +111,6 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
             longitude: data.longitude,
           };
         } catch (error) {
-          console.error("Error getting last known position:", error);
           return;
         }
       }
@@ -126,10 +118,7 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
       let currentAdress: string | undefined = undefined;
       let distance = 0;
 
-      console.log("New user position:", JSON.stringify(newUserposition));
-
       if (newUserposition) {
-        console.log("Calculating distance...");
         try {
           distance = calculateDistance(
             latestPosition?.data.latitude ?? newUserposition.latitude,
@@ -139,10 +128,7 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
           );
 
           distance = distance < 0.0015 ? 0 : distance;
-
-          console.log("Distance to previous location:", distance);
         } catch (error) {
-          console.error("Error calculating distance:", error);
         }
 
         try {
@@ -157,7 +143,6 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
             });
           }
         } catch (error) {
-          console.error("Error reverse geocoding:", error);
         }
 
         if (!user?.id) return;
@@ -176,12 +161,10 @@ function GeolocationTracker({ timeBetweenTrack = 5000 }: GeolocationTrackerProps
           await createLocation(payload);
         } catch (error) {
           const msg = error instanceof Error ? error.message : "Lỗi không lưu được vị trí";
-          console.error("Error creating location:", msg);
           setError(msg);
         }
       }
     } catch (error) {
-      console.error("Unexpected error in updatePosition:", error);
     }
   }, [user?.id]);
 

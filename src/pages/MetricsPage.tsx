@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import AppHeader from "@/components/common/AppHeader";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
@@ -22,11 +22,10 @@ export function MetricFeedbackCard({ feedback }: { feedback: IMetricFeedback }) 
                             <TrendingDown className="w-5 h-5 text-red-500" />
                         )}
                         <CardTitle className="text-base capitalize">{feedback.metric}</CardTitle>
-                        <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                            feedback.contrib > 0 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-red-100 text-red-700'
-                        }`}>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded ${feedback.contrib > 0
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                            }`}>
                             {feedback.contrib > 0 ? '+' : ''}{round3(feedback.contrib)}
                         </span>
                     </div>
@@ -164,10 +163,43 @@ export default function MetricsPage() {
 
             // 2) Daily spending
             try {
-                const latestInvoice = invoices && invoices.length > 0 ? invoices[0] : null;
-                const daily_total = latestInvoice ? parseFloat(latestInvoice.totals?.grand_total ?? 0) : 0;
-                const base_avg = parseFloat(preAppAnswers?.avg_daily_spend || '500000') || 500000;
-                if (daily_total > 0) await callDailySpending(daily_total, base_avg);
+                const today = new Date().toISOString().split('T')[0];
+                const daily_total = (invoices || [])
+                    .filter(inv => {
+                        // Helper to normalize date to YYYY-MM-DD
+                        const normalizeDate = (d: string | undefined) => {
+                            if (!d) return '';
+                            if (d.includes('/')) {
+                                const [day, month, year] = d.split('/');
+                                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                            }
+                            return d;
+                        };
+
+                        let invDate = normalizeDate(inv.datetime?.date);
+
+                        // Fallback to createdAt if no issued date
+                        if (!invDate && inv.createdAt) {
+                            try {
+                                invDate = new Date(inv.createdAt).toISOString().split('T')[0];
+                            } catch (e) {
+                                // ignore invalid date
+                            }
+                        }
+
+                        return invDate === today;
+                    })
+                    .reduce((sum, inv) => sum + (parseFloat(inv.totals?.grand_total || '0') || 0), 0);
+
+                const base_avg = 450000; // Hardcoded as per request
+
+                // Only call if there's spending or to update with 0 if that's desired, 
+                // but usually we want to track even if 0 if we are tracking daily. 
+                // However, the previous logic was `if (daily_total > 0)`. 
+                // Let's keep it but maybe the user wants to see it even if 0? 
+                // For now, I'll stick to the logic but with the correct total.
+                // Actually, if I have bills today, I should send it.
+                if (daily_total >= 0) await callDailySpending(daily_total, base_avg);
             } catch (err) {
                 console.error('dailySpending failed:', err);
             }
@@ -182,7 +214,7 @@ export default function MetricsPage() {
                         plant_meals: plantScansCount,
                         total_meals: totalScans,
                         base_likert,
-                        ocean_score: currentOcean ? { O: currentOcean.O/100, C: currentOcean.C/100, E: currentOcean.E/100, A: currentOcean.A/100, N: currentOcean.N/100 } : { O:0, C:0, E:0, A:0, N:0 }
+                        ocean_score: currentOcean ? { O: currentOcean.O / 100, C: currentOcean.C / 100, E: currentOcean.E / 100, A: currentOcean.A / 100, N: currentOcean.N / 100 } : { O: 0, C: 0, E: 0, A: 0, N: 0 }
                     } as any;
                     await callHealthyFoodRatio(payload);
                 }
@@ -217,10 +249,10 @@ export default function MetricsPage() {
         }
     };
 
-    // Call on mount once
-    useEffect(() => {
-        updateAllMetrics();
-    }, []);
+    // Call on mount once - REMOVED as per user request to only update on button click
+    // useEffect(() => {
+    //     updateAllMetrics();
+    // }, []);
 
     // Reuse for button
     const handleUpdateAllMetrics = async () => {

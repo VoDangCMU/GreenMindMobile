@@ -76,16 +76,19 @@ export default function SafeAreaLayout({ children, header, footer, className = '
       {/* Dev Catalogue FAB (global, respects safe-area insets) */}
       {showCatalogueFab && (
         <>
-          <button
+          <div
+            role="button"
             aria-label="Open catalogue"
+            tabIndex={0}
             onClick={() => setShowCatalogue(true)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowCatalogue(true); } }}
             className="fixed z-50"
             style={{ left: `calc(env(safe-area-inset-left, 16px) + 12px)`, top: `calc(env(safe-area-inset-top, 16px) + ${cardTopOffset}px)` }}
           >
             <Button size="icon" className="rounded-full shadow-lg bg-white border border-gray-200 text-greenery-700 hover:bg-gray-50 h-10 w-10 flex items-center justify-center">
               <List className="w-5 h-5" />
             </Button>
-          </button>
+          </div>
 
           {showCatalogue && (
             <>

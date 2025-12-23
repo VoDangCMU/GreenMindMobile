@@ -7,11 +7,40 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Trash, Copy, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash, Copy, ChevronDown, ChevronUp, Check } from "lucide-react";
 import RequestDetailCard from "@/components/dev/RequestDetailCard";
 import { useDevSettingsStore } from "@/store/devSettingsStore";
+import { useOcean } from "@/hooks/v1/useOcean";
+import { AppBottomNavBar } from "./HomePage";
+
+function ResetOceanButton() {
+  const { saveOcean, fetchOcean } = useOcean();
+  const [loading, setLoading] = useState(false);
+
+  const handleReset = async () => {
+    setLoading(true);
+    try {
+      // Save with 0.5 scale (server helper will normalize)
+      await saveOcean({ O: 0.5, C: 0.5, E: 0.5, A: 0.5, N: 0.5 });
+      // Refresh from server to ensure store reflects backend data
+      await fetchOcean();
+      toast.success('Ocean reset and refreshed from server');
+    } catch (err) {
+      toast.error('Failed to reset ocean');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button variant="outline" onClick={handleReset} disabled={loading}>
+      {loading ? 'Resetting...' : 'Reset OCEAN to 0.5'}
+    </Button>
+  );
+}
 
 export default function DevSettingsPage() {
   const inspectRequests = useDevSettingsStore((s) => s.inspectRequests);
@@ -35,6 +64,23 @@ export default function DevSettingsPage() {
   const [expandedLogs, setExpandedLogs] = useState<number[]>([]);
   const [expandedRequests, setExpandedRequests] = useState<number[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+
+  // Local inputs for Backend/AI URL (submit explicitly to persist)
+  const [backendInput, setBackendInput] = useState<string>("");
+  const [aiInput, setAiInput] = useState<string>("");
+
+  useEffect(() => {
+    const s = useDevSettingsStore.getState();
+    setBackendInput(s.backendUrl || "");
+    setAiInput(s.aiUrl || "");
+
+    const unsub = useDevSettingsStore.subscribe((state) => {
+      setBackendInput(state.backendUrl || "");
+      setAiInput(state.aiUrl || "");
+    });
+
+    return unsub;
+  }, []);
 
   const toggleExpandedLog = (i: number) => setExpandedLogs((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i]));
   const toggleExpandedRequest = (i: number) => setExpandedRequests((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i]));
@@ -72,7 +118,10 @@ export default function DevSettingsPage() {
   };
 
   return (
-    <SafeAreaLayout header={<AppHeader showBack title="Dev Settings" />}>
+    <SafeAreaLayout 
+      header={<AppHeader showBack title="Dev Settings" />}
+      footer={<AppBottomNavBar />}
+    >
       <div className="max-w-sm mx-auto p-4 space-y-4">
         <Card className="border-0 shadow-md">
           <CardHeader>
@@ -117,6 +166,24 @@ export default function DevSettingsPage() {
 
             <div className="flex items-start space-x-3">
               <Checkbox
+                id="axiosLogging"
+                checked={useDevSettingsStore((s) => s.axiosLogging)}
+                onCheckedChange={(c) => {
+                  useDevSettingsStore.getState().setAxiosLogging(Boolean(c));
+                  toast.success(`Axios Logging ${c ? "ON" : "OFF"}`);
+                }}
+                className="mt-1"
+              />
+              <div>
+                <Label htmlFor="axiosLogging" className="text-sm font-medium cursor-pointer">
+                  Axios Logging
+                </Label>
+                <div className="text-xs text-gray-500">When enabled, axios will output request/response logs to the console.</div>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <Checkbox
                 id="showCatalogueFab"
                 checked={useDevSettingsStore((s) => s.showCatalogueFab)}
                 onCheckedChange={(c) => {
@@ -130,6 +197,43 @@ export default function DevSettingsPage() {
                   Show Catalogue FAB
                 </Label>
                 <div className="text-xs text-gray-500">When enabled, a floating Catalogue button appears on the Home page (dev-only).</div>
+              </div>
+            </div>
+
+            {/* Backend / AI URL overrides */}
+            <div className="pt-3 space-y-3">
+              <div>
+                <Label className="text-sm font-medium">Backend URL</Label>
+                <div className="mt-2 flex items-center gap-2">
+                  <Input
+                    value={backendInput}
+                    onChange={(e) => { setBackendInput(e.target.value); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { useDevSettingsStore.getState().setBackendUrl(backendInput); toast.success('Backend URL saved'); } }}
+                    placeholder="https://..."
+                    className="flex-1"
+                  />
+                  <Button size="sm" variant="ghost" aria-label="Save backend URL" onClick={() => { useDevSettingsStore.getState().setBackendUrl(backendInput); toast.success('Backend URL saved'); }}>
+                    <Check className="w-4 h-4" />
+                  </Button> 
+                </div>
+                <div className="text-xs text-gray-500 mt-1">Override the backend API base URL for development (persisted).</div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">AI URL</Label>
+                <div className="mt-2 flex items-center gap-2">
+                  <Input
+                    value={aiInput}
+                    onChange={(e) => { setAiInput(e.target.value); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { useDevSettingsStore.getState().setAiUrl(aiInput); toast.success('AI URL saved'); } }}
+                    placeholder="https://..."
+                    className="flex-1"
+                  />
+                  <Button size="sm" variant="ghost" aria-label="Save AI URL" onClick={() => { useDevSettingsStore.getState().setAiUrl(aiInput); toast.success('AI URL saved'); }}>
+                    <Check className="w-4 h-4" />
+                  </Button> 
+                </div>
+                <div className="text-xs text-gray-500 mt-1">Override the AI base URL for development (persisted).</div>
               </div>
             </div>
 
@@ -339,10 +443,12 @@ export default function DevSettingsPage() {
               </CardContent>
             </Card>
 
-            <div className="pt-3">
+            <div className="pt-3 flex items-center gap-2">
               <Button variant="outline" onClick={() => { reset(); toast.success("Reset dev settings"); }}>
                 Reset Dev Settings
               </Button>
+
+              <ResetOceanButton />
             </div>
           </CardContent>
         </Card>

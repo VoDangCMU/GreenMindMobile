@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
@@ -17,6 +17,11 @@ import OceanRadarChart from "@/components/hardcore-coder/OceanCard";
 import calculate_ocean from "@/apis/ai/calculate_ocean_score";
 import type { IQuestionData, IOceanTraitScore } from "@/apis/ai/calculate_ocean_score";
 import { useAppStore } from "@/store/appStore";
+import { ensureUserOcean } from "@/apis/backend/v1/ocean";
+import type { ISubmitUserAnswerParams } from "@/apis/backend/v2/survey/submitUserAnswer";
+import submitUserAnswer from "@/apis/backend/v2/survey/submitUserAnswer";
+import { useAuthStore } from "@/store/authStore";
+import getAllUserAnswer from "@/apis/backend/v2/survey/getAllUserAnswer";
 
 /* =========================
    Progress Icon Bar
@@ -193,6 +198,10 @@ export default function QuizPage() {
 
   const toast = useToast();
   const currentOcean = useAppStore((s) => s.ocean);
+  const setAppOcean = useAppStore((s) => s.setOcean);
+  const user = useAuthStore(s => s.user);
+
+  const navigator = useNavigate();
 
   /* Fetch questions */
   useEffect(() => {
@@ -265,8 +274,12 @@ export default function QuizPage() {
     setSubmitting(true);
     try {
       // Build IQuestionData from current questions + answers (no combine or store usage)
-      const userId = 'user_' + (Date.now());
-      const payload: IQuestionData = { user_id: userId, answers: [] };
+      // const userId = 'user_' + (Date.now());
+      const calculateOceanParams: IQuestionData = { user_id: user?.id ?? '', answers: [] };
+      const submitUserAnswersParams: ISubmitUserAnswerParams = {
+        userId: user?.id ?? '',
+        answers: [],
+      };
 
       const KEY_PER_QUESTION_TYPE: Record<string, 'pos' | 'neg'> = {
         yesno: 'pos',
@@ -298,7 +311,7 @@ export default function QuizPage() {
         const score = SCORE_PER_QUESTION_TYPE[kind]?.[rawAns] ?? (isNumeric(rawAns) ? parseInt(rawAns) : 0);
         const ans = ANS_PER_QUESTION_TYPE[kind]?.[rawAns] ?? rawAns;
 
-        payload.answers.push({
+        calculateOceanParams.answers.push({
           trait: q.trait ?? 'O',
           template_id: q.templateId ?? '',
           intent: kind,
@@ -308,17 +321,54 @@ export default function QuizPage() {
           key,
           kind,
         });
+
+        submitUserAnswersParams.answers.push({
+          questionId: q.id,
+          answer: opt?.text ?? '',
+        });
+
       }
+
+      try {
+        await submitUserAnswer(submitUserAnswersParams);
+      } catch (err) {
+        console.error('submitUserAnswer failed:', err);
+      }
+
 
       // Call calculate_ocean directly
       try {
-        const res = await calculate_ocean(payload);
+        const all_answers = await getAllUserAnswer();
+
+        const new_calculate_params: IQuestionData = {
+          user_id: user?.id ?? '',
+          answers: [],
+        };
+
+        for (const qa of all_answers.data) {
+          
+          for (const item of qa.scenario.questionSet.items) {
+            new_calculate_params.answers.push({
+              trait: item.trait ?? 'O',
+              template_id: item.templateId ?? '',
+              intent: item.behaviorNormalized ?? 'unknown',
+              question: item.question,
+              ans: item.userAnswers.find(ua => ua.questionId === item.id)?.answer ?? '',
+              score: SCORE_PER_QUESTION_TYPE[item.behaviorNormalized ?? 'unknown']?.[item.userAnswers.find(ua => ua.questionId === item.id)?.answer ?? ''] ?? 0,
+              key: KEY_PER_QUESTION_TYPE[item.behaviorNormalized ?? 'unknown'] ?? 'pos',
+              kind: item.behaviorNormalized ?? 'unknown',
+            });
+          }
+        }
+
+        const res = await calculate_ocean(new_calculate_params);
         setShowOceanResult(true);
         setOceanResult(res.scores);
         toast.success('OCEAN calculated');
+
+        setAppOcean(ensureUserOcean(res.scores));
       } catch (err) {
         console.error('calculate_ocean failed:', err);
-        toast.error('Không tính được OCEAN, hiển thị OCEAN hiện có');
 
         // Fallback: use ocean currently in store (if available), otherwise zeros
         if (currentOcean) {
@@ -438,7 +488,10 @@ export default function QuizPage() {
               </div>
               <OceanRadarChart scores={oceanResult ?? undefined} />
               <div className="mt-4 flex justify-end">
-                <Button onClick={() => setShowOceanResult(false)}>Close</Button>
+                <Button onClick={() => {
+                  setShowOceanResult(false);
+                  navigator(-1);
+                  }}>Close</Button>
               </div>
             </div>
           </div>

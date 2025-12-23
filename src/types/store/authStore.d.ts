@@ -6,6 +6,7 @@ declare interface IUser {
   role: string;
   gender?: string;
   location?: string;
+  age?: number;
 }
 
 declare interface IToken {
