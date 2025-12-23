@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award, AlertCircle, CheckCircle2, Leaf, ClipboardList, Bell, User, Home, MapPin, Lightbulb, RefreshCw, Wand, ListTodo, Camera, FileText, X, Bus, Trees, Coffee, ShoppingBag, Book, Dumbbell } from "lucide-react";
+import { Award, AlertCircle, CheckCircle2, ClipboardList, Bell, User, Home, MapPin, Lightbulb, RefreshCw, Wand, ListTodo, Camera, FileText, X, Bus, Trees, Coffee, ShoppingBag, Book, Dumbbell, Brain } from "lucide-react";
 import { createCheckin } from "@/apis/backend/v2/checkin";
 import { Link, useNavigate } from "react-router-dom";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 
-import Logo from "@/components/app-components/page-components/login/Logo";
+
 import { Button } from "@/components/ui/button";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
@@ -14,7 +14,8 @@ import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
 import { useDailyMoving } from "@/hooks/metric/useDailyMoving";
 import { useOcean } from "@/hooks/v1/useOcean";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 import { MetricFeedbackCard } from "./MetricsPage";
 import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/notificationStore";
@@ -176,15 +177,16 @@ const features = [
 
 export function HomeAppHeader() {
   const unreadCount = useNotificationStore((s) => s.getUnreadCount());
+  const user = useAuthStore((s) => s.user);
 
   return (
     <header
       className="w-full flex items-center justify-between px-4 py-3 bg-greenery-50 shadow-sm fixed top-0 left-0 z-30"
-      style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}
+      style={{ paddingTop: 'env(safe-area-inset-top, 24px)' }}
     >
-      <div className="flex items-center gap-2">
-        <Logo size={32} />
-        <span className="text-xl font-bold text-greenery-700">GreenMind</span>
+      <div className="flex flex-col">
+        <span className="text-xl font-bold text-greenery-900 leading-tight">Welcome back</span>
+        <span className="text-sm text-greenery-700 font-medium">{user?.full_name || 'Friend'}</span>
       </div>
       <div className="flex items-center gap-2">
         <Link to="/notifications">
@@ -243,14 +245,7 @@ export function AppBottomNavBar() {
         >
           <div className="relative">
             <ListTodo className="w-6 h-6 mb-1" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-white text-[10px] font-bold items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              </span>
-            )}
+
           </div>
           <span className="text-xs">Todos</span>
         </Link>
@@ -310,13 +305,14 @@ function SetMapRef({ setRef }: { setRef: (map: L.Map) => void }) {
 }
 
 export function CurrentLocationCard() {
-  const { currentPosition, isTracking, error } = useGeolocationStore();
+  const { isTracking, error } = useGeolocationStore();
   const lastCalculatedLocation = useLocationStore(s => s.lastCalculatedlocation);
   const { answers } = usePreAppSurveyStore();
   const mapRef = useRef<L.Map | null>(null);
   const [todayDistanceKm, setTodayDistanceKm] = useState<number>(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const movingFeedback = useMetricFeedbackStore((s) => s.getFeedback("daily_moving"));
+  const toast = useToast();
 
 
   // Load distance data on component mount
@@ -332,7 +328,7 @@ export function CurrentLocationCard() {
     };
 
     loadTodayDistance();
-  }, [currentPosition]);
+  }, [lastCalculatedLocation]);
 
   // Update OCEAN scores using daily distance
   const { callDailyMoving, loading: updatingOcean } = useDailyMoving();
@@ -424,11 +420,7 @@ export function CurrentLocationCard() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
+
 
         {/* Feedback Section */}
         {showFeedback && (
@@ -529,13 +521,14 @@ export default function HomePage() {
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [isQuickActionsMounted, setIsQuickActionsMounted] = useState(false);
   const [cardVisible, setCardVisible] = useState(false);
+  const toast = useToast();
 
   // Check-in modal states
   const [isCheckInMounted, setIsCheckInMounted] = useState(false);
   const [checkInVisible, setCheckInVisible] = useState(false);
   const [selectedCheckIn, setSelectedCheckIn] = useState<string | null>(null);
 
-  const user = useAuthStore((s) => s.user) || { full_name: '' };
+
 
   useEffect(() => {
     if (showQuickActions) {
@@ -639,22 +632,56 @@ export default function HomePage() {
       header={<HomeAppHeader />}
       footer={<AppBottomNavBar />}
     >
-      <div className="w-full max-w-md mx-auto pt-10 pb-6 px-4">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-greenery-500 flex items-center justify-center shadow-md mb-3">
-            <Leaf className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-3xl font-extrabold text-greenery-700 mb-1 tracking-tight text-center drop-shadow-sm">
-            Green Mind
-          </h1>
-          <p className="text-greenery-600 text-center">
-            Welcome back {user.full_name}
-          </p>
-        </div>
+      <div className="w-full max-w-md mx-auto pt-20 pb-6 px-4">
 
-        <div className="mb-6 max-h-100 flex items-center justify-center">
-          <OceanChart scores={scores!} size="sm" />
-        </div>
+
+        <Card className="mb-6 border-0 shadow-lg bg-gradient-to-br from-white to-green-50 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-greenery-100/50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+
+          <CardContent className="pt-5 pb-8 relative z-10">
+            <div className="flex flex-col items-center mb-1">
+              <div className="flex items-center gap-2 text-greenery-800 mb-1">
+                <Brain className="w-5 h-5" />
+                <h3 className="font-bold text-lg">Personality Profile</h3>
+              </div>
+              <p className="text-xs text-center text-greenery-700 max-w-[200px]">
+                Visualize your unique trait composition
+              </p>
+            </div>
+
+            <div className="flex justify-center -my-2">
+              <OceanChart scores={scores || undefined} size="md" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {!preAppSurveyAnswers &&
+          <Card className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-md">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <AlertCircle className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-800 mb-1">
+                  Complete the onboarding survey
+                </h3>
+                <p className="text-sm text-blue-600 mb-3">
+                  Help GreenMind understand you better and provide personalized suggestions.
+                </p>
+                <div className="flex gap-2">
+                  <Link to="/onboarding-quiz">
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                      Start Survey
+                    </button>
+                  </Link>
+                  <Link to="/guide">
+                    <Button variant="outline" size="sm" className="h-8">Quick Guide</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </Card>
+        }
 
         <div className="mb-4">
           <CurrentLocationCard />
@@ -665,34 +692,8 @@ export default function HomePage() {
         </div> */}
 
         {/* Onboarding Quiz Status */}
-        {!preAppSurveyAnswers && 
-          <Card className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <AlertCircle className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-blue-800 mb-1">
-                Complete the onboarding survey
-              </h3>
-              <p className="text-sm text-blue-600 mb-3">
-                Help GreenMind understand you better and provide personalized suggestions.
-              </p>
-              <div className="flex gap-2">
-                <Link to="/onboarding-quiz">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                    Start Survey
-                  </button>
-                </Link>
-                <Link to="/guide">
-                  <Button variant="outline" size="sm" className="h-8">Quick Guide</Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </Card>
-        }
-        
+
+
 
         <div className="grid gap-2 grid-cols-2">
           {features.map((f) => (
@@ -700,10 +701,10 @@ export default function HomePage() {
               <Card className="flex flex-row items-center gap-4 rounded-2xl shadow-lg p-5 bg-white/95 hover:bg-greenery-50 transition-all border border-greenery-100 group-hover:scale-[1.025]">
                 <div className="flex-shrink-0">{f.icon}</div>
                 <div className="flex flex-col flex-1 min-w-0">
-                  <span className="font-semibold text-greenery-700 text-xs mb-1 truncate group-hover:text-greenery-600 transition-colors">
+                  <span className="font-semibold text-greenery-800 text-xs mb-1 truncate group-hover:text-greenery-900 transition-colors">
                     {f.title}
                   </span>
-                  <span className="text-[8px] text-greenery-500 leading-tight whitespace-normal break-words">
+                  <span className="text-[10px] text-greenery-600 leading-tight whitespace-normal break-words">
                     {f.desc}
                   </span>
                 </div>

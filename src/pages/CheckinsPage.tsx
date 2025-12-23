@@ -6,7 +6,8 @@ import AppHeader from "@/components/common/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getCheckins } from "@/apis/backend/v2/checkin";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 import { Bus, Trees, MapPin, Coffee, ShoppingBag, Book, Dumbbell, Home } from "lucide-react";
 
 interface ICheckinItem {
@@ -38,6 +39,7 @@ function getIconForLocation(location: string | undefined) {
 export default function CheckinsPage() {
   const [items, setItems] = useState<ICheckinItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const toast = useToast();
 
   const load = async () => {
     setLoading(true);

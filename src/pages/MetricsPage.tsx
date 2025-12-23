@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, memo } from "react";
 import AppHeader from "@/components/common/AppHeader";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
@@ -8,45 +8,62 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown } from "lucide-react";
 import type { IMetricFeedback } from "@/store/v2/metricFeedbackStore";
 
-export function MetricFeedbackCard({ feedback }: { feedback: IMetricFeedback }) {
+export const MetricFeedbackCard = memo(function MetricFeedbackCard({ feedback }: { feedback: IMetricFeedback }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const round3 = (num: number) => Math.round(num * 1000) / 1000;
+
+    const metricNames: Record<string, string> = {
+        daily_moving: "Daily Movement",
+        daily_spending: "Daily Spending",
+        healthy_food_ratio: "Healthy Food Ratio",
+        night_out_freq: "Night Out Frequency",
+        todo_affect: "Todo Completion",
+        public_transit_ratio: "Public Transit Usage",
+        novel_location_ratio: "Location Novelty",
+    };
+
+    const displayName = metricNames[feedback.metric] || feedback.metric.replace(/_/g, ' ');
+
     return (
         <Card className="mb-4 border-0 shadow-lg">
             <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        {feedback.contrib > 0 ? (
-                            <TrendingUp className="w-5 h-5 text-green-500" />
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            {feedback.contrib > 0 ? (
+                                <TrendingUp className="w-5 h-5 text-green-500" />
+                            ) : (
+                                <TrendingDown className="w-5 h-5 text-red-500" />
+                            )}
+                            <CardTitle className="text-base capitalize">{displayName}</CardTitle>
+                            <span className={`text-xs font-semibold px-2 py-1 rounded ${feedback.contrib > 0
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                                }`}>
+                                {feedback.contrib > 0 ? '+' : ''}{round3(feedback.contrib)}
+                            </span>
+                        </div>
+                        {isExpanded ? (
+                            <ChevronUp className="w-5 h-5 text-gray-500" />
                         ) : (
-                            <TrendingDown className="w-5 h-5 text-red-500" />
+                            <ChevronDown className="w-5 h-5 text-gray-500" />
                         )}
-                        <CardTitle className="text-base capitalize">{feedback.metric}</CardTitle>
-                        <span className={`text-xs font-semibold px-2 py-1 rounded ${feedback.contrib > 0
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                            }`}>
-                            {feedback.contrib > 0 ? '+' : ''}{round3(feedback.contrib)}
-                        </span>
                     </div>
-                    {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-gray-500" />
-                    ) : (
-                        <ChevronDown className="w-5 h-5 text-gray-500" />
-                    )}
+                    {/* Always visible values */}
+                    <div className="flex gap-4 text-xs text-gray-500 pl-7">
+                        <div>
+                            <span className="font-medium text-gray-700">Value:</span> {round3(feedback.vt)}
+                        </div>
+                        <div>
+                            <span className="font-medium text-gray-700">Base:</span> {round3(feedback.bt)}
+                        </div>
+                    </div>
                 </div>
             </CardHeader>
             {isExpanded && (
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-2 p-2 bg-gray-50 rounded-lg">
-                        <div className="text-sm">
-                            <p className="text-gray-500">Value Today (vt)</p>
-                            <p className="font-semibold text-gray-800">{round3(feedback.vt)}</p>
-                        </div>
-                        <div className="text-sm">
-                            <p className="text-gray-500">Baseline (bt)</p>
-                            <p className="font-semibold text-gray-800">{round3(feedback.bt)}</p>
-                        </div>
+                        {/* Removed redundant simple values, kept r and contrib */}
                         <div className="text-sm">
                             <p className="text-gray-500">Correlation (r)</p>
                             <p className="font-semibold text-gray-800">{round3(feedback.r)}</p>
@@ -99,26 +116,30 @@ export function MetricFeedbackCard({ feedback }: { feedback: IMetricFeedback }) 
             )}
         </Card>
     );
-}
+});
 import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 
 // Metric hooks and stores
 import { useDailyMoving } from "@/hooks/metric/useDailyMoving";
 import { useDailySpending } from "@/hooks/metric/useDailySpending";
-import { useHealthyFoodRatio } from "@/hooks/metric/useHealthyFoodRatio";
+// import { useHealthyFoodRatio } from "@/hooks/metric/useHealthyFoodRatio";
 import { useTodoAffect } from "@/hooks/metric/useTodoAffect";
 import { useNightOutFeq } from "@/hooks/metric/useNightOutFeq";
+import { usePublicTransitRatio } from "@/hooks/metric/usePublicTransitRatio";
+import { useNovelLocationRatio } from "@/hooks/metric/useNovelLocationRatio";
+import { getCheckins } from "@/apis/backend/v2/checkin";
 
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import useInvoiceStore from "@/store/invoiceStore";
-import usePlantScanStore from "@/store/plantScanStore";
+// import usePlantScanStore from "@/store/plantScanStore";
 import { useTodoStore } from "@/store/todoStore";
 import { useNightOutHistoryStore } from "@/store/nightOutHistoryStore";
 import { getDistanceToday } from "@/apis/backend/v2/location";
-import { useAppStore } from "@/store/appStore";
+// import { useAppStore } from "@/store/appStore";
 
 export default function MetricsPage() {
     const [isUpdatingAll, setIsUpdatingAll] = useState(false);
@@ -127,24 +148,33 @@ export default function MetricsPage() {
     // Metric hooks
     const { callDailyMoving } = useDailyMoving();
     const { callDailySpending } = useDailySpending();
-    const { callHealthyFoodRatio } = useHealthyFoodRatio();
+    // const { callHealthyFoodRatio } = useHealthyFoodRatio();
     const { callTodoAffect } = useTodoAffect();
     const { callNightOutFeq } = useNightOutFeq();
+    const { callPublicTransitRatio } = usePublicTransitRatio();
+    const { callNovelLocationRatio } = useNovelLocationRatio();
 
     // Stores for inputs
     const preAppAnswers = usePreAppSurveyStore((s) => s.answers);
     const invoices = useInvoiceStore((s) => s.invoices);
-    const plantScans = usePlantScanStore((s) => s.scans);
+    // const plantScans = usePlantScanStore((s) => s.scans);
     const todos = useTodoStore((s) => s.todos);
     const nightOutHistory = useNightOutHistoryStore((s) => s.records);
-    const currentOcean = useAppStore((s) => s.ocean);
+    // const currentOcean = useAppStore((s) => s.ocean);
+    const toast = useToast();
 
     // Get all feedbacks - simple selector
     const allFeedbacks = useMemo(() => {
         const arr = Object.values(feedbacks);
-        return arr.sort(
-            (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        );
+        return arr.sort((a, b) => {
+            const timeA = new Date(a.timestamp).getTime();
+            const timeB = new Date(b.timestamp).getTime();
+            if (timeB !== timeA) {
+                return timeB - timeA; // Newest first
+            }
+            // Stable sort tie-breaker by metric name
+            return a.metric.localeCompare(b.metric);
+        });
     }, [feedbacks]);
 
     // Single function to update all metrics
@@ -191,7 +221,7 @@ export default function MetricsPage() {
                     })
                     .reduce((sum, inv) => sum + (parseFloat(inv.totals?.grand_total || '0') || 0), 0);
 
-                const base_avg = 450000; // Hardcoded as per request
+                const base_avg = parseFloat(preAppAnswers?.avg_daily_spend || '0') || 500000;
 
                 // Only call if there's spending or to update with 0 if that's desired, 
                 // but usually we want to track even if 0 if we are tracking daily. 
@@ -205,6 +235,8 @@ export default function MetricsPage() {
             }
 
             // 3) Healthy food ratio (plant scans)
+            /* 3) Healthy food ratio (plant scans) - REMOVED */
+            /*
             try {
                 const totalScans = plantScans.length;
                 if (totalScans > 0) {
@@ -221,6 +253,7 @@ export default function MetricsPage() {
             } catch (err) {
                 console.error('healthyFoodRatio failed:', err);
             }
+            */
 
             // 4) Todo affect
             try {
@@ -238,6 +271,54 @@ export default function MetricsPage() {
                 if (night_out_count > 0) await callNightOutFeq(night_out_count, base_night_out);
             } catch (err) {
                 console.error('nightOutFeq failed:', err);
+            }
+
+            // 6) Public Transit and Novel Location (from Checkins)
+            try {
+                const checkinsRes = await getCheckins();
+                const allCheckins = checkinsRes?.data?.checkins || [];
+
+                // Helper to get date diff in days
+                const getDaysDiff = (dateStr: string) => {
+                    const d1 = new Date(dateStr);
+                    const d2 = new Date();
+                    d1.setHours(0, 0, 0, 0);
+                    d2.setHours(0, 0, 0, 0);
+                    return Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+                };
+
+                // Filter last 6 days (0 to 5)
+                const recentCheckins = allCheckins.filter(c => {
+                    const diff = getDaysDiff(c.createdAt);
+                    return diff >= 0 && diff < 6;
+                });
+
+                // Split: Recent (0-2) vs Past (3-5)
+                const groupRecent = recentCheckins.filter(c => getDaysDiff(c.createdAt) < 3);
+                const groupPast = recentCheckins;
+
+                // Public Transit Ratio
+                // user rule: "from 6-3 days ago is total trip, 3 most recent days is public transit trips"
+                const public_transit_trips = groupRecent.length;
+                const total_trips = groupPast.length;
+                const pt_base_likert = parseFloat(preAppAnswers?.public_transit_ratio || '3') || 3;
+
+                if (public_transit_trips > 0 || total_trips > 0) {
+                    await callPublicTransitRatio(public_transit_trips, total_trips, pt_base_likert);
+                }
+
+                // Novel Location Ratio
+                // user rule: "similar for location novel" -> compare unique locations
+                const locations_now = Array.from(new Set(groupRecent.map(c => c.location)));
+                const locations_prev = Array.from(new Set(groupPast.map(c => c.location)));
+                const nl_base_likert = parseFloat(preAppAnswers?.novel_location_ratio || '3') || 3;
+
+                if (locations_now.length > 0 || locations_prev.length > 0) {
+                    await callNovelLocationRatio(locations_prev, locations_now, nl_base_likert);
+                }
+
+            } catch (err) {
+                console.error('Checkin metrics failed:', err);
             }
 
             toast.success('Metric updates triggered');

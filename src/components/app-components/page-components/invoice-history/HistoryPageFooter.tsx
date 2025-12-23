@@ -2,7 +2,8 @@ import React from "react";
 import { ScanLine } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import useInvoiceStore from "@/store/invoiceStore";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 import ocrInvoice from "@/apis/backend/v1/ai-forward/image-processing/ocr-invoice";
 
 interface HistoryPageFooterProps {
@@ -14,6 +15,7 @@ interface HistoryPageFooterProps {
 const HistoryPageFooter: React.FC<HistoryPageFooterProps> = ({ onScan, onImport }) => {
   const addInvoice = useInvoiceStore((state) => state.addInvoice);
   const setOcring = useInvoiceStore((state) => state.setOcring);
+  const toast = useToast();
 
   const defaultScan = async () => {
     setOcring(true);

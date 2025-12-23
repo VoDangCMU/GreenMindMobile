@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import dailySpending from '@/apis/backend/v1/ai-forward/metrics/dailySpending';
 // import dailySpending from '@/apis/ai/monitor_ocean/avg_daily_spend';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
+import { useToast } from '@/hooks/useToast';
 import { useOcean } from '@/hooks/v1/useOcean';
 import { useMetricFeedbackStore } from '@/store/v2/metricFeedbackStore';
 
@@ -10,6 +11,7 @@ export const useDailySpending = () => {
     const [error, setError] = useState<string | null>(null);
     const { ocean, saveOcean } = useOcean();
     const { setFeedback } = useMetricFeedbackStore();
+    const toast = useToast();
 
     const callDailySpending = async (daily_total: number, base_avg: number) => {
         if (!ocean) {

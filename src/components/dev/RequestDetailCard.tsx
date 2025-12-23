@@ -3,9 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { X, Copy, Download } from "lucide-react";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 
 export default function RequestDetailCard({ request, onClose }: { request: any; onClose: () => void }) {
+  const toast = useToast();
   if (!request) return null;
 
   // Pretty-print helper: accepts string or object

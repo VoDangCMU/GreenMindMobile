@@ -1,12 +1,10 @@
-import { storageKey } from "@/store/authStore";
+import { useAuthStore } from "@/store/authStore";
 
 export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return null;
-    const data = JSON.parse(raw);
-    return data.state.tokens.access_token || null;
+    // Read directly from store state (in-memory) which is faster and more reliable during state transitions
+    const state = useAuthStore.getState();
+    return state.tokens?.access_token || null;
   } catch {
     return null;
   }

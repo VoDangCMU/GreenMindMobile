@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Copy, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 
 export default function CatalogueCard({ onClose, topOffset = 48 }: { onClose?: () => void; topOffset?: number }) {
+  const toast = useToast();
   const routes = [
     { path: '/', label: 'Login' },
     { path: '/register', label: 'Register' },

@@ -23,6 +23,16 @@ import submitUserAnswer from "@/apis/backend/v2/survey/submitUserAnswer";
 import { useAuthStore } from "@/store/authStore";
 import getAllUserAnswer from "@/apis/backend/v2/survey/getAllUserAnswer";
 
+const getLatestUserAnswer = (userAnswers: any[] = []) => {
+  if (!userAnswers.length) return null;
+
+  return userAnswers.reduce((latest, current) => {
+    return new Date(current.timestamp) > new Date(latest.timestamp)
+      ? current
+      : latest;
+  });
+};
+
 /* =========================
    Progress Icon Bar
 ========================= */
@@ -346,27 +356,50 @@ export default function QuizPage() {
         };
 
         for (const qa of all_answers.data) {
-          
           for (const item of qa.scenario.questionSet.items) {
+
+            const latestAnswer = getLatestUserAnswer(item.userAnswers);
+
+            const answerText = latestAnswer?.answer ?? '';
+            const intent = item.behaviorNormalized ?? 'unknown';
+
             new_calculate_params.answers.push({
               trait: item.trait ?? 'O',
               template_id: item.templateId ?? '',
-              intent: item.behaviorNormalized ?? 'unknown',
+              intent,
               question: item.question,
-              ans: item.userAnswers.find(ua => ua.questionId === item.id)?.answer ?? '',
-              score: SCORE_PER_QUESTION_TYPE[item.behaviorNormalized ?? 'unknown']?.[item.userAnswers.find(ua => ua.questionId === item.id)?.answer ?? ''] ?? 0,
-              key: KEY_PER_QUESTION_TYPE[item.behaviorNormalized ?? 'unknown'] ?? 'pos',
-              kind: item.behaviorNormalized ?? 'unknown',
+              ans: answerText,
+              score: SCORE_PER_QUESTION_TYPE[intent]?.[answerText] ?? 0,
+              key: KEY_PER_QUESTION_TYPE[intent] ?? 'pos',
+              kind: intent,
             });
           }
         }
 
         const res = await calculate_ocean(new_calculate_params);
         setShowOceanResult(true);
-        setOceanResult(res.scores);
-        toast.success('OCEAN calculated');
 
-        setAppOcean(ensureUserOcean(res.scores));
+        // Filter traits: Only update traits that are present in the current question set
+        const relevantTraits = new Set(questions.map(q => q.trait).filter(Boolean));
+
+        let initialOcean = { ...currentOcean };
+        // If currentOcean is missing (null/undefined), initialize with defaults or zeros
+        if (!initialOcean.O) initialOcean = { O: 50, C: 50, E: 50, A: 50, N: 50 }; // Or 0 if preferred, but existing code used currentOcean
+
+        const mergedScores = { ...initialOcean };
+
+        // Only update relevant traits
+        for (const t of relevantTraits) {
+          const traitKey = t as keyof IOceanTraitScore;
+          if (res.scores[traitKey] !== undefined) {
+            mergedScores[traitKey] = res.scores[traitKey];
+          }
+        }
+
+        setOceanResult(mergedScores as IOceanTraitScore);
+        toast.success('OCEAN calculated (Partial Update)');
+
+        setAppOcean(ensureUserOcean(mergedScores as IOceanTraitScore));
       } catch (err) {
         console.error('calculate_ocean failed:', err);
 
@@ -394,7 +427,7 @@ export default function QuizPage() {
 
   /* Footer */
   const FooterContent = (
-    <div className="w-full bg-white border-t" style={{paddingBottom: "env(safe-area-inset-bottom)",}}>
+    <div className="w-full bg-white border-t" style={{ paddingBottom: "env(safe-area-inset-bottom)", }}>
       <div className="max-w-md mx-auto p-3">
         {!isLastQuestion && (
           <Button
@@ -418,8 +451,8 @@ export default function QuizPage() {
             {submitting
               ? "Đang gửi..."
               : allAnswered
-              ? "Submit"
-              : "Trả lời tất cả để gửi"}
+                ? "Submit"
+                : "Trả lời tất cả để gửi"}
           </Button>
         )}
       </div>
@@ -491,7 +524,7 @@ export default function QuizPage() {
                 <Button onClick={() => {
                   setShowOceanResult(false);
                   navigator(-1);
-                  }}>Close</Button>
+                }}>Close</Button>
               </div>
             </div>
           </div>

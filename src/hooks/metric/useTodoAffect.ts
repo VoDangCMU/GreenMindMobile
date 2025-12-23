@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import todoAffect from '@/apis/backend/v1/ai-forward/metrics/todoAffect';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
+import { useToast } from '@/hooks/useToast';
 import { usePreAppSurveyStore } from '@/store/preAppSurveyStore';
 import { useOcean } from '@/hooks/v1/useOcean';
 import { useMetricFeedbackStore } from '@/store/v2/metricFeedbackStore';
@@ -11,6 +12,7 @@ export const useTodoAffect = () => {
     const { ocean, saveOcean } = useOcean();
     const { answers } = usePreAppSurveyStore();
     const { setFeedback } = useMetricFeedbackStore();
+    const toast = useToast();
 
     const callTodoAffect = async (todos: ITodo[]) => {
         if (!ocean) {

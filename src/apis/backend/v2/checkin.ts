@@ -15,6 +15,7 @@ export interface ICheckinUser {
   dateOfBirth: string;
   createdAt: string;
   updatedAt: string;
+  segmentId?: string; // Added from new spec
 }
 
 // Detailed checkin returned by create endpoint
@@ -65,6 +66,30 @@ export interface IGetCheckinsResponse {
 
 export async function getCheckins() {
   const res = await BackendInstance.get<IGetCheckinsResponse>(`/checkins/get-checkins`, { headers: authHeader() });
+  return res.data;
+}
+
+// New API: Get checkins by period
+export interface ICheckinByPeriodItem {
+  id: string;
+  latitude: string;
+  longitude: string;
+  location: string;
+  createdAt: string;
+  updatedAt: string;
+  user: ICheckinUser;
+}
+
+export interface IGetCheckinsByPeriodResponse {
+  message: string;
+  data: {
+    checkins: ICheckinByPeriodItem[];
+    count: number;
+  };
+}
+
+export async function getCheckinsByPeriod() {
+  const res = await BackendInstance.get<IGetCheckinsByPeriodResponse>(`/checkins/get-checkins-by-period`, { headers: authHeader() });
   return res.data;
 }
 

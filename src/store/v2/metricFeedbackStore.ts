@@ -38,6 +38,7 @@ export interface IMetricFeedbackState {
   clearFeedback: (metric: string) => void;
   getAllFeedbacks: () => IMetricFeedback[];
   getAllFeedbacksSorted: () => IMetricFeedback[]; // Get all feedbacks sorted by timestamp (newest first)
+  clearAllFeedbacks: () => void;
 }
 
 export const useMetricFeedbackStore = create<IMetricFeedbackState>()(
@@ -100,6 +101,8 @@ export const useMetricFeedbackStore = create<IMetricFeedbackState>()(
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
       },
+
+      clearAllFeedbacks: () => set({ feedbacks: {} }),
     }),
     {
       name: "metric-feedback-storage", // unique name

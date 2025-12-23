@@ -24,8 +24,8 @@ import {
 import { useAuthStore } from "@/store/authStore";
 
 import { TodoItemComponent } from "@/components/app-components/page-components/todo/TodoItem";
-import {AppBottomNavBar} from "@/pages/HomePage";
-import OceanPersonalityCard from "@/components/app-components/commons/OceanPersonalityCard";
+import { AppBottomNavBar } from "@/pages/HomePage";
+
 
 export default function TodoPage() {
   const { todos, addTodo, addSubtask, removeTodo, setTodos } = useTodoStore();
@@ -265,8 +265,8 @@ export default function TodoPage() {
         {showFeedback && todoFeedback && (
           <MetricFeedbackCard feedback={todoFeedback} />
         )}
-        
-        <OceanPersonalityCard />
+
+
         {/* Stats Card */}
         <Card className="border-0 shadow-md bg-gradient-to-r from-greenery-50 to-blue-50">
           <CardContent className="p-4">

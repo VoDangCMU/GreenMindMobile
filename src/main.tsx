@@ -101,6 +101,18 @@ initDevTools();
 // This targets the specific error: "A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received"
 // We only suppress this exact message to avoid hiding other errors.
 if (typeof window !== 'undefined') {
+
+
+  // Monkey-patch console.error to suppress error logs
+  console.error = () => {
+    // Suppress all errors as requested
+  };
+
+  console.warn = () => {
+    // Suppress all warnings as requested
+  };
+  // -------------------------------------------------------------
+
   window.addEventListener('unhandledrejection', (e) => {
     try {
       const reason = (e as any).reason;
@@ -109,7 +121,7 @@ if (typeof window !== 'undefined') {
         e.preventDefault();
         // Keep a debug trace without spamming the console
         if (process.env.NODE_ENV === 'development') {
-          console.debug('[dev] suppressed noisy extension message:', msg);
+          // console.debug('[dev] suppressed noisy extension message:', msg);
         }
       }
     } catch (err) {

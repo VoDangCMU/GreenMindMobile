@@ -5,9 +5,9 @@ import InvoiceDetailModal from "@/components/app-components/page-components/invo
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/useToast';
 import ocrInvoice from '@/apis/backend/v1/ai-forward/image-processing/ocr-invoice';
-import HistoryPageFooter from "@/components/app-components/page-components/invoice-history/HistoryPageFooter";
+import PageActionFooter from "@/components/common/PageActionFooter";
 import useBillStore from "@/store/invoiceStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import invoiceApi from "@/apis/backend/v1/invoice";
@@ -33,6 +33,7 @@ export default function InvoiceHistoryPage() {
   const location = useLocation();
   const addInvoice = useBillStore((state) => state.addInvoice);
   const setOcring = useBillStore((state) => state.setOcring);
+  const toast = useToast();
 
   // Scan handler (can be triggered from footer or auto-start)
   const handleScan = async () => {
@@ -40,7 +41,8 @@ export default function InvoiceHistoryPage() {
     let photo;
     try {
       photo = await Camera.getPhoto({
-        quality: 90,
+        quality: 60,
+        width: 1024,
         resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
         saveToGallery: false,
@@ -189,7 +191,7 @@ export default function InvoiceHistoryPage() {
           ].filter(Boolean)}
         />
       }
-      footer={<HistoryPageFooter onScan={handleScan} onImport={handleImport} />}
+      footer={<PageActionFooter onScan={handleScan} onImport={handleImport} />}
     >
       <div className="flex flex-col bg-gradient-to-br">
         <div className="flex-1 w-full mx-auto px-3 pb-28">
@@ -199,7 +201,7 @@ export default function InvoiceHistoryPage() {
               <MetricFeedbackCard feedback={spendingFeedback} />
             </div>
           )}
-          
+
           <InvoiceList
             invoices={invoices}
             onInvoiceClick={(invoice) => {

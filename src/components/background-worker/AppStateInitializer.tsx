@@ -24,40 +24,52 @@ function mapApiResponseToStore(apiData: any): PreAppSurveyAnswers {
 
 export function AppStateInitializer() {
   const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.tokens?.access_token);
   const setAnswers = usePreAppSurveyStore((s) => s.setAnswers);
   const { call } = useFetch();
   const { setOcean } = useOcean();
 
   useEffect(() => {
+    // Only initialize if we have both user ID and a token
+    if (!user?.id || !token) {
+      // Optional: clear state if logged out?
+      return;
+    }
+
+    console.log("AppStateInitializer: Initializing for user", user.id);
+
     call([
       {
-        fn: () => getUserOcean(user?.id || ""),
+        fn: () => getUserOcean(user.id),
         onSuccess: (data) => {
+          console.log("AppStateInitializer: Ocean fetched");
           setOcean(data.scores);
         },
-        onFailed: () => {
-          createUserOcean(user?.id || "", DEFAULT_OCEAN);
+        onFailed: (err) => {
+          console.error("AppStateInitializer: Failed to fetch ocean", err);
+          createUserOcean(user.id, DEFAULT_OCEAN).catch(e => console.error("Create ocean failed", e));
           setOcean(DEFAULT_OCEAN);
         },
       },
       {
-        fn: () => getPreAppSurveyByUser(user?.id || ""),
+        fn: () => getPreAppSurveyByUser(user.id),
         onSuccess: (data) => {
+          console.log("AppStateInitializer: Survey fetched");
           const normalizedData = mapApiResponseToStore(data);
           setAnswers(normalizedData);
         },
-        onFailed: () => {
-          console.log("Failed to fetch pre-app survey");
+        onFailed: (err) => {
+          console.warn("AppStateInitializer: Failed to fetch pre-app survey (might not exist)", err);
         },
       }
     ]);
-  }, [user?.id]);
+  }, [user?.id, token]); // Re-run if user or token changes
 
   // Listen for app state changes (pause/resume)
   useEffect(() => {
     const appStateListener = App.addListener("appStateChange", ({ isActive }) => {
       console.log("App state changed. isActive:", isActive);
-      
+
       if (isActive) {
         console.log("App resumed from background");
         // App is back to foreground - state should be preserved by Zustand persist

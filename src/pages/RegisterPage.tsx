@@ -11,11 +11,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { DatePickerField } from "@/components/native-wrapper/DatePicker";
 import { Drawer } from "vaul";
 import React from "react";
-import { getCountryNames, getCitiesByCountry } from "@/apis/countries";
+import { getCountryNames, getCitiesByCountry, searchCountryNames, searchCityNames } from "@/apis/countries";
 import { registerUser } from "@/apis/backend/v2/register";
 import type { TRegion } from "@/apis/backend/v2/register";
 import { getGeocode } from "@/apis/nominatim/reverseGeocode";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 
 // ========== STEP 1 COMPONENT ==========
 interface Step1Props {
@@ -104,11 +105,10 @@ function RegisterFormStep1({ formData, errors, isLoading, handleInputChange, han
             <button
               type="button"
               onClick={() => handleGenderSelect("Male")}
-              className={`flex-1 flex items-center justify-center space-x-2 h-12 rounded-lg border-2 transition-all ${
-                formData.gender === "Male"
-                  ? "bg-greenery-500 text-white border-greenery-500"
-                  : "border-gray-300 text-gray-700 hover:border-greenery-300 hover:bg-greenery-50"
-              }`}
+              className={`flex-1 flex items-center justify-center space-x-2 h-12 rounded-lg border-2 transition-all ${formData.gender === "Male"
+                ? "bg-greenery-500 text-white border-greenery-500"
+                : "border-gray-300 text-gray-700 hover:border-greenery-300 hover:bg-greenery-50"
+                }`}
             >
               <Mars className="w-5 h-5" />
               <span>Male</span>
@@ -117,11 +117,10 @@ function RegisterFormStep1({ formData, errors, isLoading, handleInputChange, han
             <button
               type="button"
               onClick={() => handleGenderSelect("Female")}
-              className={`flex-1 flex items-center justify-center space-x-2 h-12 rounded-lg border-2 transition-all ${
-                formData.gender === "Female"
-                  ? "bg-pink-500 text-white border-pink-500"
-                  : "border-gray-300 text-gray-700 hover:border-pink-300 hover:bg-pink-50"
-              }`}
+              className={`flex-1 flex items-center justify-center space-x-2 h-12 rounded-lg border-2 transition-all ${formData.gender === "Female"
+                ? "bg-pink-500 text-white border-pink-500"
+                : "border-gray-300 text-gray-700 hover:border-pink-300 hover:bg-pink-50"
+                }`}
             >
               <Venus className="w-5 h-5" />
               <span>Female</span>
@@ -243,15 +242,14 @@ function RegisterFormStep2(props: Step2Props) {
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-600">Password strength</span>
                 <span
-                  className={`font-medium ${
-                    passwordStrength.strength <= 25
-                      ? "text-red-600"
-                      : passwordStrength.strength <= 50
+                  className={`font-medium ${passwordStrength.strength <= 25
+                    ? "text-red-600"
+                    : passwordStrength.strength <= 50
                       ? "text-yellow-600"
                       : passwordStrength.strength <= 75
-                      ? "text-blue-600"
-                      : "text-green-600"
-                  }`}
+                        ? "text-blue-600"
+                        : "text-green-600"
+                    }`}
                 >
                   {passwordStrength.label}
                 </span>
@@ -594,6 +592,7 @@ export default function RegisterPage() {
   const setUser = useAuthStore((state) => state.setUser);
   const setTokens = useAuthStore((state) => state.setTokens);
   const navigate = useNavigate();
+  const toast = useToast();
 
   // Step 2 states
   const [countries, setCountries] = React.useState<string[]>([]);
@@ -624,7 +623,7 @@ export default function RegisterPage() {
 
         // Nominatim search API returns array, take first result
         const data = Array.isArray(result) ? result[0] : result;
-        
+
         if (!data || !data.lat) {
           console.log("No valid result from geocode");
           setDetectedRegion("");
@@ -828,11 +827,14 @@ export default function RegisterPage() {
     }
   };
 
-  const filteredCountries = countries.filter((c) =>
-    c.toLowerCase().includes(searchCountry.toLowerCase())
+  const filteredCountries = React.useMemo(() =>
+    searchCountryNames(searchCountry, countries),
+    [searchCountry, countries]
   );
-  const filteredCities = cities.filter((c) =>
-    c.toLowerCase().includes(searchCity.toLowerCase())
+
+  const filteredCities = React.useMemo(() =>
+    searchCityNames(searchCity, cities),
+    [searchCity, cities]
   );
 
   return (

@@ -113,6 +113,22 @@ export const getCitiesByCountry = (country: string): City[] => {
 };
 
 
-// Lấy toàn bộ
-export const getAllCountries = (): Country[] => countries;
-export const getAllCities = (): City[] => cities;
+// Helper để chuẩn hóa chuỗi (bỏ dấu, lowercase)
+export const normalizeStr = (str: string): string => {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+};
+
+// Tìm kiếm danh sách tên quốc gia (accent-insensitive)
+export const searchCountryNames = (query: string, allNames: string[]): string[] => {
+  if (!query.trim()) return allNames;
+  const normalizedQuery = normalizeStr(query);
+  return allNames.filter(name => normalizeStr(name).includes(normalizedQuery));
+};
+
+// Tìm kiếm danh sách tên thành phố (accent-insensitive)
+export const searchCityNames = (query: string, allNames: string[]): string[] => {
+  if (!query.trim()) return allNames;
+  const normalizedQuery = normalizeStr(query);
+  return allNames.filter(name => normalizeStr(name).includes(normalizedQuery));
+};
+

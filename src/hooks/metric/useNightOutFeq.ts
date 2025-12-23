@@ -1,7 +1,8 @@
 import { useState } from 'react';
 // import nightOut from '@/apis/backend/ai-forward/metrics/nightOut';
 import nightOut from '@/apis/ai/monitor_ocean/night_out_freq';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
+import { useToast } from '@/hooks/useToast';
 import { useOcean } from '@/hooks/v1/useOcean';
 import { useMetricFeedbackStore } from '@/store/v2/metricFeedbackStore';
 
@@ -11,6 +12,7 @@ export const useNightOutFeq = () => {
     const [error, setError] = useState<string | null>(null);
     const { ocean, saveOcean } = useOcean();
     const { setFeedback } = useMetricFeedbackStore();
+    const toast = useToast();
 
     const callNightOutFeq = async (night_out_count: number, base_night_out: number) => {
         if (!ocean) {

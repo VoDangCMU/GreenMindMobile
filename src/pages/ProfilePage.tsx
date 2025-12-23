@@ -29,7 +29,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyData } from "@/hooks/v1/usePreAppSurveyData";
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
+import { useToast } from '@/hooks/useToast';
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
 // import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
@@ -39,7 +40,9 @@ import NightOutStatusCard from "@/components/app-components/page-components/prof
 import { useAuthStore } from "@/store/authStore";
 import { AppBottomNavBar } from "./HomePage";
 import OceanRadarChart from "@/components/hardcore-coder/OceanCard";
+import NightOutCard from "@/components/app-components/page-components/home/NightOutCard";
 import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
+import ProfileMetricsComparisonCard from "@/components/app-components/page-components/profile/ProfileMetricsComparisonCard";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -48,6 +51,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const setBypassAuthGate = useAuthStore((state) => state.setBypassAuthGate);
   // const ocean = useAppStore((state) => state.ocean) || MOCKED_OCEAN_SCORE;
+  const toast = useToast();
 
   // Get Pre-App Survey data
   const { answers, isCompleted, completedAt } = usePreAppSurveyData();
@@ -238,7 +242,25 @@ export default function ProfilePage() {
 
   return (
     <SafeAreaLayout
-      header={<AppHeader showBack title="Profile"></AppHeader>}
+      header={<AppHeader
+        showBack
+        title="Profile"
+        rightActions={[
+          <Button
+            key="logout"
+            variant="ghost"
+            size="icon"
+            className="text-red-600 hover:bg-red-50 rounded-full"
+            onClick={() => {
+              clearAuth();
+              setBypassAuthGate(false);
+              navigate("/", { replace: true });
+            }}
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
+        ]}
+      ></AppHeader>}
       footer={<AppBottomNavBar />}
     >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
@@ -413,8 +435,14 @@ export default function ProfilePage() {
         {/* Night Out Status Card */}
         <NightOutStatusCard />
 
+        {/* Night Out Activity Chart */}
+        <NightOutCard />
+
         {/* Location History Card */}
         <LocationHistoryCard />
+
+        {/* Metrics Comparison Card */}
+        <ProfileMetricsComparisonCard />
 
         {/* Level Progress */}
         <Card className="border-0 shadow-md">
@@ -566,18 +594,6 @@ export default function ProfilePage() {
                 </Button>
               );
             })}
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-12 text-red-600 hover:bg-red-50"
-              onClick={() => {
-                clearAuth();
-                setBypassAuthGate(false);
-                navigate("/", { replace: true });
-              }}
-            >
-              <LogOut className="w-4 h-4 mr-3" />
-              Sign Out
-            </Button>
           </CardContent>
         </Card>
       </div>

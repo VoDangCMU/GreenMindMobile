@@ -9,16 +9,63 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 import { Trash, Copy, ChevronDown, ChevronUp, Check } from "lucide-react";
 import RequestDetailCard from "@/components/dev/RequestDetailCard";
 import { useDevSettingsStore } from "@/store/devSettingsStore";
+import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
 import { useOcean } from "@/hooks/v1/useOcean";
 import { AppBottomNavBar } from "./HomePage";
+import servers from "@/apis/instances/servers";
+
+function ManualOceanUpdate() {
+  const { saveOcean, fetchOcean } = useOcean();
+  const [val, setVal] = useState("0.5");
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
+
+  const handleUpdate = async () => {
+    const num = parseFloat(val);
+    if (isNaN(num) || num < 0 || num > 1) {
+      toast.error("Please enter a value between 0 and 1");
+      return;
+    }
+    setLoading(true);
+    try {
+      await saveOcean({ O: num, C: num, E: num, A: num, N: num });
+      await fetchOcean();
+      toast.success(`Ocean set to ${num}`);
+    } catch (err) {
+      toast.error("Failed to update ocean");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        type="number"
+        min="0"
+        max="1"
+        step="0.1"
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        className="w-20 h-9"
+        placeholder="0.5"
+      />
+      <Button variant="outline" size="sm" onClick={handleUpdate} disabled={loading}>
+        {loading ? 'Updating...' : 'Set All OCEAN'}
+      </Button>
+    </div>
+  );
+}
 
 function ResetOceanButton() {
   const { saveOcean, fetchOcean } = useOcean();
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const handleReset = async () => {
     setLoading(true);
@@ -48,6 +95,7 @@ export default function DevSettingsPage() {
   const setInspectRequests = useDevSettingsStore((s) => s.setInspectRequests);
   const setEnableLogging = useDevSettingsStore((s) => s.setEnableLogging);
   const reset = useDevSettingsStore((s) => s.reset);
+  const toast = useToast();
 
   // Helper to pretty-print JSON strings or objects
   const prettyJson = (val: any) => {
@@ -71,12 +119,12 @@ export default function DevSettingsPage() {
 
   useEffect(() => {
     const s = useDevSettingsStore.getState();
-    setBackendInput(s.backendUrl || "");
-    setAiInput(s.aiUrl || "");
+    setBackendInput(s.backendUrl || servers.VPS_HOST);
+    setAiInput(s.aiUrl || servers.AI_HOST);
 
     const unsub = useDevSettingsStore.subscribe((state) => {
-      setBackendInput(state.backendUrl || "");
-      setAiInput(state.aiUrl || "");
+      setBackendInput(state.backendUrl || servers.VPS_HOST);
+      setAiInput(state.aiUrl || servers.AI_HOST);
     });
 
     return unsub;
@@ -118,7 +166,7 @@ export default function DevSettingsPage() {
   };
 
   return (
-    <SafeAreaLayout 
+    <SafeAreaLayout
       header={<AppHeader showBack title="Dev Settings" />}
       footer={<AppBottomNavBar />}
     >
@@ -200,6 +248,57 @@ export default function DevSettingsPage() {
               </div>
             </div>
 
+            <div className="flex items-start space-x-3">
+              <Checkbox
+                id="disableErrorToasts"
+                checked={useDevSettingsStore((s) => s.disableErrorToasts)}
+                onCheckedChange={() => {
+                  useDevSettingsStore.getState().toggleDisableErrorToasts();
+                }}
+                className="mt-1"
+              />
+              <div>
+                <Label htmlFor="disableErrorToasts" className="text-sm font-medium cursor-pointer">
+                  Disable Error Toasts
+                </Label>
+                <div className="text-xs text-gray-500">Suppress error notifications.</div>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <Checkbox
+                id="disableWarningToasts"
+                checked={useDevSettingsStore((s) => s.disableWarningToasts)}
+                onCheckedChange={() => {
+                  useDevSettingsStore.getState().toggleDisableWarningToasts();
+                }}
+                className="mt-1"
+              />
+              <div>
+                <Label htmlFor="disableWarningToasts" className="text-sm font-medium cursor-pointer">
+                  Disable Warning Toasts
+                </Label>
+                <div className="text-xs text-gray-500">Suppress warning notifications.</div>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <Checkbox
+                id="disableInfoToasts"
+                checked={useDevSettingsStore((s) => s.disableInfoToasts)}
+                onCheckedChange={() => {
+                  useDevSettingsStore.getState().toggleDisableInfoToasts();
+                }}
+                className="mt-1"
+              />
+              <div>
+                <Label htmlFor="disableInfoToasts" className="text-sm font-medium cursor-pointer">
+                  Disable Info/Success Toasts
+                </Label>
+                <div className="text-xs text-gray-500">Suppress info and success notifications.</div>
+              </div>
+            </div>
+
             {/* Backend / AI URL overrides */}
             <div className="pt-3 space-y-3">
               <div>
@@ -214,9 +313,32 @@ export default function DevSettingsPage() {
                   />
                   <Button size="sm" variant="ghost" aria-label="Save backend URL" onClick={() => { useDevSettingsStore.getState().setBackendUrl(backendInput); toast.success('Backend URL saved'); }}>
                     <Check className="w-4 h-4" />
-                  </Button> 
+                  </Button>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Override the backend API base URL for development (persisted).</div>
+                <div className="flex items-start space-x-3 mt-3">
+                  <Checkbox
+                    id="useVpsBackend"
+                    checked={backendInput === "https://green-api-vps.khoav4.com/"}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        const url = "https://green-api-vps.khoav4.com/";
+                        localStorage.setItem("BACKEND_URL_OVERRIDE", url);
+                        useDevSettingsStore.getState().setBackendUrl(url);
+                      } else {
+                        localStorage.removeItem("BACKEND_URL_OVERRIDE");
+                        useDevSettingsStore.getState().setBackendUrl("");
+                      }
+                      window.location.reload();
+                    }}
+                    className="mt-1"
+                  />
+                  <div>
+                    <Label htmlFor="useVpsBackend" className="text-sm font-medium cursor-pointer">
+                      Use VPS Backend
+                    </Label>
+                    <div className="text-xs text-gray-500">Switch between default and VPS (green-api-vps.khoav4.com). Reloads on change.</div>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -231,7 +353,7 @@ export default function DevSettingsPage() {
                   />
                   <Button size="sm" variant="ghost" aria-label="Save AI URL" onClick={() => { useDevSettingsStore.getState().setAiUrl(aiInput); toast.success('AI URL saved'); }}>
                     <Check className="w-4 h-4" />
-                  </Button> 
+                  </Button>
                 </div>
                 <div className="text-xs text-gray-500 mt-1">Override the AI base URL for development (persisted).</div>
               </div>
@@ -287,7 +409,7 @@ export default function DevSettingsPage() {
                                 </div>
                               </div>
 
-                              <pre className={`text-sm font-mono mt-1 break-words ${isExpanded ? '' : 'line-clamp-3'}`} style={{whiteSpace: 'pre-wrap'}}>{preview}</pre>
+                              <pre className={`text-sm font-mono mt-1 break-words ${isExpanded ? '' : 'line-clamp-3'}`} style={{ whiteSpace: 'pre-wrap' }}>{preview}</pre>
 
                               {isExpanded && (
                                 <div className="mt-2 text-xs text-muted-foreground">
@@ -337,7 +459,7 @@ export default function DevSettingsPage() {
                         <li key={i} className="p-2">
                           <div className="flex items-start gap-3">
                             <button onClick={(e) => { e.stopPropagation(); openRequestDetail(r); }} aria-label="Open request detail" className="p-1 rounded-md hover:bg-gray-100">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" /><circle cx="12" cy="12" r="3" /></svg>
                             </button>
 
                             <div className={`text-[11px] font-semibold px-2 py-0.5 rounded ${statusClass} shrink-0`}>{statusText}</div>
@@ -443,12 +565,31 @@ export default function DevSettingsPage() {
               </CardContent>
             </Card>
 
-            <div className="pt-3 flex items-center gap-2">
-              <Button variant="outline" onClick={() => { reset(); toast.success("Reset dev settings"); }}>
-                Reset Dev Settings
-              </Button>
+            <div className="pt-3 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="sm" onClick={() => { reset(); toast.success("Reset dev settings"); }}>
+                  Reset Settings
+                </Button>
+                <div className="text-xs text-gray-500">Manual Ocean Control</div>
+              </div>
 
-              <ResetOceanButton />
+              <div className="flex items-center gap-2">
+                <ManualOceanUpdate />
+                <ResetOceanButton />
+              </div>
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => {
+                    useMetricFeedbackStore.getState().clearAllFeedbacks();
+                    toast.success("All metrics cleared");
+                  }}
+                >
+                  Clear All Metrics
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

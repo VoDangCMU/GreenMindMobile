@@ -2,18 +2,28 @@ import axios from "axios";
 import servers from "./servers";
 import { useDevSettingsStore } from "@/store/devSettingsStore";
 
+const getBaseUrl = () => {
+  try {
+    const override = localStorage.getItem("BACKEND_URL_OVERRIDE");
+    if (override) return override;
+  } catch (e) {
+    // Ignore error
+  }
+  return servers.VPS_HOST;
+};
+
 const AIApi = axios.create({
-  baseURL: servers.BACKEND_HOST,
+  baseURL: getBaseUrl(),
 });
 
 AIApi.interceptors.request.use(config => {
   let log = false;
   try {
     const state = useDevSettingsStore.getState();
-    config.baseURL = state.backendUrl || servers.BACKEND_HOST;
+    config.baseURL = state.backendUrl || servers.VPS_HOST;
     log = Boolean(state.axiosLogging);
   } catch (e) {
-    config.baseURL = config.baseURL || servers.BACKEND_HOST;
+    config.baseURL = config.baseURL || servers.VPS_HOST;
   }
 
   if (log) console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data || "");
