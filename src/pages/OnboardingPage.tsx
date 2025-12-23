@@ -4,56 +4,52 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Leaf,
-  Brain,
+  Info,
+  Navigation,
   Target,
-  TrendingUp,
-  Users,
-  ChevronLeft,
-  ChevronRight,
+  MapPin,
+  ShieldCheck,
+  ArrowRight
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
+import AppHeader from "@/components/common/AppHeader";
 
 const onboardingSteps = [
   {
-    icon: Leaf,
-    title: "Welcome to GREEN MIND",
-    description:
-      "Your personal guide to sustainable living through behavioral insights and personalized recommendations.",
+    icon: Info,
+    title: "Getting started",
+    description: "Register or log in to start using GreenMind. Complete the onboarding survey and open the Quiz to discover your OCEAN personality traits.",
     color: "text-greenery-600",
     bgColor: "bg-greenery-100",
   },
   {
-    icon: Brain,
-    title: "Understand Yourself",
-    description:
-      "Discover your personality traits and how they influence your daily behaviors and environmental impact.",
-    color: "text-purple-600",
-    bgColor: "bg-purple-100",
-  },
-  {
-    icon: Target,
-    title: "Track Your Impact",
-    description:
-      "Monitor your eating, commuting, and consumption habits to see their effects on environment, health, and finances.",
+    icon: Navigation,
+    title: "Navigation",
+    description: "Use the bottom navigation to quickly access main sections: Home, Surveys, Todos, Notifications, and Profile. Tap any card on Home to explore.",
     color: "text-blue-600",
     bgColor: "bg-blue-100",
   },
   {
-    icon: TrendingUp,
-    title: "Get Personalized Tips",
-    description:
-      "Receive tailored recommendations based on your personality and goals to live more sustainably.",
+    icon: Target,
+    title: "Taking the quiz",
+    description: "Answer each multiple-choice question. You can swipe left/right to navigate. All answers are saved locally until you submit.",
+    color: "text-purple-600",
+    bgColor: "bg-purple-100",
+  },
+  {
+    icon: MapPin,
+    title: "Location & Tracking",
+    description: "GreenMind can request location permissions to record distances and improve insights. You can stop tracking anytime.",
     color: "text-orange-600",
     bgColor: "bg-orange-100",
   },
   {
-    icon: Users,
-    title: "Join the Community",
-    description:
-      "Connect with others on their sustainability journey and share your progress and achievements.",
-    color: "text-pink-600",
-    bgColor: "bg-pink-100",
+    icon: ShieldCheck,
+    title: "Privacy",
+    description: "We store only necessary data (answers, basic profile, anonymized metrics). You can request data removal via Profile.",
+    color: "text-green-600",
+    bgColor: "bg-green-100",
   },
 ];
 
@@ -86,8 +82,8 @@ export default function OnboardingPage() {
     const delta = touchStartX.current - touchEndX.current;
 
     if (Math.abs(delta) > 50) {
-      if (delta > 0) handleNext(); // vuốt sang trái → next
-      else handlePrev(); // vuốt sang phải → prev
+      if (delta > 0) handleNext(); // swipe left -> next
+      else handlePrev(); // swipe right -> prev
     }
 
     touchStartX.current = null;
@@ -95,37 +91,43 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 p-4"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      <div className="max-w-sm mx-auto flex flex-col justify-between h-screen py-8">
-        <div className="flex justify-end">
-          <Link to="/home">
-            <Button
-              variant="ghost"
-              className="text-gray-500 hover:text-gray-700"
-            >
-              Skip
-            </Button>
-          </Link>
-        </div>
-
-        <div className="flex-1 flex flex-col justify-center space-y-8">
-          <Card className="border-0 shadow-sm text-center">
-            <CardContent className="p-8 space-y-6">
-              <div
-                className={`w-24 h-24 ${step.bgColor} rounded-full flex items-center justify-center mx-auto`}
+    <SafeAreaLayout
+      header={
+        <AppHeader
+          title="Onboarding"
+          showBack
+          rightActions={[
+            <Link to="/home" key="skip">
+              <Button
+                variant="ghost"
+                className="text-gray-500 hover:text-gray-700"
               >
-                <Icon className={`w-12 h-12 ${step.color}`} />
+                Skip
+              </Button>
+            </Link>,
+          ]}
+        />
+      }
+    >
+      <div
+        className="flex-1 flex flex-col h-full"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="flex-1 flex flex-col justify-center px-4 space-y-8">
+          <Card className="border-0 shadow-none bg-transparent text-center">
+            <CardContent className="p-4 space-y-6">
+              <div
+                className={`w-32 h-32 ${step.bgColor} rounded-full flex items-center justify-center mx-auto transition-colors duration-300`}
+              >
+                <Icon className={`w-16 h-16 ${step.color}`} />
               </div>
               <div className="space-y-4">
                 <h1 className="text-2xl font-bold text-gray-800">
                   {step.title}
                 </h1>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-600 leading-relaxed text-lg">
                   {step.description}
                 </p>
               </div>
@@ -136,40 +138,25 @@ export default function OnboardingPage() {
             {onboardingSteps.map((_, index) => (
               <div
                 key={index}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentStep ? "bg-greenery-500" : "bg-gray-300"
-                }`}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === currentStep ? "bg-greenery-500 w-8" : "bg-gray-300"
+                  }`}
               />
             ))}
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-8">
-          <Button
-            onClick={handlePrev}
-            disabled={currentStep === 0}
-            className="flex-1 rounded-full py-3 bg-white border border-greenery-200 text-greenery-700 shadow-sm transition-all duration-150 hover:bg-greenery-50 hover:border-greenery-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-5 h-5 mr-2" />
-            Back
-          </Button>
-          <Button
-            onClick={() => {
-              if (currentStep < onboardingSteps.length - 1) {
-                setCurrentStep(currentStep + 1);
-              } else {
-                navigate("/onboarding-quiz");
-              }
-            }}
-            className="flex-1 rounded-full py-3 bg-greenery-500 text-white shadow-sm transition-all duration-150 hover:bg-greenery-600 ml-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {currentStep === onboardingSteps.length - 1
-              ? "Take Survey"
-              : "Next"}
-            <ChevronRight className="w-5 h-5 ml-2" />
-          </Button>
+        <div className="p-6 pb-8 min-h-[100px] flex items-center justify-center">
+          {currentStep === onboardingSteps.length - 1 && (
+            <Button
+              onClick={() => navigate("/onboarding-quiz")}
+              className="w-full rounded-full py-6 bg-greenery-600 hover:bg-greenery-700 text-white shadow-lg shadow-greenery-200 animate-in fade-in zoom-in duration-300"
+            >
+              Start Quiz
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          )}
         </div>
       </div>
-    </div>
+    </SafeAreaLayout>
   );
 }

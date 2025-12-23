@@ -21,6 +21,7 @@ import {
   Bell,
   Shield,
   HelpCircle,
+  Terminal,
   LogOut,
   User,
   MapPin,
@@ -28,15 +29,20 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
 import { usePreAppSurveyData } from "@/hooks/v1/usePreAppSurveyData";
+// import { toast } from 'sonner';
+import { useToast } from '@/hooks/useToast';
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import AppHeader from "@/components/common/AppHeader";
-import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
-import CurrentLocationCard from "@/components/app-components/page-components/profile/CurrentLocationCard";
+// import { MOCKED_OCEAN_SCORE } from "@/apis/ai/calculate_ocean_score";
 import LocationHistoryCard from "@/components/app-components/page-components/profile/LocationHistoryCard";
 import HomeLocationCard from "@/components/app-components/page-components/home/HomeLocationCard";
 import NightOutStatusCard from "@/components/app-components/page-components/profile/NightOutStatusCard";
 import { useAuthStore } from "@/store/authStore";
-import BottomNav from "@/components/app-components/page-components/home/HomeBottomNav";
+import { AppBottomNavBar } from "./HomePage";
+import OceanRadarChart from "@/components/hardcore-coder/OceanCard";
+import NightOutCard from "@/components/app-components/page-components/home/NightOutCard";
+import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
+import ProfileMetricsComparisonCard from "@/components/app-components/page-components/profile/ProfileMetricsComparisonCard";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -44,10 +50,16 @@ export default function ProfilePage() {
   const user = useAuthStore((state) => state.user);
   const [isEditing, setIsEditing] = useState(false);
   const setBypassAuthGate = useAuthStore((state) => state.setBypassAuthGate);
-  const ocean = useAppStore((state) => state.ocean) || MOCKED_OCEAN_SCORE;
+  // const ocean = useAppStore((state) => state.ocean) || MOCKED_OCEAN_SCORE;
+  const toast = useToast();
 
   // Get Pre-App Survey data
   const { answers, isCompleted, completedAt } = usePreAppSurveyData();
+
+  // Get current OCEAN scores from app store
+  const oce = useAppStore((s) => s.ocean) ?? { O: 0, C: 0, E: 0, A: 0, N: 0 };
+
+  const setPreAppAnswers = usePreAppSurveyStore((s) => s.setAnswers);
 
   console.log("Pre-App Survey Data:", { answers, isCompleted, completedAt });
 
@@ -58,7 +70,83 @@ export default function ProfilePage() {
     bio: "Passionate about sustainable living and helping others make eco-friendly choices.",
     location: user?.location || "Unknown",
     joinDate: "",
+    age: user?.age || "25",
   });
+
+  // Inline component: Step 1 survey editor
+  function SurveyStep1Editor({ answers, onSave, editable = false }: { answers: any; onSave: (vals: any) => void; editable?: boolean; }) {
+    const [avgSpend, setAvgSpend] = useState<number>(Number(answers?.avg_daily_spend ?? 500000));
+    const [spendVariability, setSpendVariability] = useState<number>(Number(answers?.spend_variability ?? 3));
+    const [brandNovel, setBrandNovel] = useState<number>(Number(answers?.brand_novel ?? 3));
+    const [listAdherence, setListAdherence] = useState<number>(Number(answers?.list_adherence ?? 3));
+    const [novelLocationRatio, setNovelLocationRatio] = useState<number>(Number(answers?.novel_location_ratio ?? 3));
+    const [publicTransit, setPublicTransit] = useState<number>(Number(answers?.public_transit_ratio ?? 3));
+    const [healthyFood, setHealthyFood] = useState<number>(Number(answers?.healthy_food_ratio ?? 3));
+    const [nightOutFreq, setNightOutFreq] = useState<number>(Number(answers?.night_out_freq ?? 1));
+
+    return (
+      <div className="space-y-3">
+        {/* Avg spend (keep numeric input) */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">Average Daily Spend</div>
+            {/* <div className="text-xs text-gray-500">Your typical daily spending</div> */}
+          </div>
+          <div className="text-right">
+            {editable ? (
+              <>
+                <input type="number" value={avgSpend} onChange={(e) => setAvgSpend(Number(e.target.value))} className="w-32 text-right p-2 rounded border" />
+                <div className="text-xs text-gray-500">VND</div>
+              </>
+            ) : (
+              <div className="text-right">
+                <div className="text-sm font-medium">{new Intl.NumberFormat('vi-VN').format(avgSpend)} VND</div>
+                {/* <div className="text-xs text-gray-500">VND</div> */}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sliders 1-5 */}
+        <SliderRow label="Spend variability" unit="scale (1-5)" min={1} max={5} value={spendVariability} onChange={setSpendVariability} disabled={!editable} />
+        <SliderRow label="Brand novelty" unit="scale (1-5)" min={1} max={5} value={brandNovel} onChange={setBrandNovel} disabled={!editable} />
+        <SliderRow label="List adherence" unit="scale (1-5)" min={1} max={5} value={listAdherence} onChange={setListAdherence} disabled={!editable} />
+        <SliderRow label="Novel location ratio" unit="scale (1-5)" min={1} max={5} value={novelLocationRatio} onChange={setNovelLocationRatio} disabled={!editable} />
+        <SliderRow label="Public transit" unit="scale (1-5)" min={1} max={5} value={publicTransit} onChange={setPublicTransit} disabled={!editable} />
+        <SliderRow label="Healthy food ratio" unit="scale (1-5)" min={1} max={5} value={healthyFood} onChange={setHealthyFood} disabled={!editable} />
+
+        {/* Night out 1-7 */}
+        <SliderRow label="Night out frequency" unit="times (1-7)" min={1} max={7} value={nightOutFreq} onChange={setNightOutFreq} disabled={!editable} />
+
+        <div className="flex gap-2 mt-2">
+          {editable && (
+            <Button className="flex-1" onClick={() => onSave({
+              avg_daily_spend: avgSpend,
+              spend_variability: spendVariability,
+              brand_novel: brandNovel,
+              list_adherence: listAdherence,
+              novel_location_ratio: novelLocationRatio,
+              public_transit_ratio: publicTransit,
+              healthy_food_ratio: healthyFood,
+              night_out_freq: nightOutFreq,
+            })}>Save Step 1</Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  function SliderRow({ label, unit, min, max, value, onChange, disabled = false }: { label: string; unit: string; min: number; max: number; value: number; onChange: (v: number) => void; disabled?: boolean }) {
+    return (
+      <div className={disabled ? 'opacity-70' : ''}>
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-sm font-medium">{label}</div>
+          <div className="text-xs text-gray-500">{value} — <span className="text-xs">{unit}</span></div>
+        </div>
+        <input type="range" min={min} max={max} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full" disabled={disabled} />
+      </div>
+    );
+  }
 
   const stats = {
     level: 15,
@@ -141,6 +229,8 @@ export default function ProfilePage() {
     { icon: Shield, label: "Privacy & Security", action: () => { } },
     { icon: HelpCircle, label: "Help & Support", action: () => { } },
     { icon: Settings, label: "App Settings", action: () => { } },
+    { icon: MapPin, label: "Check-ins", action: () => { navigate("/checkins"); } },
+    { icon: Terminal, label: "Dev Settings", action: () => { navigate("/dev-settings"); } },
   ];
 
   const handleSaveProfile = () => {
@@ -152,8 +242,26 @@ export default function ProfilePage() {
 
   return (
     <SafeAreaLayout
-      header={<AppHeader showBack title="Profile"></AppHeader>}
-      footer={<BottomNav></BottomNav>}
+      header={<AppHeader
+        showBack
+        title="Profile"
+        rightActions={[
+          <Button
+            key="logout"
+            variant="ghost"
+            size="icon"
+            className="text-red-600 hover:bg-red-50 rounded-full"
+            onClick={() => {
+              clearAuth();
+              setBypassAuthGate(false);
+              navigate("/", { replace: true });
+            }}
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
+        ]}
+      ></AppHeader>}
+      footer={<AppBottomNavBar />}
     >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
         {/* Profile Info */}
@@ -194,7 +302,7 @@ export default function ProfilePage() {
                 {/* Gender */}
                 <div className="flex items-center space-x-1 text-gray-600 mb-1">
                   <User className="w-4 h-4" />
-                  <span>{userInfo.gender} 25</span>
+                  <span>{userInfo.gender} {userInfo.age}</span>
                 </div>
 
                 {/* Location */}
@@ -269,7 +377,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* OCEAN Score Vertical */}
-        <Card className="border-0 shadow-md">
+        {/* <Card className="border-0 shadow-md">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center space-x-2">
               <Users className="w-4 h-4 text-greenery-600" />
@@ -295,37 +403,31 @@ export default function ProfilePage() {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
+
+        <OceanRadarChart scores={oce} />
 
         {/* Pre-App Survey Card */}
-        {answers && (
-          <Card className="border-0 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center space-x-2">
-                <MapPin className="w-4 h-4 text-blue-600" />
-                <span>Pre-App Survey</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {Object.entries(answers).map(([key, value]) => (
-                  <div key={key} className="flex flex-col text-sm">
-                    <span className="font-medium text-gray-700 capitalize">{key.replace(/_/g, ' ')}</span>
-                    <span className="text-blue-700 font-semibold">{value}</span>
-                  </div>
-                ))}
+        <Card className="border-0 shadow-md">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center space-x-2">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <span>Pre-App Survey</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SurveyStep1Editor answers={answers} onSave={(vals) => {
+              // save converted to strings
+              setPreAppAnswers({ ...answers, ...Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, String(v)])) } as any);
+              toast.success('Saved survey (Step 1)');
+            }} editable={false} />
+            {isCompleted && completedAt && (
+              <div className="mt-3 text-xs text-gray-500">
+                Đã hoàn thành: {new Date(completedAt).toLocaleString()}
               </div>
-              {isCompleted && completedAt && (
-                <div className="mt-3 text-xs text-gray-500">
-                  Đã hoàn thành: {new Date(completedAt).toLocaleString()}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Current Location Card */}
-        <CurrentLocationCard />
+            )}
+          </CardContent>
+        </Card>
 
         {/* Home Location Card */}
         <HomeLocationCard />
@@ -333,8 +435,14 @@ export default function ProfilePage() {
         {/* Night Out Status Card */}
         <NightOutStatusCard />
 
+        {/* Night Out Activity Chart */}
+        <NightOutCard />
+
         {/* Location History Card */}
         <LocationHistoryCard />
+
+        {/* Metrics Comparison Card */}
+        <ProfileMetricsComparisonCard />
 
         {/* Level Progress */}
         <Card className="border-0 shadow-md">
@@ -486,18 +594,6 @@ export default function ProfilePage() {
                 </Button>
               );
             })}
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-12 text-red-600 hover:bg-red-50"
-              onClick={() => {
-                clearAuth();
-                setBypassAuthGate(false);
-                navigate("/", { replace: true });
-              }}
-            >
-              <LogOut className="w-4 h-4 mr-3" />
-              Sign Out
-            </Button>
           </CardContent>
         </Card>
       </div>

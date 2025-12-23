@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 export interface IMetricFeedback {
   metric: string;
@@ -37,11 +38,14 @@ export interface IMetricFeedbackState {
   clearFeedback: (metric: string) => void;
   getAllFeedbacks: () => IMetricFeedback[];
   getAllFeedbacksSorted: () => IMetricFeedback[]; // Get all feedbacks sorted by timestamp (newest first)
+  clearAllFeedbacks: () => void;
 }
 
-export const useMetricFeedbackStore = create<IMetricFeedbackState>((set, get) => ({
-  feedbacks: {},
-      
+export const useMetricFeedbackStore = create<IMetricFeedbackState>()(
+  persist(
+    (set, get) => ({
+      feedbacks: {},
+
       setFeedback: (metric, feedback) =>
         set((state) => ({
           feedbacks: {
@@ -53,7 +57,7 @@ export const useMetricFeedbackStore = create<IMetricFeedbackState>((set, get) =>
             },
           },
         })),
-      
+
       getFeedback: (metric) => {
         const feedback = get().feedbacks[metric];
         return feedback || null;
@@ -81,13 +85,13 @@ export const useMetricFeedbackStore = create<IMetricFeedbackState>((set, get) =>
             : latest
         );
       },
-      
+
       clearFeedback: (metric) =>
         set((state) => {
           const { [metric]: _, ...rest } = state.feedbacks;
           return { feedbacks: rest };
         }),
-      
+
       getAllFeedbacks: () => {
         return Object.values(get().feedbacks);
       },
@@ -97,5 +101,12 @@ export const useMetricFeedbackStore = create<IMetricFeedbackState>((set, get) =>
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
       },
-    })
+
+      clearAllFeedbacks: () => set({ feedbacks: {} }),
+    }),
+    {
+      name: "metric-feedback-storage", // unique name
+      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+    }
+  )
 );

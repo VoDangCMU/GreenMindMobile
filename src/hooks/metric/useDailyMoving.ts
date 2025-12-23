@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import dailyMoving from '@/apis/backend/v1/ai-forward/metrics/dailyMoving';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
+import { useToast } from '@/hooks/useToast';
 import { useOcean } from '@/hooks/v1/useOcean';
 import { useMetricFeedbackStore } from '@/store/v2/metricFeedbackStore';
 
@@ -9,6 +10,7 @@ export const useDailyMoving = () => {
     const [error, setError] = useState<string | null>(null);
     const { ocean, saveOcean } = useOcean();
     const { setFeedback } = useMetricFeedbackStore();
+    const toast = useToast();
 
     const callDailyMoving = async (distance_today: number, base_avg_distance: number) => {
         if (!ocean) {

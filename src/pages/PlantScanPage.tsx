@@ -1,8 +1,9 @@
 import AppHeader from "@/components/common/AppHeader";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
-import { Loader2, Check, RefreshCw, Lightbulb } from "lucide-react";
-import { useState } from "react";
-import ScanHistoryFooter from "@/components/app-components/page-components/plant-scan/ScanHistoryFooter";
+import { Loader2, Check, Lightbulb } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from 'react-router-dom';
+import PageActionFooter from "@/components/common/PageActionFooter";
 import usePlantScanStore, { type PlantScanResult } from "@/store/plantScanStore";
 import SafeAreaLayout from "@/components/layouts/SafeAreaLayout";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
@@ -13,8 +14,9 @@ import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 import { useOceanUpdate } from "@/hooks/v1/useOceanUpdate";
 import { useHealthyFoodRatio } from "@/hooks/metric/useHealthyFoodRatio";
 import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
-import { MetricFeedbackCard } from "@/components/app-components/MetricFeedbackCard";
+import { MetricFeedbackCard } from "./MetricsPage";
 import planScan from "@/apis/backend/v1/ai-forward/image-processing/plan-scan";
+import { useToast } from "@/hooks/useToast";
 
 function PlantScanList({
   scans,
@@ -112,21 +114,33 @@ export default function PlantScanPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [selectedScan, setSelectedScan] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
-  const [isUpdatingOcean, setIsUpdatingOcean] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const setOcean = useAppStore((state) => state.setOcean);
   const ocean = useAppStore((state) => state.ocean);
+  const toast = useToast();
   const { updateOcean } = useOceanUpdate();
   const { callHealthyFoodRatio } = useHealthyFoodRatio();
   const preAppSurveyAnswers = usePreAppSurveyStore((state) => state.answers);
   const foodRatioFeedback = useMetricFeedbackStore((s) => s.getFeedback("healthy_food_ratio"));
 
-  // Calculate plant_meals and total_meals from scans
-  const calculateMealStats = () => {
-    const totalScans = scans.length;
-    const plantScans = scans.filter(scan => scan.vegetable_ratio_percent > 30).length; // Consider >30% as plant meal
-    return { plant_meals: plantScans, total_meals: totalScans };
-  };
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto-trigger camera if navigated with { state: { startScan: true } }
+  useEffect(() => {
+    if ((location as any)?.state?.startScan) {
+      handleScan();
+      // clear state to avoid re-trigger on back navigation
+      navigate(location.pathname, { replace: true });
+    }
+  }, []);
+
+  // Calculate plant_meals and total_meals from scans - REMOVED (now per-scan)
+  // const calculateMealStats = () => {
+  //   const totalScans = scans.length;
+  //   const plantScans = scans.filter(scan => scan.vegetable_ratio_percent > 20).length; // Consider >20% as plant meal
+  //   return { plant_meals: plantScans, total_meals: totalScans };
+  // };
 
   // Get base_likert from preAppSurvey healthy_food_ratio
   const getBaseLikert = () => {
@@ -136,16 +150,18 @@ export default function PlantScanPage() {
     return 3; // default
   };
 
-  // Update OCEAN manually when button is clicked
-  const handleUpdateOcean = async () => {
-    setIsUpdatingOcean(true);
-    const { plant_meals, total_meals } = calculateMealStats();
+  // Trigger OCEAN update immediately after scan
+  const triggerOceanUpdateFromScan = async (scanResult: any) => {
+    console.log("Triggering OCEAN update from scan result:", scanResult);
+    if (!ocean) {
+      console.warn("Ocean score missing, skipping update");
+      return;
+    }
     const base_likert = getBaseLikert();
 
-    if (!ocean) {
-      setIsUpdatingOcean(false);
-      return; // No OCEAN scores, skip silently
-    }
+    // Logic: Map vegetable_area -> plant_meals, dish_area -> total_meals
+    const plant_meals = parseInt(scanResult.vegetable_area, 10) || 0;
+    const total_meals = parseInt(scanResult.dish_area, 10) || 0;
 
     const data: IHealthyFoodRatio = {
       plant_meals,
@@ -156,27 +172,35 @@ export default function PlantScanPage() {
       sigma_r: 1.0,
       alpha: 0.5,
       ocean_score: {
-        O: ocean.O / 100, // Convert back to 0-1 range
+        O: ocean.O / 100,
         C: ocean.C / 100,
         E: ocean.E / 100,
         A: ocean.A / 100,
         N: ocean.N / 100,
       },
     };
+
+    console.log("Calling healthy food ratio with payload:", data);
+
     try {
       const res = await callHealthyFoodRatio(data);
+      console.log("Healthy food ratio response:", res);
       if (res && res.new_ocean_score) {
         updateOcean(res.new_ocean_score);
         setOcean(res.new_ocean_score);
-        console.log(`OCEAN updated from plant scan! Plant meals: ${plant_meals}/${total_meals}, Base: ${base_likert}`);
+        console.log(`OCEAN updated from scan! Area Ratio: ${plant_meals}/${total_meals}`);
+      } else {
+        console.warn("API response valid but missing new_ocean_score?");
       }
     } catch (error) {
-      // Error already handled by hook
-      console.warn("Failed to update OCEAN from plant scan:", error);
-    } finally {
-      setIsUpdatingOcean(false);
+      console.warn("Update OCEAN from scan failed:", error);
     }
   };
+
+  // REMOVED manual update function
+  /*
+  const handleUpdateOcean = async () => { ... }
+  */
 
   // Helper to extract base64 from photo (web/native)
   // Always use Capacitor Filesystem API to get base64 from photo
@@ -230,10 +254,13 @@ export default function PlantScanPage() {
   };
 
   const handleScan = async () => {
+    console.log("Starting Scan...");
     setIsScanning(true);
     try {
+      console.log("Opening Camera...");
       const photo = await Camera.getPhoto({
-        quality: 90,
+        quality: 60,
+        width: 1024,
         resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
         saveToGallery: false,
@@ -248,17 +275,25 @@ export default function PlantScanPage() {
         createdAt: new Date().toLocaleString(),
         _original_base64: base64,
       };
+      console.log("Scan result:", result);
       addScan(scan);
-    } catch {
-      // handle error or user cancel
+      // Trigger metric update
+      console.log("Triggering metric update...");
+      await triggerOceanUpdateFromScan(result);
+      console.log("Scan flow complete.");
+    } catch (e: any) {
+      console.error("Scan failed", e);
+      toast.error(`Scan failed: ${e?.message || "Unknown error"}`);
     } finally {
       setIsScanning(false);
     }
   };
 
   const handleImport = async () => {
+    console.log("Starting Import...");
     setIsScanning(true);
     try {
+      console.log("Opening Gallery...");
       const photo = await Camera.getPhoto({
         quality: 90,
         resultType: CameraResultType.Uri,
@@ -275,9 +310,15 @@ export default function PlantScanPage() {
         createdAt: new Date().toLocaleString(),
         _original_base64: base64,
       };
+      console.log("Import result:", result);
       addScan(scan);
-    } catch {
-      // handle error or user cancel
+      // Trigger metric update
+      console.log("Triggering metric update form import...");
+      await triggerOceanUpdateFromScan(result);
+      console.log("Import flow complete.");
+    } catch (e: any) {
+      console.error("Import failed", e);
+      toast.error(`Import failed: ${e?.message || "Unknown error"}`);
     } finally {
       setIsScanning(false);
     }
@@ -296,17 +337,6 @@ export default function PlantScanPage() {
               onClick={() => setShowFeedback(!showFeedback)}
             />,
             <AppHeaderButton
-              key="update-ocean"
-              icon={
-                isUpdatingOcean ? (
-                  <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-                ) : (
-                  <RefreshCw className="h-6 w-6 text-blue-500" />
-                )
-              }
-              onClick={handleUpdateOcean}
-            />,
-            <AppHeaderButton
               key="scan"
               icon={
                 isScanning ? (
@@ -320,7 +350,7 @@ export default function PlantScanPage() {
           ]}
         />
       }
-      footer={<ScanHistoryFooter onScan={handleScan} onImport={handleImport} />}
+      footer={<PageActionFooter onScan={handleScan} onImport={handleImport} />}
     >
       <div className="flex flex-col bg-gradient-to-br">
         <div className="flex-1 w-full mx-auto px-3 pb-28">

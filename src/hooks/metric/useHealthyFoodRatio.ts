@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { healthy_food_ratio } from '@/apis/ai/monitor_ocean';
 import type { IHealthyFoodRatio } from '@/apis/ai/monitor_ocean';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
+import { useToast } from '@/hooks/useToast';
 import { useOcean } from '@/hooks/v1/useOcean';
 import { useMetricFeedbackStore } from '@/store/v2/metricFeedbackStore';
 
@@ -10,6 +11,7 @@ export const useHealthyFoodRatio = () => {
     const [error, setError] = useState<string | null>(null);
     const { ocean, saveOcean } = useOcean();
     const { setFeedback } = useMetricFeedbackStore();
+    const toast = useToast();
 
     const callHealthyFoodRatio = async (data: IHealthyFoodRatio) => {
         if (!ocean) {
@@ -42,11 +44,13 @@ export const useHealthyFoodRatio = () => {
             await saveOcean(newOceanScores);
 
             // Save feedback to store with timestamp
-            setFeedback("healthy_food_ratio", {
+            const feedbackData = {
                 ...result,
                 new_ocean_score: newOceanScores,
                 timestamp: new Date().toISOString(),
-            });
+            };
+            console.log("Saving healthy_food_ratio feedback:", feedbackData);
+            setFeedback("healthy_food_ratio", feedbackData);
 
             toast.success("OCEAN scores updated successfully!");
             return result;

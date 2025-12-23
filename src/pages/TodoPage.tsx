@@ -13,7 +13,7 @@ import generate_subtasks from "@/apis/ai/todos/todo_generator";
 import { useTodoAffect } from "@/hooks/metric/useTodoAffect";
 import { createTodo, getTodos, batchCreateTodos, deleteTodo as deleteTodoAPI, updateTodo as updateTodoAPI, type TodoData } from "@/apis/backend/v1/todo";
 import { useMetricFeedbackStore } from "@/store/v2/metricFeedbackStore";
-import { MetricFeedbackCard } from "@/components/app-components/MetricFeedbackCard";
+import { MetricFeedbackCard } from "./MetricsPage";
 import AppHeaderButton from "@/components/common/AppHeaderButton";
 import {
   Plus,
@@ -24,8 +24,8 @@ import {
 import { useAuthStore } from "@/store/authStore";
 
 import { TodoItemComponent } from "@/components/app-components/page-components/todo/TodoItem";
-import BottomNav from "@/components/app-components/page-components/home/HomeBottomNav";
-import OceanPersonalityCard from "@/components/app-components/commons/OceanPersonalityCard";
+import { AppBottomNavBar } from "@/pages/HomePage";
+
 
 export default function TodoPage() {
   const { todos, addTodo, addSubtask, removeTodo, setTodos } = useTodoStore();
@@ -258,15 +258,15 @@ export default function TodoPage() {
           onClick={() => setShowFeedback(!showFeedback)}
         />
       ] : []} />}
-      footer={<BottomNav></BottomNav>}
+      footer={<AppBottomNavBar />}
     >
       <div className="max-w-sm mx-auto pl-4 pr-4 pb-8 space-y-4">
         {/* Show feedback card if available */}
         {showFeedback && todoFeedback && (
           <MetricFeedbackCard feedback={todoFeedback} />
         )}
-        
-        <OceanPersonalityCard />
+
+
         {/* Stats Card */}
         <Card className="border-0 shadow-md bg-gradient-to-r from-greenery-50 to-blue-50">
           <CardContent className="p-4">

@@ -71,10 +71,16 @@ export default function combineQuestionWithTemplate(
     questiondata: IQuestionResponse,
     userAnswers: IUserAnswer
 ): ICombineOutput {
+    console.log("[combineQuestionWithTemplate] Starting...")
+    console.log("[combineQuestionWithTemplate] Question data:", questiondata)
+    console.log("[combineQuestionWithTemplate] User answers:", userAnswers)
+    
     const answers: IAnswer[] = userAnswers.answers.map(userAnswer => {
         const q = questiondata.data.questions.find(q => q.id === userAnswer.questionId);
 
         if (!q) {
+            console.warn("[combineQuestionWithTemplate] Question not found for ID:", userAnswer.questionId);
+            console.log("[combineQuestionWithTemplate] Available question IDs:", questiondata.data.questions.map(q => q.id));
             return {
                 trait: "unknown",
                 template_id: "unknown",

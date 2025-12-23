@@ -15,7 +15,8 @@ import { usePreAppSurveyStore } from "@/store/preAppSurveyStore";
 const COLORS = ["#3b82f6", "#9ca3af"]; // blue - night out, gray - night in
 
 export default function NightOutCard() {
-  const { getNightOutRecords, getTotalNightOutDays } = useNightOutHistoryStore();
+  // Subscribe to records so component re-renders when they change
+  const { getNightOutRecords, records } = useNightOutHistoryStore();
   const { callNightOutFeq, loading } = useNightOutFeq();
   const ocean = useAppStore((state) => state.ocean);
   const preAppSurvey = usePreAppSurveyStore((state) => state.answers);
@@ -46,19 +47,19 @@ export default function NightOutCard() {
       date,
       wentOut: nightOutDates.has(date)
     }));
-  }, [getNightOutRecords]);
+  }, [getNightOutRecords, records]);
 
   // Function to update OCEAN based on night out frequency
   const updateOceanWithNightOut = async () => {
-    // Get total night out count from store
-    const totalNightOutDays = getTotalNightOutDays();
+    // Get night out count for the last 7 days
+    const currentWeekCount = last7Days.filter(d => d.wentOut).length;
 
     // Get baseline night out frequency from pre-app survey
     const baseNightOut = preAppSurvey?.night_out_freq
       ? parseInt(preAppSurvey.night_out_freq)
       : 2; // Fallback to 2 if no pre-app data
 
-    await callNightOutFeq(totalNightOutDays, baseNightOut);
+    await callNightOutFeq(currentWeekCount, baseNightOut);
   };
 
   const outCount = last7Days.filter((d) => d.wentOut).length;
@@ -82,16 +83,44 @@ export default function NightOutCard() {
             <Moon className="w-4 h-4 text-indigo-500" />
             <span>Night Activity (7 days)</span>
           </CardTitle>
-          <Button
-            onClick={updateOceanWithNightOut}
-            disabled={loading || !ocean}
-            size="sm"
-            variant="outline"
-            className="flex items-center space-x-1"
-          >
-            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-            <span className="text-xs">Update OCEAN</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                const fakeDate = new Date();
+                // Randomly subtract 0-6 days to populate the chart
+                fakeDate.setDate(fakeDate.getDate() - Math.floor(Math.random() * 6));
+                useNightOutHistoryStore.getState().addNightOutRecord({
+                  timestamp: fakeDate.toISOString(),
+                  distanceFromHome: 0.5,
+                  location: { latitude: 0, longitude: 0 }
+                });
+                // Force re-render if needed or rely on store subscription? 
+                // Store subscription might not auto-trigger 'last7Days' memo if it depends on 'getNightOutRecords' which is a function.
+                // Actually 'getNightOutRecords' is stable, but the result of calling it changes. 
+                // We need to trigger a re-render. Since we use 'getNightOutRecords' in useMemo, 
+                // we might need to depend on 'records' directly or force update.
+                // Let's rely on standard Zustand reactivity if properly used.
+                // Wait, usage: `const { getNightOutRecords } = useNightOutHistoryStore();` 
+                // This selector selects actions/functions. It DOES NOT subscribe to state changes if we only select functions!
+                // We must select state to trigger updates.
+              }}
+              size="sm"
+              variant="ghost"
+              className="text-xs text-gray-500 hover:text-indigo-600"
+            >
+              Simulate
+            </Button>
+            <Button
+              onClick={updateOceanWithNightOut}
+              disabled={loading || !ocean}
+              size="sm"
+              variant="outline"
+              className="flex items-center space-x-1"
+            >
+              <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+              <span className="text-xs">Update OCEAN</span>
+            </Button>
+          </div>
         </div>
       </CardHeader>
 

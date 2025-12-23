@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
-  ArrowLeft,
   Sparkles,
   Leaf,
   Heart,
@@ -20,6 +19,9 @@ import {
   Info,
 } from "lucide-react"
 import {Link} from "react-router-dom"
+import SafeAreaLayout from "@/components/layouts/SafeAreaLayout"
+import AppHeader from "@/components/common/AppHeader"
+import AppHeaderButton from "@/components/common/AppHeaderButton"
 
 interface Recommendation {
   id: string
@@ -243,23 +245,25 @@ export default function RecommendationsPage() {
   const totalCount = recommendations.length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-greenery-50 to-greenery-100 p-4">
-      <div className="max-w-sm mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Link to="/home">
-            <Button variant="ghost" className="p-2">
-              <ArrowLeft className="w-5 h-5 text-greenery-700" />
-            </Button>
-          </Link>
-          <h1 className="text-lg font-bold text-greenery-700">Smart Recommendations</h1>
-          <Button variant="ghost" onClick={generateNewRecommendations} className="p-2">
-            <RefreshCw className="w-5 h-5 text-greenery-700" />
-          </Button>
-        </div>
-
-        {/* Progress Overview */}
-        <Card className="border-0 shadow-md mb-6">
+    <SafeAreaLayout
+      header={
+        <AppHeader
+          title="Smart Recommendations"
+          showBack
+          rightActions={[
+            <AppHeaderButton
+              key="refresh"
+              icon={<RefreshCw className="h-6 w-6 text-greenery-600" />}
+              onClick={generateNewRecommendations}
+            />,
+          ]}
+        />
+      }
+    >
+      <div className="flex flex-col bg-gradient-to-br from-greenery-50 to-greenery-100 min-h-screen">
+        <div className="flex-1 w-full mx-auto px-4 pb-6">
+          {/* Progress Overview */}
+          <Card className="border-0 shadow-md mb-6 mt-4">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-greenery-600" />
@@ -451,7 +455,8 @@ export default function RecommendationsPage() {
             </Button>
           </Link>
         </div>
+        </div>
       </div>
-    </div>
+    </SafeAreaLayout>
   )
 }

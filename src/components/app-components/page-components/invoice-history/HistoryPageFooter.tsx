@@ -2,7 +2,8 @@ import React from "react";
 import { ScanLine } from "lucide-react";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import useInvoiceStore from "@/store/invoiceStore";
-import { toast } from "sonner";
+// import { toast } from "sonner";
+import { useToast } from "@/hooks/useToast";
 import ocrInvoice from "@/apis/backend/v1/ai-forward/image-processing/ocr-invoice";
 
 interface HistoryPageFooterProps {
@@ -11,11 +12,12 @@ interface HistoryPageFooterProps {
   loading?: boolean;
 }
 
-const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
+const HistoryPageFooter: React.FC<HistoryPageFooterProps> = ({ onScan, onImport }) => {
   const addInvoice = useInvoiceStore((state) => state.addInvoice);
   const setOcring = useInvoiceStore((state) => state.setOcring);
+  const toast = useToast();
 
-  const handleScan = async () => {
+  const defaultScan = async () => {
     setOcring(true);
     let photo;
     try {
@@ -35,7 +37,6 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
 
     let exportedInvoice;
     try {
-      // exportedInvoice = await ocrBill(photo);
       exportedInvoice = await ocrInvoice(photo)
     } catch (err) {
       console.log("OCR error:", err);
@@ -49,7 +50,7 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
     toast.success("Invoice added successfully");
   };
 
-  const handleImport = async () => {
+  const defaultImport = async () => {
     let photo;
     try {
       photo = await Camera.getPhoto({
@@ -68,10 +69,10 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
 
     setOcring(true);
 
-    // const exportedInvoice = await ocrBill(photo);
     const exportedInvoice = await ocrInvoice(photo)
     if (!exportedInvoice) {
       console.error("No bill data returned from OCR.");
+      setOcring(false);
       return;
     }
 
@@ -79,6 +80,16 @@ const HistoryPageFooter: React.FC<HistoryPageFooterProps> = () => {
     setOcring(false);
     toast.success("Invoice added successfully");
 
+  };
+
+  const handleScan = async () => {
+    if (onScan) return onScan();
+    return defaultScan();
+  };
+
+  const handleImport = async () => {
+    if (onImport) return onImport();
+    return defaultImport();
   };
 
   return (

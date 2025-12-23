@@ -1,3 +1,4 @@
+import type { TRegion } from '@/apis/backend/v2/register';
 import { create } from 'zustand';
 
 export type Gender = "Male" | "Female" | "Other";
@@ -13,6 +14,7 @@ interface FormData {
   agreeToTerms: boolean;
   subscribeNewsletter: boolean;
   gender: Gender;
+  region?: TRegion;
 }
 
 interface FormErrors {
@@ -54,6 +56,7 @@ const initialFormData: FormData = {
   agreeToTerms: false,
   subscribeNewsletter: true,
   gender: "Other",
+  region: "Unknown"
 };
 
 export const useRegisterStore = create<RegisterState>((set) => ({
